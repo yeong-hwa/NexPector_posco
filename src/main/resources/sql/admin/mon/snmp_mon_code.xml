@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="snmp_mon_code">
+
+  <select id="select_list" resultType="hashmap" parameterType="hashmap">
+    SELECT
+      N_SNMP_MAN_CODE || N_SNMP_MON_CODE AS KEY_COL,
+      N_SNMP_MAN_CODE, S_DESC, N_SNMP_MON_CODE, N_TIMEM, SNMP_MAN_NAME
+    FROM
+    (
+      SELECT
+        N_SNMP_MAN_CODE, S_DESC, N_SNMP_MON_CODE, N_TIMEM
+        , (SELECT S_DESC FROM TB_SNMP_MAN_CODE WHERE N_SNMP_MAN_CODE = A.N_SNMP_MAN_CODE) SNMP_MAN_NAME
+      FROM
+        TB_SNMP_MON_CODE A
+    ) A
+    <where>
+      <if test="S_DESC != '' and S_DESC != null">
+      AND S_DESC LIKE '%' || #{S_DESC} || '%'
+      </if>
+      <if test="N_SNMP_MAN_CODE != '' and N_SNMP_MAN_CODE != null">
+      AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE}
+      </if>
+    </where>
+  </select>
+
+  <insert id="insert_data" parameterType="hashmap" statementType="PREPARED">
+    INSERT INTO TB_SNMP_MON_CODE (N_SNMP_MAN_CODE, N_SNMP_MON_CODE, N_TIMEM, S_DESC) VALUES (#{N_SNMP_MAN_CODE}, #{N_SNMP_MON_CODE}, #{N_TIMEM}, #{S_DESC})
+  </insert>
+
+  <update id="update_data" parameterType="hashmap" statementType="PREPARED">
+    UPDATE TB_SNMP_MON_CODE
+    SET
+      N_TIMEM = #{N_TIMEM}
+      , S_DESC = #{S_DESC}
+    WHERE
+      N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+  </update>
+
+  <delete id="delete_data" parameterType="hashmap" statementType="PREPARED">
+    DELETE FROM TB_SNMP_MON_CODE WHERE N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+  </delete>
+
+  <select id="dul_chk" resultType="hashMap" parameterType="hashmap">
+    SELECT
+      COUNT(*) CNT
+    FROM
+      TB_SNMP_MON_CODE
+    WHERE
+      N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+  </select>
+
+  <select id="detail_info" resultType="hashmap" parameterType="hashmap">
+    SELECT
+      (SELECT S_DESC FROM TB_SNMP_MAN_CODE WHERE N_SNMP_MAN_CODE = A.N_SNMP_MAN_CODE) AS SNMP_MAN_NAME, A.N_SNMP_MAN_CODE, A.N_SNMP_MON_CODE, A.N_TIMEM, A.S_DESC
+    FROM
+      TB_SNMP_MON_CODE A
+    WHERE
+      A.N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} AND A.N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+  </select>
+
+</mapper>

@@ -1,0 +1,1216 @@
+﻿<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="cmb" uri="/WEB-INF/views/include/taglib/combo_tag.tld"%>
+<!doctype html>
+<html>
+<style>
+	.ellipsis_title {
+		display: inline-block; width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	}
+	.ellipsis_sub_title {
+		display: inline-block; width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	}
+</style>
+<head>
+	<meta charset="utf-8">
+	<title>::: [대교] IPT/IPCC 시스템 현황 :::</title>
+	
+	<jsp:include page="../include/dash_system_include.jsp"></jsp:include>
+	<jsp:include page="../include/dash_common_include.jsp"></jsp:include>
+
+  <!--jquery scroll-->
+  <script>
+    (function($) {
+      $(window).load(function() {
+        $("#sys_err_list").mCustomScrollbar({
+          scrollButtons: {
+            disable: true
+          },
+          theme: "3d-thick"
+        });
+        $("#sys_alarm_mid_tail_contents").mCustomScrollbar({
+          scrollButtons: {
+            disable: true
+          },
+          theme: "3d-thick"
+        });
+      });
+    })(jQuery);
+  </script>
+  <!--//jquery scroll-->
+
+<script type="text/javascript">
+//
+var	g_arrSysErrList		= [];
+var g_arrPhoneErrList	= [];
+
+var	s_url = "/dashboard/dash_system_info.htm";
+
+$(document).ready( function() {
+	init_intervalTime(s_url, disp_dashSystemInfo);
+	disp_dashSystemInfo();
+});
+
+$(document).keyup(function(e) {
+    if (e.keyCode == 27) {
+    	startInterval();
+   }
+});
+function disp_dashSystemInfo() {
+	var url = cst.contextPath() + '/dashboard/ajax_system_info.htm';
+	var param = {
+		'firstRecordIndex'	: 0,
+		'lastRecordIndex'	: 25
+	};
+
+	currentDateTimer();
+	$.getJSON(url, param, function(resp){
+		cmLog(resp);
+		
+		disp_almTotlaList(resp.ALM_TOTAL_LIST);
+		disp_nationalCallStatus(resp.NATIONAL_CALL_STATUS);
+		disp_systemErrStatus(resp.SYSTEM_ERR_STATUS);
+		disp_systemErrList(resp.SYSTEM_ERR_LIST);
+		
+		disp_almErrList(resp.ALM_ERR_LIST);
+		disp_monCount(resp.MON_TOT_COUNT, resp.MON_ERR_COUNT);
+	});
+}
+
+function disp_almTotlaList(data) {
+	if (data.length === undefined) {
+		data = [];
+	}
+	
+	dispAlaramMapData(data);
+}
+function disp_nationalCallStatus(data) {
+	if (data.length === undefined) {
+		data = [];
+	}
+	
+	makeMidTailHtml(data);
+	makeMidListHtml(data);
+}
+function disp_systemErrStatus(data) {
+	if (data.length === undefined) {
+		data = [];
+	}
+	
+	for (var i = 0; i < data.length; i ++) {
+		var item		= data[i];
+		var alm_rating	= item.N_ALM_RATING;
+		var alm_count	= item.N_ALM_COUNT;
+		
+		var alm_class	= 'b_nor_cicle'
+        if (alm_rating == 1) {
+        	// 장애
+        	alm_class	= 'b_war3_cicle';
+        }
+        else if (alm_rating == 2) {
+        	// 경고
+        	alm_class	= 'b_war2_cicle';
+        }
+        else if (alm_rating == 3) {
+        	// 주의
+        	alm_class	= 'b_war1_cicle';
+        }
+               
+		$('#ser_cicle_' + item.N_TYPE_CODE).removeClass('b_nor_cicle');
+		$('#ser_cicle_' + item.N_TYPE_CODE).addClass(alm_class);
+		$('#ser_cicle_' + item.N_TYPE_CODE).attr('onclick', 'systemErrListDetailEx(' + item.N_TYPE_CODE + ');');
+	}
+}
+function disp_almErrList(data) {
+	if (data.length === undefined) {
+		data = [];
+	}
+	
+	for (var i = 0; i < data.length; i ++) {
+		var item	= data[i];
+		var	id		= '';
+		
+		if (item.N_ALM_RATING == 1) { id	 = 'alm_err_1'; }
+		if (item.N_ALM_RATING == 2) { id	 = 'alm_err_2'; }
+		if (item.N_ALM_RATING == 3) { id	 = 'alm_err_3'; }
+		
+		$('#' + id).text(item.N_ALM_COUNT);
+	}
+	
+	
+}
+function disp_monCount(tcnt, ecnt) {
+	$('#mon_tot_cnt').text(tcnt);
+	$('#mon_succ_cnt').text(Number(tcnt) - Number(ecnt));
+}
+function disp_systemErrList(data) {
+	if (data.length === undefined) {
+		data = [];
+	}
+	
+	makeSystemErrListHtml(data);
+}
+
+// 지도에 전국전화기 현황 표시
+function dispAlaramMapData(data) {
+	var sum_tot_count	= 0;
+	var sum_arm_count	= 0;
+	
+	for (var i = 0; i < data.length; i ++) {
+		switch(data[i].N_GROUP_CODE) {
+		case 1000:
+			dispAlarmMapItem('map_Seoul', data[i]);
+			break;
+		case 2000:
+			dispAlarmMapItem('map_Gyeonggi', data[i]);
+			break;
+		case 3000:
+			dispAlarmMapItem('map_Gangwon', data[i]);
+			break;
+		case 4000:
+			dispAlarmMapItem('map_Chung', data[i]);
+			break;
+		case 4500:
+			dispAlarmMapItem('map_Chungbuk', data[i]);
+			break;
+		case 5000:
+			dispAlarmMapItem('map_Gyeongsangnam', data[i]);
+			break;
+		case 5500:
+			dispAlarmMapItem('map_Gyeongbuk', data[i]);
+			break;
+		case 6000:
+			dispAlarmMapItem('map_Jeonnam', data[i]);
+			break;
+		case 6500:
+			dispAlarmMapItem('map_Jeonbuk', data[i]);
+			break;
+		case 7000:
+			dispAlarmMapItem('map_Jeju', data[i]);
+			break;
+		case 8000:
+			dispAlarmMapItem('map_Sejong', data[i]);
+			break;
+		}
+		
+		sum_tot_count	+= data[i].TOT_COUNT;
+		sum_arm_count	+= data[i].ALM_COUNT;
+	}
+	
+	$('#p_success_cnt').html(sum_tot_count - sum_arm_count);
+	$('#p_error_cnt').html(sum_arm_count);
+	$('#p_total_cnt').html(sum_tot_count);
+}
+
+function dispAlarmMapItem(cname, item) {
+	var	ph_id = "#phs_" + item.N_GROUP_CODE;
+	if (item.ALM_COUNT > 0) {
+		$("." + cname + " .area_data").html(item.ALM_COUNT);
+		$("." + cname + " .nor_cicle").removeClass("error");
+		$("." + cname + " .nor_cicle").addClass("error");
+		
+		$(ph_id + " .nor_num").html(item.TOT_COUNT);
+		$(ph_id + " .error_num").html(item.ALM_COUNT);
+		$(ph_id + " .error_num").removeClass("error");
+		$(ph_id + " .error_num").addClass("error");
+		$(ph_id + " .lamp_normal").removeClass("error");
+		$(ph_id + " .lamp_normal").addClass("error");
+		
+		$("." + cname + " .nor_cicle").find('a').attr('href', 'javascript:showModalBigPopup(' + item.N_GROUP_CODE + ', \'' + $(ph_id + " dt span").text() + '\', \'S_ALARM\');');
+	}
+	else {
+		$("." + cname + " .area_data").html(item.ALM_COUNT);
+		$("." + cname + " .nor_cicle").removeClass("error");
+		
+		$(ph_id + " .nor_num").html(item.TOT_COUNT);
+		$(ph_id + " .error_num").html(item.ALM_COUNT);
+		$(ph_id + " .error_num").removeClass("error");
+		$(ph_id + " .lamp_normal").removeClass("error");
+		
+		$("." + cname + " .nor_cicle").find('a').attr('href', '#');
+	}
+}
+
+function openModalBigPopup() {
+	clearBigPopup();
+	stopInterval();
+	$('#myModal_big').dialog({
+		width : 930 // dialog 넓이 지정
+		, height : 650 // dialog 높이 지정
+		, modal : true // dialog를 modal 창으로 띄울것인지 결정
+		, resizeable : true // 사이즈 조절가능 여부
+		, open: function(event, ui) { 
+			$(this).parent().children('.ui-dialog-titlebar').hide();
+		}
+	});
+}
+function closeBigPopup() {
+	startInterval();
+	$('#myModal_big').dialog('close');
+}
+
+function openModalMidPopup() {
+	//clearBigPopup();
+	stopInterval();
+	$('#myModal_mid').dialog({
+		width : 930 // dialog 넓이 지정
+		, height : 650 // dialog 높이 지정
+		, modal : true // dialog를 modal 창으로 띄울것인지 결정
+		, resizeable : true // 사이즈 조절가능 여부
+		, open: function(event, ui) { 
+			$(this).parent().children('.ui-dialog-titlebar').hide();
+		}
+	});
+}
+
+function closeMidPopup() {
+	startInterval();
+	$('#myModal_mid').dialog('close');
+}
+
+
+function initDashAlarmBigGrid(code, sel_status) {
+	var dataSource = new kendo.data.DataSource({
+		transport		: {
+			read		: {
+				type		: 'post',
+				dataType	: 'json',
+				contentType	: 'application/json;charset=UTF-8',
+				url 		: cst.contextPath() + "/admin/kendoPagination_jijum.phone_alm_list_qry.htm",
+				data 		: function(data) {
+					return {
+						'N_GROUP_CODE'	: code,
+						'SEL_STATUS'	: $('select[name=SEL_STATUS]').val(),
+						'SEARCH_TYPE' 	: $('#SEARCH_TYPE').val(),
+						'SEARCH_KEYWORD': $.trim($('#SEARCH_KEYWORD').val())
+					};
+				}
+			},
+			parameterMap: function (data, opperation) {
+				return JSON.stringify(data);
+			}
+		},
+		schema			: {
+			data	: function(data) {
+				return $.isArray(data) ? data : [];
+			},
+			total 	: function(response) {
+				var totalCount = response.length > 0 ? response[0].TOTAL_COUNT : 0;
+				$('#total_count').text(totalCount);
+				return totalCount;
+			}
+		},
+		pageSize		: cst.countPerPage(),
+		serverPaging	: true,
+		serverSorting	: true
+	});
+
+	$("#dash_big_alarm_grid")
+		.kendoGrid($.extend({}, kendoGridDefaultOpt, {
+			dataSource	: dataSource,
+			change		: selectedServerGridRow,
+			pageable	: {
+				messages : {
+					empty	: "<strong>No data</strong>",
+					display : "<span>전체<strong style='color: #f35800;'>{2}</strong> 개 항목</span>"
+				}
+			},
+			
+			scrollable	: true,
+			sortable	: true,
+			columns		: [
+				{template:'# if (N_ALM_STATUS == 0) {# #: " " # #} else {# <span style="color:red;font-size:20pt">●</span> #}#', title:"<span style='font-size:20pt;'>○</span>", width:'5%', attributes:alignCenter, headerAttributes:alignCenter},
+				{field:'N_ALM_STATUS == 0 ? "정상" : "장애"', 	title:'상태', width:'8%', attributes:alignCenter, headerAttributes:alignCenter},
+				{field:'S_GROUP_NAME',	title:'본부', width:'8%', attributes:alignCenter, headerAttributes:alignCenter},
+				{field:'S_NAME', 		title:'지점', width:'8%', attributes:alignCenter, headerAttributes:alignCenter},
+				{field:'S_RUNNING', 	title:'러닝', width:'8%', attributes:alignCenter, headerAttributes:alignCenter},
+				{field:'S_GUBUN', 		title:'구분', width:'8%', attributes:alignCenter, headerAttributes:alignCenter},
+				{field:'S_EXT_NUM', 	title:'전화번호', width:'15%', attributes:alignCenter, headerAttributes:alignCenter},
+				{field:'S_ADDRESS', 	title:'주소', width:'35%', attributes:alignCenter, headerAttributes:alignCenter}
+			],
+			height		: '432px'
+		}));
+
+	$('#btn_search_modal_big').on('click', function(event) {
+		event.preventDefault();
+		$("#dash_big_alarm_grid").data('kendoGrid').dataSource.read();
+	});
+	
+}
+
+function selectedServerGridRow() {
+	
+}
+
+function makeMidTailHtml(data) {
+	g_arrPhoneErrList		= data;
+	
+	var sHtml	= '';
+	
+	var style		= 'box4_wrap fl mgr10';
+	var last_style	= ''
+	for (var i = 0; i < data.length; i ++) {
+		var item 	= data[i];
+		var ip_addr	= item.S_IP_ADDRESS;
+		
+		if (i == 0 || i % 4 == 0) {
+			sHtml += '<div class="call_er_data">';
+		}
+
+		if ((i + 1) % 4 == 0) {
+			sHtml += '<div class="box4_wrap fl"  style="cursor:pointer" onclick="showModalMidPopupEx(\'' + ip_addr + '\', ' + (i + 1) + ')">';
+		} else {
+			sHtml += '<div class="box4_wrap fl mgr10" style="cursor:pointer" onclick="showModalMidPopupEx(\'' + ip_addr + '\', ' + (i + 1) + ')">';
+		}
+		
+		var name	= item.S_GROUP_NAME + ' ' + item.S_NAME;
+		if (item.S_RUNNING != '') {
+			name	= name + ' ' +item.S_RUNNING;
+		}
+		
+		sHtml += '<ul class="data_con">';
+		sHtml += '<li class="tit_box1">' + name + '</li>';
+		sHtml += '<li class="tit_box2">' + item.S_EXT_NUM + '</li>';
+		sHtml += '<li class="time1"><span class="time1_tit"></span>' + item.D_UPDATE_TIME + '</li>';
+		sHtml += '<li class="time2"><span class="time1_tit"></span>' + splitToComponentTimes(item.ELAPSE_TIME) + '</li>';
+		sHtml += '</ul>';
+		sHtml += '</div>';
+		
+		if ((i + 1) % 4 == 0) {
+			sHtml += '</div>';
+			sHtml += '<br>';
+		}
+	}
+	
+	$('#sys_alarm_mid_tail_contents').html(sHtml);
+
+}
+
+function makeMidListHtml(data) {
+	console.log('makeMidListHtml()');
+	console.log(data);
+	var sHtml	= '';
+	
+	sHtml += '<a class="prev" href="#" onclick="document.frmList.reset(); plusSlides(-1);"><img src="/common/dashdaekyo/images/btn_left.png" alt="이전페이지"></a>';
+	sHtml += '<a class="next" href="#" onclick="document.frmList.reset(); plusSlides(1)"><img src="/common/dashdaekyo/images/btn_right.png" alt="다음페이지"></a>';
+   	
+	for (var i = 0; i < data.length; i ++) {
+		var item 		= data[i];
+		var style		= '';
+		var alm_text	= '';
+		
+		if (i > 0) {
+			style	= ' style="display:none;"';
+		}
+		
+		// 명칭
+		var name		= item.S_GROUP_NAME + ' ' + item.S_NAME + ' ' + item.S_RUNNING;
+		
+		if (item.N_ALM_STATUS == 0) {
+			alm_text	= '복구';
+		}
+		else if (item.N_ALM_STATUS == 1) {
+			alm_text	= '확인';
+		}
+		else if (item.N_ALM_STATUS == 2) {
+			alm_text	= '장애';
+		}
+		
+		sHtml += '<div class="pop_tbl_wrap" ' + style + '>';
+		sHtml += '<table class="errorDetail" cellspacing="0" cellpadding="0" summary="">';
+		sHtml += '<caption style="display: none">장애상세</caption>';
+		sHtml += '<colgroup>';
+		sHtml += '<col width="156px" /><col width="" />';
+		sHtml += '</colgroup>';
+		sHtml += '<thead><tr><th colspan="2">장애상세 <span class="page"><span style="color:#232378">' + (i + 1) + '</span>/' + data.length + '</span></th></tr></thead>';
+		sHtml += '<tbody>';
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">시간</th><td>' + item.D_UPDATE_TIME + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">명칭</th><td>' + name + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">전화번호</th><td>' + item.S_EXT_NUM + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">IP Address</th><td>' + item.S_IP_ADDRESS + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">경과시간</th><td>' + splitToComponentTimes(item.ELAPSE_TIME) + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">구분</th><td class="red">' + item.S_GUBUN + '</td>';
+		sHtml += '</tr>';
+        
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">상태</th><td class="red">발생</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">발생내용</th><td>응답없음</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">미표시기간(일)</th><td><input type="text" id="textfield_' + (i + 1) + '" name="textfield" style="height: 35px;" placeholder="" /><a class="btn_confirm" href="javascript:updateSysErrDispSkip(\'' + item.S_IP_ADDRESS + '\', \'\', ' + (i + 1) + ');" >확인</a></td>';
+		sHtml += '</tr>';
+		sHtml += '</tbody>';
+		sHtml += '</table>';
+		
+		sHtml += '<div class="btn_wrap">';
+		sHtml += '<a class="btn_default mgr8" href="javascript:goCenterTotal();">실시간현황</a>';
+		sHtml += '<a class="btn_default mgr8" href="javascript:goCenterTotalPhone();">장비상세</a>';
+		sHtml += '<a class="btn_default" href="javascript:goRecoverErrorPhone(\'' + item.S_IP_ADDRESS + '\');">수동복구/확인</a>';
+		sHtml += '</div>';
+		
+		sHtml += '</div>';
+	}
+	
+	
+	
+	$('#sys_alarm_mid_contents').html('');
+	$('#sys_alarm_mid_contents').html(sHtml);
+}
+
+function makeSystemErrListDetailHtml(data) {
+	var sHtml	= '';
+	
+	sHtml += '<a class="prev" href="#" onclick="document.frmList.reset(); plusSlides(-1)"><img src="/common/dashdaekyo/images/btn_left.png" alt="이전페이지"></a>';
+	sHtml += '<a class="next" href="#" onclick="document.frmList.reset(); plusSlides(1)"><img src="/common/dashdaekyo/images/btn_right.png" alt="다음페이지"></a>';
+   	
+	for (var i = 0; i < data.length; i ++) {
+		var item 		= data[i];
+		var style		= '';
+		var alm_text	= '';
+		
+		if (i > 0) {
+			style	= ' style="display:none;"';
+		}
+		
+		if (item.N_ALM_STATUS == 0) {
+			alm_text	= '정상';
+		}
+		else if (item.N_ALM_STATUS == 1) {
+			alm_text	= '장애';
+		}
+		else if (item.N_ALM_STATUS == 2) {
+			alm_text	= '경고';
+		}
+		else if (item.N_ALM_STATUS == 3) {
+			alm_text	= '주의';
+		}
+		
+		sHtml += '<div class="pop_tbl_wrap" ' + style + '>';
+		sHtml += '<table class="errorDetail" cellspacing="0" cellpadding="0" summary="">';
+		sHtml += '<caption style="display: none">장애상세</caption>';
+		sHtml += '<colgroup>';
+		sHtml += '<col width="156px" /><col width="" />';
+		sHtml += '</colgroup>';
+		sHtml += '<thead><tr><th colspan="2">장애상세 <span class="page"><span style="color:#232378">' + (i + 1) + '</span>/' + data.length + '</span></th></tr></thead>';
+		sHtml += '<tbody>';
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">시간</th><td>' + item.D_UPDATE_TIME + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">모니터링코드</th><td>' + item.S_MON_NAME + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">영역</th><td>' + item.S_GROUP_NAME + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">타입</th><td>' + item.S_TYPE_NAME + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">경과시간</th><td>' + splitToComponentTimes(item.ELAPSE_TIME) + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">등급</th><td class="red">' + alm_text + '</td>';
+		sHtml += '</tr>';
+        
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">상태</th><td class="red">발생</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">발생내용</th><td>' + item.ALM_MSG + '</td>';
+		sHtml += '</tr>';
+		
+		sHtml += '<tr>';
+		sHtml += '<th scope="row">미표시기간(일)</th><td><input type="text" id="textfield_' + (i + 1) + '" name="textfield" style="height: 35px;" placeholder=""><a class="btn_confirm" href="javascript:updateSysErrDispSkip(\'' + item.S_MON_IP + '\', ' + item.N_MON_ID + ', ' + (i + 1) + ');">확인</a></td>';
+		sHtml += '</tr>';
+		sHtml += '</tbody>';
+		sHtml += '</table>';
+		
+		sHtml += '<div class="btn_wrap">';
+		sHtml += '<a class="btn_default mgr8" href="javascript:goCenterTotal();">실시간현황</a>';
+		sHtml += '<a class="btn_default mgr8" href="javascript:goServerDetail(\'' + item.N_MON_ID + '\', ' + item.N_GROUP_CODE +', \'' + item.S_ALM_KEY + '\');">장비상세</a>';
+		sHtml += '<a class="btn_default" href="javascript:goRecoverError(' + item.N_MON_ID + ', \'' + item.S_ALM_KEY + '\');">수동복구/확인</a>';
+		sHtml += '</div>';
+		
+		sHtml += '</div>';
+	}
+	
+	$('#sys_alarm_mid_contents').html('');
+	$('#sys_alarm_mid_contents').html(sHtml);
+}
+
+function makeSystemErrListHtml(data) {
+	g_arrSysErrList	= data;
+	var sHtml	= '';
+	
+	var style		= 'box4_wrap fl mgr10';
+	var last_style	= ''
+	
+	for (var i = 0; i < data.length; i ++) {
+		var item			= data[i];
+		var s_type_name		= item.S_TYPE_NAME;
+		var s_mon_name		= item.S_MON_NAME;
+		var N_TYPE_CODE		= item.N_TYPE_CODE;
+		var n_mon_id		= item.N_MON_ID;
+		var n_alm_rating	= item.N_ALM_RATING;
+		var d_update_time	= item.D_UPDATE_TIME;
+		var alm_msg			= item.ALM_MSG;
+		
+		var lamp_class		= 'lamp_yellow_b';
+		
+		if (N_TYPE_CODE == 1000 || N_TYPE_CODE == 1500) {
+			s_type_name = s_type_name.replace('PBX', '교환기');
+		} 
+		
+		if (n_alm_rating == 1) {
+			lamp_class		= 'lamp_red';
+		}
+		else if (n_alm_rating == 2) {
+			lamp_class		= 'lamp_orange_b';
+		}
+		
+		if (i == 0 || i % 4 == 0) {
+			sHtml += '<div class="sys_er_data">';
+		}
+
+		if ((i + 1) % 4 == 0) {
+			sHtml += '<div class="box4_wrap fl"  style="cursor:pointer" onclick="systemErrListDetail(' + (i + 1) + ');">';
+		} else {
+			sHtml += '<div class="box4_wrap fl mgr10" style="cursor:pointer" onclick="systemErrListDetail(' + (i + 1) + ');">';
+		}
+		
+		sHtml += '<ul class="data_con">';
+		sHtml += '<li class="tit_box1 ellipsis_title"><span class="' + lamp_class + '"></span>' + s_type_name + '</li>';
+		sHtml += '<li class="tit_box2 ellipsis_title">' + s_mon_name + '</li>';
+		sHtml += '<li class="time1"><span class="time1_tit"></span>' + item.D_UPDATE_TIME + '</li>';
+		sHtml += '<li class="time2"><span class="time1_tit"></span>' + splitToComponentTimes(item.ELAPSE_TIME) + '</li>';
+		sHtml += '<li title="' + alm_msg + '"><span class="ellipsis_sub_title">' + alm_msg + '</span></li>';
+		sHtml += '</ul>';
+		sHtml += '</div>';
+		
+		if ((i + 1) % 4 == 0) {
+			sHtml += '</div>';
+			sHtml += '<br>';
+		}
+	}
+	
+	$('#sys_err_list').html('');
+	$('#sys_err_list').html(sHtml);
+}
+
+function initDashAlarmMidGrid(code) {
+	var param 	= {
+		'N_GROUP_CODE' : code
+	};
+	
+	if (code === null || code === undefined) {
+		param	= '';
+	}
+	
+	sysAlarmList(param);	
+}
+
+function showModalBigPopup(code, text, sel_status) {
+	var	ph_id = "#phs_" + code;
+	var	alm_cnt = $(ph_id + " .error_num").html();
+	if (alm_cnt == '0' && sel_status == 'S_ALARM') {
+		return;
+	}
+
+	openModalBigPopup();
+	
+	$('select[name=SEL_STATUS]').val(sel_status);
+	initDashAlarmBigGrid(code);
+	
+	// 지역명
+	$('#big_region').text(text);
+	$('#hdn_big_region_code').val(code);
+}
+
+function showModalMidPopup(code) {
+	openModalMidPopup();
+	
+	var params 	= {
+		'N_GROUP_CODE' : code
+	};
+	
+	if (code === null || code === undefined || code == '') {
+		params	= '';
+	}
+	
+	getAlarmDataList(params, makeMidListHtml);
+}
+
+/**
+ * 전화기 장애 현황 클릭 시 장애 팝업 오픈
+ * idx - 팝업 idx 선택값 
+ */
+function showModalMidPopupEx(ip, idx) {
+	openModalMidPopup();
+	
+	makeMidListHtml(g_arrPhoneErrList);
+	
+	slideIndex	= idx;
+	showSlides(slideIndex);
+	
+	console.log(g_arrPhoneErrList);
+}
+
+function systemErrListDetail(index) {
+	openModalMidPopup();
+	
+	makeSystemErrListDetailHtml(g_arrSysErrList);
+	
+	slideIndex	= index;
+	showSlides(slideIndex);
+	
+	console.log(g_arrSysErrList);
+}
+
+function systemErrListDetailEx(type_code) {
+	var arr = new Array();
+	
+	for (var i = 0; i < g_arrSysErrList.length; i ++) {
+		var item	= g_arrSysErrList[i];
+		
+		if (item.N_TYPE_CODE == type_code) {
+			arr.push(item);
+		}
+	}
+	
+	openModalMidPopup();
+	makeSystemErrListDetailHtml(arr);
+}
+
+
+function sortMidTileContents(sort) {
+	var params 	= {
+		'SORT' : sort
+	};
+	
+	getAlarmDataList(params, makeMidTailHtml);
+}
+
+function sortSystemErrList(sort) {
+	var params 	= {
+		'SORT' : sort
+	};
+	
+	getSystemErrList(params);
+}
+
+function getAlarmDataList(param, func_callback) {
+	$.getJSON("<c:url value='/admin/lst_dash_system.select_system_mid_info.htm'/>", param, function(data){
+		console.log(data);
+		func_callback(data);
+	});
+}
+
+function getSystemErrList(param, func_callback) {
+	$.getJSON("<c:url value='/admin/lst_dash_system.select_system_err_list.htm'/>", param, function(data){
+		console.log(data);
+		makeSystemErrListHtml(data);
+	});
+}
+
+/**
+ * 미표시기간(일) 업데이트 
+ * tb_dash_alm_skip
+ */
+function updateSysErrDispSkip(ip, mon_id, idx) {
+	var skip_val	= $('#textfield_' + idx).val();
+	
+	if (skip_val == '') {
+		alert('미표시기간(일)을 입력하세요.');
+		return;
+	}
+	
+	if (mon_id == '') {
+		mon_id	= 0;
+	}
+	
+	var param	= {
+			'S_IP_ADDRESS' :	ip
+			, 'N_MON_ID' :		mon_id
+			, 'N_SKIP_VAL' :	skip_val
+			, 'S_USER' :		'${sessionScope.S_USER_ID}'
+	}
+	console.log(param);
+
+	$.getJSON("<c:url value='/admin/ins_dash_system.ins_alm_skip.htm'/>", param, function(data){
+		console.log(data);
+		alert('처리되었습니다.');
+		pageReload();
+	});
+}
+function exportDash() {
+	var n_group_code	= $('#hdn_big_region_code').val();
+	var sel_status		= $('select[name=SEL_STATUS]').val();
+	var search_type		= $('#SEARCH_TYPE').val();
+	var search_keyword	= $.trim($('#SEARCH_KEYWORD').val());
+	
+	location.href = '/admin/dash_file_export.htm?N_GROUP_CODE=' + n_group_code + '&SEL_STATUS=' + sel_status + '&SEARCH_TYPE=' + search_type + '&SEARCH_KEYWORD=' + search_keyword;
+}
+
+
+function clearBigPopup() {
+	$('select[name=SEL_STATUS]').val('');
+	$('#SEARCH_TYPE').val('S_GUBUN');
+	$.trim($('#SEARCH_KEYWORD').val(''));
+}
+function pageReload() {
+	location.href = s_url;
+}
+// 경과시간 처리 
+function splitToComponentTimes(second) {
+	var secondL		= second;
+	var nDay		= Math.floor(secondL / (60 * 60 * 24));
+ 	var nDayToSec	= Math.floor(nDay * (60 * 60 * 24));
+ 	secondL			= secondL - nDayToSec;
+	var nHours		= Math.floor(secondL / (60 * 60));
+	secondL			= Math.floor(secondL - nHours * (60 * 60));
+	var nMins		= Math.floor(secondL / 60);
+	secondL			= Math.floor(secondL - nMins * 60);
+	var nSec		= secondL;
+	var str			= '';
+	
+	if (nDay > 0)	{ str += nDay + '일 '; }
+	if (nHours > 0) { str += nHours + '시 '; }
+	if (nMins > 0)	{ str += nMins + '분 '; }
+	
+	return str;
+}
+
+</script>
+<script>
+	//센터 현황으로 이동 (장비)
+	function goCenterTotal() {
+		location.href ="/watcher/realtime_stats/component/center_total.htm";
+	}
+	//센터 현황으로 이동 (전화기)
+	function goCenterTotalPhone() {
+		location.href ="/watcher/realtime_stats/component/jijum_phone.htm";
+	}
+	
+	function goServerDetail(mon_id, group_code, alm_key) {
+		//setAlmMonInfo(mon_id, alm_key);
+		//var monId = targetError.N_MON_ID;
+		//var groupCode = targetError.N_GROUP_CODE;
+		var monId = mon_id;
+		var groupCode = group_code;
+		
+		//var leftNaviCountPerPage = parseInt('<spring:eval expression="@serviceProps['watcher.detail.navi.countperpage']"/>');
+		$.getJSON('<c:url value="/watcher/map_SvrLstByMonIdPageNum.htm"/>', {'MON_ID' : monId, 'N_GROUP_CODE' : groupCode}, function(data) {
+			var pageNum = "";
+			/*
+			if(parseInt(data.NUM % leftNaviCountPerPage) > 0) {
+				pageNum=parseInt(data.NUM / leftNaviCountPerPage) + 1;
+			} else {
+				pageNum=parseInt(data.NUM / leftNaviCountPerPage);
+			}
+			*/
+			var param = {'N_GROUP_CODE' : groupCode, 'N_MON_ID' : monId, pageNum : pageNum, tabStrip : "error"};
+			goMenu(document.getElementById('mnavi01_02'), param, 'E'); // watcher_template.jsp 에 선언되어있음.
+		});
+	}
+	
+	function goMenu(obj, parameter, menulink) {
+		var url, param = {}, imgSrc;
+
+		if (parameter) {
+			$.extend(param, parameter);
+		}
+
+ 		url = '/watcher/server_detail/monitoring.htm?menu=mnavi01_02&menulink=' + (menulink ? menulink : 'M');
+		location.href = url + '&' + $.param(param);
+	}
+	
+	function goRecoverError(mon_id, alm_key) {
+		setAlmMonInfo(mon_id, alm_key);
+		recoverError();
+	}
+	function goRecoverErrorPhone(ip_address) {
+		setAlmPhoneInfo(ip_address);
+		recoverError();
+	}
+</script>
+</head>
+
+<body>
+  <!--Wrapper-->
+  <div class="wrapper">
+    <!--Header-->
+    <div class="header">
+      <div class="logo fl">
+        <a href="/watcher/realtime_stats/component/center_total.htm?menu=mnavi01_01"><img src="/common/dashdaekyo/images/logo.png" alt="대교" /></a>
+      </div>
+      <div class="title fl">
+        <p class="maintit">IPT/IPCC 시스템 현황</p>
+      </div>
+      <div class="antena fl">
+        <img src="/common/dashdaekyo/images/antena01.gif" alt="작동중" />
+      </div>
+      <!--탭-->
+      <div class="tab fl">
+        <a class="on" href="/dashboard/dash_system_info.htm">시스템 현황</a>
+        <a class="" href="/dashboard/dash_service_info.htm">서비스 현황</a>"
+      </div>
+      <!--//탭-->
+      <div class="date_wrap fr">
+        <div class="play_pause mgr16">
+          <a id="reload_play" href="javascript:setReloadStart()"><img class="pdr6" src="/common/dashdaekyo/images/btn_play.png" alt="play"></a>
+          <a id="reload_stop" href="javascript:setReloadStop()"><img src="/common/dashdaekyo/images/btn_pause.png" alt="pause"></a>
+        </div>
+        <span id="dday"  class="date">2018.01.01(수)</span>
+        <span id="dtime" class="time">01:28</span>
+        <span id="ampm"  class="time_ap">PM</span>
+        <span class="setting"><a href="javascript:openPopup_Setting();"><img src="/common/dashdaekyo/images/btn_setting.png" alt="설정" /></a></span>
+      </div>
+    </div>
+    <!--//Header-->
+
+    <!--Content-->
+    <div class="content_wrapper">
+      <!-- 전국 전화기 현황 -->
+      <div class="phone_wrap">
+        <!-- title -->
+        <div class="panel_header">
+          <p class="p_title fl">전국 전화기 현황</p>
+          <div class="legend_wrap fr">
+            <ul class="legend">
+              <li class="mgr10"><span class="square blue_b"></span>정상</li>
+              <li><span class="square red"></span>장애</li>
+            </ul>
+          </div>
+        </div>
+        <!-- //title -->
+
+        <!-- map -->
+        <div class="map_area_wrap">
+          <div class="map_Seoul">
+            <div class="nor_cicle">
+				<a href="#">
+				<span class="area">서울</span>
+				<span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+          <div class="map_Sejong">
+            <div class="nor_cicle">
+              <a href="#">
+              <span class="area">세종</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+          <div class="map_Chung">
+            <div class="nor_cicle">
+              <a href="#">
+              <span class="area">충남</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+          <div class="map_Jeonbuk">
+            <div class="nor_cicle">
+              <a href="#">
+              <span class="area">전북</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+          <div class="map_Jeonnam">
+            <div class="nor_cicle">
+             <a href="#">
+              <span class="area">전남</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+          <div class="map_Jeju">
+            <div class="nor_cicle">
+             <a href="#">
+              <span class="area">제주</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="map_Gangwon">
+            <div class="nor_cicle">
+             <a href="#">
+              <span class="area">강원</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+          <div class="map_Gyeonggi">
+            <div class="nor_cicle">
+             <a href="#">
+              <span class="area">경기</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+          <div class="map_Chungbuk">
+            <div class="nor_cicle">
+             <a href="#">
+              <span class="area">충북</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+          <div class="map_Gyeongbuk">
+            <div class="nor_cicle">
+             <a href="#">
+              <span class="area">경북</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+          <div class="map_Gyeongsangnam">
+            <div class="nor_cicle">
+             <a href="#">
+              <span class="area">경남</span>
+              <span class="area_data">0</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- //map -->
+
+	<!-- 장애현황판 -->
+	<div class="board_wrapper">
+		<div class="legend_wrap fr">
+			<ul class="legend">
+				<li class="mgr10">전체 <span id="p_total_cnt">0</span></li>
+				<li class="mgr10"><span class="square blue_b"></span>정상 <span id="p_success_cnt">0</span></li>
+				<li><span class="square red"></span>장애 <span id="p_error_cnt">0</span></li>
+			</ul>
+		</div>
+
+		<div class="error_board fl">
+			<ul>
+				<li>
+	                <dl id="phs_1000">                
+	                  <dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('1000', '서울', '');">서울</span></dt>
+	                  <dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('1000', '서울', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('1000', '서울', 'S_ALARM');">0</span></dd>               
+	                </dl>
+	                <dl id="phs_2000" class="mgt18">
+						<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('2000', '경기', '');">경기</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('2000', '경기', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('2000', '경기', 'S_ALARM');">0</span></dd>
+	                </dl>
+	                <dl id="phs_8000" class="mgt18">
+						<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('8000', '세종', '');">세종</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('8000', '세종', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('8000', '세종', 'S_ALARM');">0</span></dd>
+	                </dl>
+				</li>
+				<li>
+					<dl id="phs_3000">
+						<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('3000', '강원', '');">강원</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('3000', '강원', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('3000', '강원', 'S_ALARM');">0</span></dd>
+					</dl>
+					<dl id="phs_4000" class="mgt18">
+						<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('4000', '충남', '');">충남</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('4000', '충남', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('4000', '충남', 'S_ALARM');">0</span></dd>                 
+					</dl>
+	                <dl id="phs_4500" class="mgt18">              
+						<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('4500', '충북', '');">충북</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('4500', '충북', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('4500', '충북', 'S_ALARM');">0</span></dd>
+	                </dl>
+				</li>
+				<li>
+	                <dl id="phs_6000">
+						<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('6000', '전남', '');">전남</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('6000', '전남', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('6000', '전남', 'S_ALARM');">0</span></dd>
+	                </dl>
+	                <dl id="phs_6500" class="mgt18">                
+	 					<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('6500', '전북', '');">전북</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('6500', '전북', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('6500', '전북', 'S_ALARM');">0</span></dd>
+	                </dl>
+	                <dl id="phs_5000" class="mgt18">               
+						<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('5000', '경남', '');">경남</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('5000', '경남', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('5000', '경남', 'S_ALARM');">0</span></dd>
+	                </dl>
+				</li>
+				<li>
+	                <dl id="phs_5500">                 
+						<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('5500', '경북', '');">경북</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('5500', '경북', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('5500', '경북', 'S_ALARM');">0</span></dd>
+	               </dl>
+					<dl id="phs_7000" class="mgt18">                 
+						<dt><span class="lamp_normal"></span><span style="cursor:pointer;" onclick="showModalBigPopup('7000', '제주', '');">제주</span></dt>
+						<dd><span class="nor_num" style="cursor:pointer;" onclick="showModalBigPopup('7000', '제주', 'S_NORMAL');">0</span><span class="error_num" style="cursor:pointer;" onclick="showModalBigPopup('7000', '제주', 'S_ALARM');">0</span></dd>
+					</dl>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<!-- //장애현황판 -->
+
+      </div>
+      <!-- //전국 전화기 현황 -->
+
+      <!-- 시스템 장애 현황 및 전화기 장애 현황 -->
+      <div class="system_wrapper">
+
+        <!-- 시스템 장애 현황 -->
+        <div class="system_error_wrap">
+          <!-- title -->
+          <div class="panel_header">
+            <p class="p_title fl">시스템 장애 현황</p>
+            <div class="legend_wrap fr mgr20">
+              <ul class="legend">
+                <li class="mgr10">전체 <span id="mon_tot_cnt">0</span></li>
+                <li class="mgr10"><span class="square blue_b"></span>정상 <span id="mon_succ_cnt">0</span></li>
+                <li class="mgr10"><span class="square yellow_b"></span>주의 <span id="alm_err_3">0</span></li>
+                <li class="mgr10"><span class="square orange_b"></span>경고 <span id="alm_err_2">0</span></li>
+                <li><span class="square red"></span>장애 <span id="alm_err_1">0</span></li>
+              </ul>
+            </div>
+          </div>
+          <!-- //title -->
+
+          <!-- 시스템 장애보드 -->
+          <div class="sys_er_cicle">
+            <ul>
+              <li class="pd24 b_nor_cicle" id="ser_cicle_1500">IPT<br>PBX</li>
+              <li class="pd24 b_nor_cicle" id="ser_cicle_1000">IPCC<br>PBX</li>
+              <li class="b_nor_cicle" id="ser_cicle_2000">CTI</li>
+              <li class="b_nor_cicle" id="ser_cicle_3000">IVR</li>
+              <li class="b_nor_cicle" id="ser_cicle_5000">CRS</li>
+              <li class="b_nor_cicle" id="ser_cicle_7000">FAX</li>
+              <li class="b_nor_cicle" id="ser_cicle_3500">REC</li>
+              <li class="b_nor_cicle" id="ser_cicle_8000">본사 VG</li>
+              <li class="b_nor_cicle" id="ser_cicle_8500">전국 VG</li>
+            </ul>
+
+            <p class="sys_er_cicle_stit mgr20 mgb10">
+            	<span style="cursor:pointer;" onclick="sortSystemErrList(2);">장애발생시간</span>/<span style="cursor:pointer;" onclick="sortSystemErrList(1);">경과시간</span>
+            </p>
+
+            <!-- 스크롤 -->
+            <div id="sys_err_list" class="conscroll">
+            </div>
+            <!-- //스크롤 -->
+
+          </div>
+          <!-- //시스템 장애보드 -->
+        </div>
+        <!-- 시스템 장애 현황 -->
+
+        <!-- 전화기 장애 현황 -->
+        <div class="call_error_wrap">
+          <!-- title -->
+          <div class="panel_header">
+            <p class="p_title fl">전화기 장애 현황</p>
+            <p class="sys_er_cicle_stit fr mgr20 mgb10">
+            	<span style="cursor:pointer;" onclick="sortMidTileContents(2);">장애발생시간</span>/<span style="cursor:pointer;" onclick="sortMidTileContents(1);">경과시간</span>
+            </p>
+          </div>
+          <!-- //title -->
+
+          <!-- 전화기 장애보드-->
+          <!-- 스크롤 -->
+          <div id="sys_alarm_mid_tail_contents" class="conscroll"></div>
+          <!-- //스크롤 -->
+
+          <!-- //전화기 장애보드-->
+        </div>
+        <!-- //전화기 장애 현황 -->
+        
+      </div>
+      <!-- //시스템 장애 현황 및 전화기 장애 현황 -->
+      <!--//Content-->
+    </div>
+  </div>
+  <!--//Wrapper -->
+   
+  
+	<!-- 모달팝업 mid-->
+	<div id="myModal_mid" class="popup_wrap_mid mid" style="display:none;">
+		<!-- Top -->
+		<div class="top">
+			<a class="close close-reveal-modal" href="javascript:closeMidPopup();"><img src="/common/dashdaekyo/images/btn_close.png" alt="닫기"></a>
+		</div>
+		<!-- //Top -->
+		<!-- Content -->
+		<form id="frmList" name="frmList">
+			<div class="content" id="sys_alarm_mid_contents"></div>
+		</form>
+		<!-- //Content -->
+	</div>
+	<!-- //모달팝업 mid-->
+	
+	<!-- 모달팝업 big-->
+	<div id="myModal_big" class="popup_wrap_big big" style="display:none;">
+	<div class="popup_wrap_big">
+		<div class="top">
+			<a class="close close-reveal-modal" id="modal_big_close" href="javascript:closeBigPopup();"><img src="/common/dashdaekyo/images/btn_close.png" alt="닫기"></a>
+			<p class="pop_big_tit">전국 전화기 현황</p>
+		</div>
+		<div class="content">
+			<div class="form_wrap mgb15">
+				<ul>
+					<li class="line"><span id="big_region">서울</span></li>
+					<li class="mgl12">구분
+			            <select class="form_control" name="SEARCH_TYPE" value="${param.SEARCH_TYPE}" id="SEARCH_TYPE">
+							<option value="S_GUBUN">구분</option>
+			          		<option value="S_NAME">지점명</option>
+			          		<option value="S_RUNNING">러닝명</option>
+			          		<option value="S_EXT_NUM">내선번호</option>
+			          		<option value="S_IP_ADDRESS">IP주소</option>
+			          		<option value="S_ADDRESS">주소</option>
+						</select>           
+						<input class="form_control mgl2" type="text" name="SEARCH_KEYWORD" id="SEARCH_KEYWORD" value="${param.SEARCH_KEYWORD}">
+					</li>
+					<li class="mgl15">상태
+			            <select class="form_control" name="SEL_STATUS">
+							<option value="">전체</option>
+							<option value="S_ALARM">장애</option>
+							<option value="S_NORMAL">정상</option>
+			            </select> 
+					</li>
+					<li class="mgl2"><a href="#" class="btn_search" id="btn_search_modal_big">검색</a></li>
+					<li class="mgl53"><a class="btn_export" href="javascript:exportDash();">Export</a></li>
+				</ul>
+				</div>
+				<div class="popB_tbl_wrap">
+					<div id="dash_big_alarm_grid" class="table_typ2-4" style="float:left;"></div>
+				</div>
+				<input type="hidden" id="hdn_big_region_code" name="hdn_big_region_code" value="" />
+    		</div>
+		</div>
+    <!-- //Content -->
+	</div>
+   <!-- 모달팝업 big-->
+   
+   <jsp:include page="dash_error_popup.jsp"></jsp:include>
+
+</body>
+</html>

@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="snmp_map">
+  	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+  <select id="select_list" resultType="hashmap" parameterType="hashmap">
+	SELECT /* snmp_map.select_list */ *, @NUM AS TOTAL_COUNT FROM (
+			SELECT
+	  				@NUM := @NUM + 1 NUM
+    				, N_MON_ID||N_SNMP_MAN_CODE||N_SNMP_MON_CODE KEY_COL, N_MON_ID, N_SNMP_MAN_CODE, N_SNMP_MON_CODE, N_TIMEM
+    				, SNMP_MAN_NAME, SNMP_MON_NAME, S_MON_NAME, GROUP_NAME, TYPE_NAME, S_MON_IP
+    		FROM
+					(
+					 	SELECT
+								A.N_MON_ID, A.N_SNMP_MAN_CODE, A.N_SNMP_MON_CODE, A.N_TIMEM, B.N_GROUP_CODE, B.N_TYPE_CODE, B.S_MON_IP
+								, (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME
+								, (SELECT S_DESC FROM TB_SNMP_MAN_CODE WHERE N_SNMP_MAN_CODE = A.N_SNMP_MAN_CODE) SNMP_MAN_NAME
+								, (SELECT S_DESC FROM TB_SNMP_MON_CODE WHERE N_SNMP_MAN_CODE = A.N_SNMP_MAN_CODE AND N_SNMP_MON_CODE = A.N_SNMP_MON_CODE) SNMP_MON_NAME
+								, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = B.N_GROUP_CODE AND F_USE = 'Y') GROUP_NAME
+								, (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = B.N_TYPE_CODE) TYPE_NAME
+						FROM
+								TB_SNMP_MAP A LEFT OUTER JOIN TB_MON_INFO B ON A.N_MON_ID = B.N_MON_ID
+					) A
+					, (SELECT @NUM := 0) R
+			<where>				
+				<if test="N_MON_ID != '' and N_MON_ID != null">
+					AND N_MON_ID = #{N_MON_ID} 
+				</if>
+				<if test="N_SNMP_MAN_CODE != '' and N_SNMP_MAN_CODE != null">
+					AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} 
+				</if>
+				<if test="N_SNMP_MON_CODE != '' and N_SNMP_MON_CODE != null">
+					AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE} 
+				</if>
+				<if test="N_GROUP_CODE != null and N_GROUP_CODE != ''">
+					AND N_GROUP_CODE = #{N_GROUP_CODE}
+				</if>
+				<if test="N_TYPE_CODE != null and N_TYPE_CODE != ''">
+					AND N_TYPE_CODE = #{N_TYPE_CODE}
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'ID'">
+					AND N_MON_ID LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'NM'">
+					AND S_MON_NAME LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'IP'">
+					AND S_MON_IP LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>				
+			</where>
+	  ) X
+	  ORDER BY
+	  <if test="sort == null">N_MON_ID, SNMP_MAN_NAME, SNMP_MON_NAME</if>
+	  <if test="sort != null">
+		  <choose>
+			  <when test="sort.size() == 0">
+				  N_MON_ID, SNMP_MAN_NAME, SNMP_MON_NAME
+			  </when>
+			  <otherwise>
+				  <include refid="SQL_OderBy"/>
+			  </otherwise>
+		  </choose>
+	  </if>
+	  LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+  </select>
+  
+  <select id="select_snmp_data_yn" resultType="hashmap" parameterType="hashmap">
+			SELECT COUNT(*) CNT
+			  FROM TB_SNMP_MAP
+			 WHERE N_MON_ID = #{N_MON_ID}
+			   AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE}
+			   AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+  </select>
+  
+  <insert id="insert_data" parameterType="hashmap" statementType="PREPARED">
+  		INSERT INTO TB_SNMP_MAP(N_MON_ID, N_SNMP_MAN_CODE, N_SNMP_MON_CODE, N_TIMEM)
+  		VALUES (#{N_MON_ID}, #{N_SNMP_MAN_CODE}, #{N_SNMP_MON_CODE}, #{N_TIMEM})
+  </insert>
+  
+  <update id="update_data" parameterType="hashmap" statementType="PREPARED">
+  		UPDATE TB_SNMP_MAP
+  		SET 
+  			N_TIMEM = #{N_TIMEM}
+  		WHERE
+			N_MON_ID = #{N_MON_ID} AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+  </update>
+  
+  <delete id="delete_data" parameterType="hashmap" statementType="PREPARED">
+  		DELETE FROM TB_SNMP_MAP
+  		WHERE N_MON_ID = #{N_MON_ID}
+  		<if test="N_SNMP_MAN_CODE != '' and N_SNMP_MAN_CODE != null">
+  		  AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE}
+  		</if>  
+  		<if test="N_SNMP_MON_CODE != '' and N_SNMP_MON_CODE != null">
+  		  AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+  		</if>  
+  </delete>
+  
+  <select id="dul_chk" resultType="hashMap" parameterType="hashmap">   	
+    		SELECT
+    				COUNT(*) CNT
+    		FROM 
+					TB_SNMP_MAP
+			WHERE
+					N_MON_ID = #{N_MON_ID} 
+					<if test="N_SNMP_MON_CODE != '' and N_SNMP_MON_CODE != null">
+						AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} 
+					</if>
+					<if test="N_SNMP_MON_CODE != '' and N_SNMP_MON_CODE != null">
+						AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+					</if>
+  </select>
+  
+  <select id="dul_detail_chk" resultType="hashMap" parameterType="hashmap">   	
+    		SELECT
+    				COUNT(*) CNT
+    		FROM 
+					TB_SNMP_MAP
+			WHERE
+					N_MON_ID = #{N_MON_ID} 
+					AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE}
+					<if test="N_SNMP_MON_CODE != '' and N_SNMP_MON_CODE != null">
+						AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+					</if>
+  </select>
+  
+  <select id="detail_info" resultType="hashmap" parameterType="hashmap">
+  			SELECT
+    			N_MON_ID,
+			    (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME,
+			    N_SNMP_MAN_CODE,
+			    (SELECT S_DESC FROM TB_SNMP_MAN_CODE WHERE N_SNMP_MAN_CODE = A.N_SNMP_MAN_CODE) N_SNMP_MAN_NAME, 
+			    N_SNMP_MON_CODE,
+			    (SELECT S_DESC FROM TB_SNMP_MON_CODE  WHERE N_SNMP_MAN_CODE = A.N_SNMP_MAN_CODE AND N_SNMP_MON_CODE = A.N_SNMP_MON_CODE) N_SNMP_MON_NAME,  
+			    N_TIMEM, 
+			    N_SNMP_MON_CODE AS OLD_N_SNMP_MON_CODE
+    		FROM 
+					TB_SNMP_MAP A
+			WHERE
+					N_MON_ID = #{N_MON_ID} AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} AND N_SNMP_MON_CODE = #{N_SNMP_MON_CODE}
+  </select>
+    
+  <select id="select_equipmentList" resultType="hashmap" parameterType="hashmap">
+			SELECT /* snmp_map.select_equipmentList */ @NUM AS TOTAL_COUNT, X.*
+			FROM(
+				SELECT @NUM := @NUM + 1 NUM, A.*
+				FROM(
+					SELECT	A.N_MON_ID,
+				   			A.S_MON_NAME,
+				   		 	B.N_SNMP_MAN_CODE
+					FROM TB_MON_INFO A
+					     , TB_SNMP_INFO B
+					WHERE A.N_MON_ID = B.N_MON_ID
+					<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">
+				    	AND A.N_GROUP_CODE = #{N_GROUP_CODE}
+					</if>
+					<if test="N_SNMP_MAN_CODE != '' and N_SNMP_MAN_CODE != null">
+					   AND B.N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE}
+					</if>						 
+				) A
+				, (SELECT @NUM := 0) R
+				ORDER BY A.S_MON_NAME
+			) X
+			LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+  </select>
+  
+  <select id="select_equipmentList_detail" resultType="hashmap" parameterType="hashmap">
+			SELECT FOUND_ROWS() AS TOTAL_COUNT, 
+				   A.N_SNMP_MAN_CODE,
+			       A.N_SNMP_MON_CODE,
+			       A.S_DESC,
+			       COALESCE(B.N_MON_ID, -1) AS CHK_VAL,
+			       CASE WHEN B.N_TIMEM IS NULL
+						THEN A.N_TIMEM
+						ELSE B.N_TIMEM
+				   END AS N_TIMEM
+		   FROM TB_SNMP_MON_CODE A
+			   	LEFT OUTER JOIN TB_SNMP_MAP B
+		   ON A.N_SNMP_MAN_CODE = B.N_SNMP_MAN_CODE
+		   AND A.N_SNMP_MON_CODE = B.N_SNMP_MON_CODE
+		   AND B.N_MON_ID = #{N_MON_ID}
+		   WHERE A.N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE}
+		   ORDER BY A.N_SNMP_MON_CODE
+  </select>
+  
+  <select id="select_process_mon_map" resultType="hashmap" parameterType="hashmap">
+	SELECT S_MAP_KEY ,S_MON_NAME, S_ALIAS
+	FROM TB_MON_MAP_ALIAS
+	WHERE N_MON_ID = #{N_MON_ID} 
+		AND N_MON_TYPE = '3'
+  </select>
+  
+  <insert id="insert_mon_map" parameterType="hashmap" statementType="PREPARED">
+  		INSERT INTO TB_MON_MAP(
+  			S_MAP_KEY, N_MON_ID, N_MON_TYPE, F_USE, S_MON_NAME
+  			<if test="S_ALIAS != '' and S_ALIAS != null">
+  				, S_ALIAS
+  			</if>
+  		)
+  		VALUES(
+  			#{S_MAP_KEY}, #{N_MON_ID}, #{N_MON_TYPE}, 'Y', #{S_MON_NAME}
+  			<if test="S_ALIAS != '' and S_ALIAS != null">
+  				, #{S_ALIAS}
+  			</if>
+  		)
+  </insert>
+  
+  <insert id="insert_mon_map_alias" parameterType="hashmap" statementType="PREPARED">
+  		INSERT INTO TB_MON_MAP_ALIAS(
+  			S_MAP_KEY, N_MON_ID, N_MON_TYPE, F_THRESHOLD, S_MON_NAME
+  			<if test="S_ALIAS != '' and S_ALIAS != null">
+  				, S_ALIAS
+  			</if>
+  			, F_DAEMON
+  		)
+  		VALUES(
+  			#{S_MAP_KEY}, #{N_MON_ID}, #{N_MON_TYPE}, 'Y', #{S_MON_NAME}
+  			<if test="S_ALIAS != '' and S_ALIAS != null">
+  				, #{S_ALIAS}
+  			</if>
+  			, #{F_DAEMON}
+  		)
+  </insert>
+  
+  <delete id="delete_mon_map" parameterType="hashmap" statementType="PREPARED">
+  		DELETE FROM TB_MON_MAP
+  		WHERE N_MON_ID = #{N_MON_ID} AND N_MON_TYPE = '3'
+  </delete>  
+  
+  <delete id="delete_mon_map_alias" parameterType="hashmap" statementType="PREPARED">
+  		DELETE FROM TB_MON_MAP_ALIAS
+  		WHERE N_MON_ID = #{N_MON_ID} AND N_MON_TYPE = '3'
+  </delete>
+</mapper>

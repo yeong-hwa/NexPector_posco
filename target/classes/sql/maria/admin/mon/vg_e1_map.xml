@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="vg_e1_map">
+  	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+	
+	<!-- 서버그룹 조회 SQL-->
+	<sql id="SQL_ServerGrouup">
+		WITH /* vg_e1_map.SQL_ServerGrouup */
+			TREE_DATA AS
+		(
+			SELECT A.N_GROUP_CODE, A.S_GROUP_NAME, COALESCE(A.N_UP_CODE, 0) AS N_UP_CODE,
+               		LEVEL DEPTH , SUBSTR(SYS_CONNECT_BY_PATH(N_GROUP_CODE, ''','''), 3) || '''' CODE_LIST
+          	FROM TB_SVR_GROUP A
+            WHERE F_USE = 'Y'
+            <choose>
+            	<when test="N_GROUP_CODE != '' and N_GROUP_CODE != null">
+            		START WITH N_GROUP_CODE = #{N_GROUP_CODE}
+            	</when>
+            	<otherwise>
+            		START WITH N_UP_CODE IS NULL
+            	</otherwise>
+            </choose>
+          	CONNECT BY PRIOR N_GROUP_CODE = N_UP_CODE
+		)
+		SELECT N_GROUP_CODE 
+		     , S_GROUP_NAME
+		     , N_UP_CODE
+		     , DEPTH
+		     , CODE_LIST
+		FROM TREE_DATA
+	</sql>
+	
+	<!-- 부서조회 SQL -->
+	<sql id="SQL_Dept">
+		WITH /* vg_e1_map.SQL_DEPT */
+		TREE_DATA AS
+		(
+		SELECT A.GROUP_CODE, A.GROUP_NAME, UPPER, JUM_CODE,
+		             LEVEL DEPTH , SUBSTR(SYS_CONNECT_BY_PATH(GROUP_CODE, '/'), 2) PARENT_CODE
+		      FROM TB_ORG_INFO A
+		      WHERE A.USE_YN = 'Y'
+		      START WITH UPPER = 'TOP'
+		      CONNECT BY PRIOR GROUP_CODE = UPPER
+		)
+		SELECT GROUP_CODE CODE 
+		     , LPAD('　', ((DEPTH-1)*2), '　')||GROUP_NAME VAL
+		     , GROUP_CODE
+		     , GROUP_NAME 
+		     , JUM_CODE
+		FROM TREE_DATA
+	</sql>
+	
+  <select id="select_comboServerList" resultType="hashmap" parameterType="hashmap">
+  	SELECT N_GROUP_CODE AS CODE
+  	     , LPAD('　', ((DEPTH-1)*2), '　')|| S_GROUP_NAME VAL
+  	     , CODE_LIST
+  	FROM (<include refid="SQL_ServerGrouup"/>)
+  </select>
+	
+  <select id="select_list" resultType="hashmap" parameterType="hashmap">
+	SELECT * FROM (
+			SELECT
+	  				ROW_NUMBER() OVER (ORDER BY
+										  <choose>
+											  <when test="sort == null or sort.size() == 0">
+												  N_MON_ID, N_INDEX
+											  </when>
+											  <otherwise>
+												  <include refid="SQL_OderBy"/>
+											  </otherwise>
+										  </choose>
+										) NUM
+					, FOUND_ROWS() AS TOTAL_COUNT
+    				, A.*
+    		FROM
+					(
+						SELECT MI.N_MON_ID
+						     , MI.S_MON_NAME
+						     , MI.S_MON_IP
+						     , MI.N_GROUP_CODE
+						     , SG.S_GROUP_NAME
+						     , SRMI.N_INDEX
+						     , SRMI.S_DESC
+						     , SRMEM.JUM_CODE
+						     , SRMEM.GROUP_NAME
+						  FROM TB_MON_INFO MI
+							 , (<include refid="SQL_ServerGrouup"/>) SG
+							 , TB_SNMP_REAL_M03_IF SRMI
+							 , (SELECT SRMEM.N_MON_ID
+							         , SRMEM.N_INDEX
+							         , SRMEM.JUM_CODE
+							         , OI.GROUP_NAME
+							    FROM TB_SNMP_REAL_M03_E1_MAPPING SRMEM
+							       , (SELECT DISTINCT
+							                 IF(STRCMP((SUBSTR(GROUP_CODE, 1, 1), 'A'), '본점', GROUP_NAME) AS GROUP_NAME
+							               , JUM_CODE
+							          FROM TB_ORG_INFO OI
+							          WHERE OI.USE_YN = 'Y') OI
+							    WHERE SRMEM.JUM_CODE = OI.JUM_CODE) SRMEM   
+						    WHERE MI.N_GROUP_CODE = SG.N_GROUP_CODE
+						    AND   MI.N_MON_ID = SRMI.N_MON_ID
+						    AND   SRMI.N_TYPE = '18'
+						    AND   SRMI.N_MON_ID = SRMEM.N_MON_ID(+)
+						    AND   SRMI.N_INDEX = SRMEM.N_INDEX(+)
+						    <if test="N_MON_ID != null and N_MON_ID != ''">
+								AND MI.N_MON_ID LIKE = #{N_MON_ID}
+							</if>
+							<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'ID'">
+								AND MI.N_MON_ID LIKE '%' || #{SEARCH_KEYWORD} || '%'
+							</if>
+							<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'NM'">
+								AND MI.S_MON_NAME LIKE '%' || #{SEARCH_KEYWORD} || '%'
+							</if>
+							<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'IP'">
+								AND MI.S_MON_IP LIKE '%' || #{SEARCH_KEYWORD} || '%'
+							</if>				
+					) A
+	  ) X
+	  WHERE num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
+  </select>
+
+  <!-- VG 장비 리스트 -->
+  <select id="select_equipmentList" resultType="hashmap" parameterType="hashmap">
+		SELECT *
+		 FROM(SELECT ROW_NUMBER() OVER (
+		                 ORDER BY A.S_MON_NAME ) NUM ,
+		             FOUND_ROWS() AS TOTAL_COUNT,
+		             A.*
+			   FROM(SELECT MI.N_GROUP_CODE
+					     , SG.S_GROUP_NAME
+					     , MI.N_MON_ID
+					     , MI.S_MON_NAME
+					FROM TB_MON_INFO MI
+					   , (<include refid="SQL_ServerGrouup"/>) SG
+					WHERE MI.N_GROUP_CODE = SG.N_GROUP_CODE
+					AND EXISTS (SELECT N_MON_ID
+					            FROM TB_SNMP_REAL_M03_IF SRMI
+					            WHERE SRMI.N_MON_ID = MI.N_MON_ID
+					            AND SRMI.N_TYPE = '18')
+			) A) X
+		 WHERE NUM BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
+  </select>
+  
+  <!-- VG 장비 E1 리스트 -->
+  <select id="select_equipmentE1List" resultType="hashmap" parameterType="hashmap">
+		SELECT MI.N_MON_ID
+		     , MI.S_MON_NAME
+		     , MI.S_MON_IP
+		     , MI.N_GROUP_CODE
+		     , SG.S_GROUP_NAME
+		     , SRMI.N_INDEX
+		     , SRMI.S_DESC
+		     , COALESCE(SRMEM.JUM_CODE, -1) AS CHK_VAL
+		     , COALESCE(SRMEM.JUM_CODE, ' ') AS JUM_CODE
+		     , COALESCE(SRMEM.GROUP_NAME, ' ') AS GROUP_NAME
+		     , FOUND_ROWS() AS TOTAL_COUNT
+		  FROM TB_MON_INFO MI
+			 , (<include refid="SQL_ServerGrouup"/>) SG
+			 , TB_SNMP_REAL_M03_IF SRMI
+			 , (SELECT SRMEM.N_MON_ID
+			         , SRMEM.N_INDEX
+			         , SRMEM.JUM_CODE
+			         , OI.GROUP_NAME
+			    FROM TB_SNMP_REAL_M03_E1_MAPPING SRMEM
+			       , (SELECT DISTINCT
+	  						 IF(STRCMP(SUBSTR(GROUP_CODE, 1, 1), 'A'), '본점', GROUP_NAME) AS GROUP_NAME
+			               , JUM_CODE
+			          FROM TB_ORG_INFO OI
+			          WHERE OI.USE_YN = 'Y') OI
+			    WHERE SRMEM.JUM_CODE = OI.JUM_CODE) SRMEM   
+		    WHERE MI.N_GROUP_CODE = SG.N_GROUP_CODE
+		    AND   MI.N_MON_ID = SRMI.N_MON_ID
+		    AND   SRMI.N_TYPE = '18'
+		    AND   SRMI.N_MON_ID = SRMEM.N_MON_ID(+)
+		    AND   SRMI.N_INDEX = SRMEM.N_INDEX(+)
+			AND   MI.N_MON_ID = #{N_MON_ID}
+			ORDER BY SRMI.N_MON_ID, SRMI.N_INDEX		
+  </select>
+    
+  <select id="select_comboOrgInfo" resultType="hashmap" parameterType="hashmap">
+		<include refid="SQL_Dept"/>
+  </select>
+  
+  <insert id="save_vg_e1_mapping" parameterType="hashmap" statementType="PREPARED">
+  		<![CDATA[
+	  		MERGE INTO TB_SNMP_REAL_M03_E1_MAPPING
+			USING DUAL
+			ON ( N_MON_ID = #{N_MON_ID} AND N_INDEX = #{N_INDEX} )
+			WHEN MATCHED THEN
+			  UPDATE SET JUM_CODE = #{JUM_CODE}
+			WHEN NOT MATCHED THEN 
+			  INSERT (N_MON_ID, N_INDEX, JUM_CODE)
+			  VALUES (#{N_MON_ID}, #{N_INDEX}, #{JUM_CODE})
+		]]>
+  </insert>
+  
+  <delete id="delete_vg_e1_mapping" parameterType="hashmap" statementType="PREPARED">
+  		<![CDATA[
+			DELETE FROM TB_SNMP_REAL_M03_E1_MAPPING
+	  		WHERE N_MON_ID = #{N_MON_ID} 
+	  		AND N_INDEX = #{N_INDEX}
+  		]]>
+  </delete>  
+</mapper>

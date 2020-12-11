@@ -1,0 +1,73 @@
+@charset "utf-8";
+
+/*=========================================================
+사이트 서브레이아웃 css정의 / kipilco
+===========================================================*/
+
+/*container*/
+.container{width:1000px; float:left; margin:0 0 0 0px;}
+.container .cont_top{width:1000px; height:14px; background:url(../image/common/container_topbg.gif) no-repeat; float:left;}
+.container .cont_mid{width:1000px; min-height:600px; background:url(../image/common/container_midbg.gif) repeat-y; float:left;}
+.container .cont_bot{width:1000px; height:1px; background:url(../image/common/container_botbg.gif) no-repeat left bottom; float:left;}
+
+.container2{width:1000px; float:left; margin:0 0 0 0px;}
+.container2 .cont_top{width:1000px; height:14px; background:url(../image/common/container_topbg.gif) no-repeat; float:left;}
+.container2 .cont_mid{width:1000px; min-height:600px; background:url(../image/common/container_midbg.gif) repeat-y; float:left;}
+.container2 .cont_bot{width:1000px; height:14px; background:url(../image/common/container_botbg.gif) no-repeat; float:left;}
+
+/*서브배경_타이틀_로케이션*/
+.subBg1{width:759px; height:192px; background:url(../image/common/subBg1.jpg) no-repeat; float:left; margin:0 0 0 20px;}
+.subBg1 .location{padding:20px 0 0 0px; font-size:11px;}
+.subBg1 .titleBox{width:100%; float:left; margin:65px 0 0 0px;}
+.subBg1 .titleBox .title{margin:0; padding:0px;}
+.subBg1 .titleBox .copy_ex{padding:10px 0 0 0px;}
+
+.subBg2{width:759px; height:192px; background:url(../image/common/subBg2.jpg) no-repeat; float:left; margin:0 0 0 20px;}
+.subBg2 .location{padding:20px 0 0 0px; font-size:11px;}
+.subBg2 .titleBox{width:100%; float:left; margin:65px 0 0 0px;}
+.subBg2 .titleBox .title{margin:0; padding:0px;}
+.subBg2 .titleBox .copy_ex{padding:10px 0 0 0px;}
+
+.subBg3{width:759px; height:192px; background:url(../image/common/subBg3.jpg) no-repeat; float:left; margin:0 0 0 20px;}
+.subBg3 .location{padding:20px 0 0 0px; font-size:11px;}
+.subBg3 .titleBox{width:100%; float:left; margin:65px 0 0 0px;}
+.subBg3 .titleBox .title{margin:0; padding:0px;}
+.subBg3 .titleBox .copy_ex{padding:10px 0 0 0px;}
+
+.subBg4{width:759px; height:192px; background:url(../image/common/subBg4.jpg) no-repeat; float:left; margin:0 0 0 20px;}
+.subBg4 .location{padding:20px 0 0 0px; font-size:11px;}
+.subBg4 .titleBox{width:100%; float:left; margin:65px 0 0 0px;}
+.subBg4 .titleBox .title{margin:0; padding:0px;}
+.subBg4 .titleBox .copy_ex{padding:10px 0 0 0px;}
+
+.subBg5{width:759px; height:192px; background:url(../image/common/subBg5.jpg) no-repeat; float:left; margin:0 0 0 20px;}
+.subBg5 .location{padding:20px 0 0 0px; font-size:11px;}
+.subBg5 .titleBox{width:100%; float:left; margin:65px 0 0 0px;}
+.subBg5 .titleBox .title{margin:0; padding:0px;}
+.subBg5 .titleBox .copy_ex{padding:10px 0 0 0px;}
+
+.subBg6{width:759px; height:192px; background:url(../image/common/subBg6.jpg) no-repeat; float:left; margin:0 0 0 20px;}
+.subBg6 .location{padding:20px 0 0 0px; font-size:11px;}
+.subBg6 .titleBox{width:100%; float:left; margin:65px 0 0 0px;}
+.subBg6 .titleBox .title{margin:0; padding:0px;}
+.subBg6 .titleBox .copy_ex{padding:10px 0 0 0px;}
+
+
+/*left_bannerBox*/
+.left_bannerBox{width:198px; float:left; padding:100px 0 20px 0px; border-top:1px solid #d9d9d9; border-bottom:1px solid #d9d9d9;}
+.left_bannerBox .title_suject{border-top:1px solid #d9d9d9; border-bottom:1px solid #d9d9d9; background:#f4f4f4; height:30px; line-height:30px; color:#231f20;
+padding-left:10px; font-size:10pt;}
+.left_bannerBox .ex_pdu{width:168px; float:left; margin:0 0 0 15px;}
+.left_bannerBox .ex_pdu .img_pdu{padding:0 0 0 0px;}
+.left_bannerBox .ex_pdu .img_pdu img{border:1px solid #d9d9d9;}
+.left_bannerBox .ex_pdu .name_pdu{text-align:center; border-bottom:1px solid #d9d9d9; height:30px; line-height:30px; color:#231f20; font-size:10pt;}
+.left_bannerBox .txt_pdu p{padding:10px 0px;}
+.left_bannerBox .txt_pdu strong{color:#231f20; font-size:10pt;}
+.left_bannerBox .txt_pdu span{line-height:16px; display:inline-block; padding:0 0 10px 0px; width:168px;}
+
+
+
+/*본문내용시작*/
+.contents_box{width:759px; float:left; margin:20px 0 0 20px; padding:0 0 0px 0px;}
+.contents_box .title_box_list{width:100%; position:relative;}
+.contents_box .title_box_list .w_btn{position:absolute; right:0px;}

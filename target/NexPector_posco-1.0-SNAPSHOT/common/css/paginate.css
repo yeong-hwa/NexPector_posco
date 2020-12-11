@@ -1,0 +1,52 @@
+/* UI Object */
+.paginate_complex{line-height:normal;text-align:center; background-color:#f9f9f9; border-left:1px solid #cacaca; border-right:1px solid #cacaca; border-bottom:1px solid #cacaca; border-top:1px solid #eaeaea; height:22px; padding-top:4px; vertical-align:middle;}
+.paginate_complex a,
+.paginate_complex strong{display:inline-block;position:relative;z-index:2;margin:0 -3px;padding:1px 6px;border-left:1px solid #d6d6d6;border-right:1px solid #d6d6d6;font:bold 12px/16px Gulim, Tahoma, Sans-serif;color:#323232;text-decoration:none;vertical-align: middle}
+.paginate_complex a{color:#777;/*outline:none;*/}
+.paginate_complex a:link{color:#777;text-decoration:none;}
+.paginate_complex a:visited{color:#777;text-decoration:none;}
+.paginate_complex a:hover,
+.paginate_complex a:active,
+.paginate_complex a:focus{}
+.paginate_complex strong{color:#2fbdd3}
+.paginate_complex .direction{border:0;font-weight:normal;color:#767676;text-decoration:none !important;z-index:1}
+.paginate_complex .direction:hover,
+.paginate_complex .direction:active,
+.paginate_complex .direction:focus{color:#323232;}
+.paginate_complex .prev{border-left:0}
+.paginate_complex .next{border-right:0}
+.paginate_complex .direction span{display:inline-block;position:relative;top:4px;width:0;height:0;font-size:0;line-height:0;vertical-align:top;}
+.paginate_complex .prev span{*left:-4px;margin-right:1px;border:3px solid;border-top:solid #fff;border-bottom:solid #fff;border-left:0; vertical-align:middle; margin-bottom:8px;}
+.paginate_complex .next span{margin-left:1px;border:3px solid;border-top:solid #fff;border-bottom:solid #fff;border-right:0; vertical-align:middle; margin-bottom:8px;}
+/* //UI Object */
+
+
+
+/* UI Object */
+.paginate_simple{padding:7px 0;text-align:center;line-height:normal;}
+.paginate_simple *{display:inline-block;position:relative;margin:0 -2px;padding:2px 4px;font-size:12px;color:#333;line-height:normal;text-decoration:none;vertical-align:middle}
+.paginate_simple a {color:#d0d0d0 !important}
+.paginate_simple a:hover
+.paginate_simple a:active,
+.paginate_simple a:focus,
+.paginate_simple strong{color:#5dc0ff}
+.paginate_simple .direction{padding:0 6px;font-weight:bold;font-size:14px;color:#d0d0d0;text-align:center}
+.paginate_simple .direction:hover,
+.paginate_simple .direction:active,
+.paginate_simple .direction:focus{background-color:transparent !important;color:#c1c1c1}
+.paginate_simple .direction span{overflow:hidden;visibility:hidden;position:absolute;top:0;left:0;width:1px;height:1px;font-size:0;line-height:0}
+/* //UI Object */
+
+
+
+/* small */
+.paginate_s{padding:10px 0;text-align:center}
+.paginate_s a img{border:none;vertical-align:middle;_vertical-align:top}
+.paginate_s a,.paginate_s strong{display:inline-block;position:relative;_width /**/:18px;margin-left:-6px;padding:2px 6px 3px 7px;background:url(../images/paging/line_pg2.gif) no-repeat 0 50%;color:#333;font-family:Tahoma;font-size:11px ;line-height:normal;text-decoration:none;vertical-align:middle}
+.paginate_s a:hover{text-decoration:underline}
+.paginate_s strong{color:#f60 !important;font-weight:bold}
+.paginate_s .frst{background:none}
+.paginate_s a.pre,.paginate a.next{padding:0;background:none !important}
+.paginate_s a.pre{margin:0 3px 0 4px}
+.paginate_s a.next{margin:0 3px 0 -3px}
+/* //small */

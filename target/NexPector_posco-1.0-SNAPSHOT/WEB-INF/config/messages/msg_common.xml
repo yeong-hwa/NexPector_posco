@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<entry key="common.title">김제 국립청소년 수련원 학습평가 시스템</entry>
+	
+	<!-- 로그인 -->
+	
+	<entry key="common.login.loginId">로그인</entry>
+    <entry key="common.login.password">패스워드</entry>
+	<entry key="common.login.inputLoginId">ID를 입력해 주세요.</entry>
+    <entry key="common.login.inputPassword">패스워드를 입력해 주세요.</entry>
+    <entry key="common.login.notExistLoginInfo">아이디/패스워드를 확인하세요.</entry>
+	
+	<!-- 사용자관리 -->
+	
+	<!-- 권한 관리 -->
+	
+		
+	<!-- 공지사항 -->
+	
+	<entry key="common.CmNotiMng.NOTI_TITL">제목</entry>
+	<entry key="common.CmNotiMng.NOTI_COMT">내용</entry>
+	<entry key="common.CmNotiMng.USER_SEQ">작성자</entry>
+	<entry key="common.CmNotiMng.CRE_DT">등록일자</entry>
+	
+	<!-- 버튼 -->    
+    <entry key="common.button.save">저장</entry>
+    <entry key="common.button.delete">삭제</entry>
+    <entry key="common.button.update">수정</entry>
+    <entry key="common.button.input">입력</entry>
+    <entry key="common.button.new">신규</entry>
+    <entry key="common.button.search">조회</entry>
+    <entry key="common.button.excel">엑셀</entry>
+    <entry key="common.button.excel.long">엑셀다운로드</entry>
+    <entry key="common.button.excel.upload">엑셀업로드</entry>
+    <entry key="common.button.refresh">새로고침</entry>
+    <entry key="common.button.close">닫기</entry>
+    <entry key="common.button.cancel">취소</entry>
+	
+	<!-- 공통 메시지 -->
+	
+	<entry key="common.top.home">홈</entry>
+    <entry key="common.top.logout">로그아웃</entry>
+    <entry key="common.top.greeting">님 환영합니다.</entry>
+	
+    <entry key="common.message.save.confirm">저장 하시겠습니까?</entry>
+    <entry key="common.message.save.success">저장 되었습니다.</entry>
+    <entry key="common.message.save.failure">저장에 실패했습니다.</entry>
+    <entry key="common.message.save.noData">데이터가 없습니다.</entry>
+    <entry key="common.message.delete.confirm">삭제 하시겠습니까?</entry>
+    <entry key="common.message.delete.success">삭제 되었습니다.</entry>
+    <entry key="common.message.delete.failure">삭제에 실패했습니다.</entry>
+    <entry key="common.message.modify.confirm">변경 하시겠습니까?</entry>
+    <entry key="common.message.modify.success">변경 되었습니다.</entry>
+    <entry key="common.message.modify.failure">변경에 실패했습니다.</entry>
+    <entry key="common.message.transmit.failure">전송에 실패했습니다.</entry>
+    
+    <entry key="common.message.error">오류가 발생했습니다.</entry>
+    <entry key="common.message.delError">해당 평가서로 채점한 결과가 존재하여\n 수정할 수 없습니다.</entry>
+    
+    <entry key="common.message.search.before">조회조건 입력 후 조회버튼을 클릭해 주세요.</entry>
+    <entry key="common.message.search.nodata">조회 결과가 없습니다.</entry>
+    <entry key="common.message.search.searchText">검색어를 입력해 주세요</entry>
+    <entry key="common.message.search.allSearch">검색어가 없으면 전체 조회됩니다.</entry>
+    
+	<entry key="common.message.date">일자</entry>
+	<entry key="common.message.update_date">수정일자</entry>
+	<entry key="common.message.register_date">등록일자</entry>
+	<entry key="common.message.from_date">부터</entry>
+	<entry key="common.message.to_date">까지</entry>
+	
+	<entry key="common.message.status">상태</entry>
+	<entry key="common.message.search">검색</entry>
+	<entry key="common.message.noResult">검색 결과가 없습니다.</entry>
+	<entry key="common.message.Num">번호</entry>
+	
+	<entry key="appendix_bps">bps</entry>
+	<entry key="appendix_msec">msec</entry>
+	<entry key="appendix_Byte">Byte</entry>
+	<entry key="appendix_GByte">GByte</entry>
+	<entry key="appendix_session">session</entry>
+	
+		
+</properties>

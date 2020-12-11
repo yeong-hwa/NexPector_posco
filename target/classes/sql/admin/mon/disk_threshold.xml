@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="disk_threshold">
+
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="select_list" resultType="hashmap" parameterType="hashmap">
+		/* disk_threshold.select_list */
+		SELECT *, @NUM AS TOTAL_COUNT
+		FROM (
+			SELECT @NUM := @NUM + 1 NUM, A.N_MON_ID AS N_MON_ID, B.S_MON_NAME AS S_MON_NAME, A.S_MON_NAME AS S_DISK_PATH,
+					 (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = B.N_GROUP_CODE) AS S_GROUP_NAME,
+					 (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = B.N_TYPE_CODE) S_TYPE_NAME,
+					 A.F_THRESHOLD, (SELECT S_NAME FROM TB_CODE WHERE S_GROUP_CODE = 'USE_YN' AND S_CODE = A.F_THRESHOLD) AS F_USE_NAME,
+					 B.S_MON_IP, B.N_TYPE_CODE, B.N_GROUP_CODE
+			FROM TB_MON_MAP A, TB_MON_INFO B, (SELECT @NUM := 0) R
+			WHERE A.N_MON_ID = B.N_MON_ID AND A.N_MON_TYPE = 2
+			<if test="N_GROUP_CODE != null and N_GROUP_CODE != ''">
+				AND B.N_GROUP_CODE = #{N_GROUP_CODE}
+			</if>
+			<if test="N_TYPE_CODE != null and N_TYPE_CODE != ''">
+				AND B.N_TYPE_CODE = #{N_TYPE_CODE}
+			</if>
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'ID'">
+				AND A.N_MON_ID LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+			</if>
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'NM'">
+				AND B.S_MON_NAME LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+			</if>
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'IP'">
+				AND B.S_MON_IP LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+			</if>
+		) X
+		ORDER BY 
+		<if test="sort == null">N_MON_ID, S_MON_NAME, S_DISK_PATH</if>
+		<if test="sort != null">
+		 <choose>
+		  <when test="sort.size() == 0">
+			  N_MON_ID, S_MON_NAME, S_DISK_PATH
+		  </when>
+		  <otherwise>
+			  <include refid="SQL_OderBy"/>
+		  </otherwise>
+		 </choose>
+		</if>
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+
+	<update id="update_data" parameterType="java.util.HashMap">
+		/* disk_threshold.update_data */
+		UPDATE TB_MON_MAP
+		SET
+		    F_THRESHOLD = #{F_THRESHOLD}
+		WHERE  
+			N_MON_ID = #{N_MON_ID}
+			AND N_MON_TYPE = 2
+			AND S_MON_NAME = #{S_DISK_PATH}
+	</update>
+</mapper>

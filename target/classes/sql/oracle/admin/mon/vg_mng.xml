@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="vg_mng">
+
+  <select id="select_list" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+
+    		SELECT
+    				A.*
+    		FROM
+					(
+						SELECT
+        						N_MON_ID KEY_COL, N_MON_ID, S_USER_NAME, S_USER_PHONE
+        						, (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME
+        						, (SELECT N_GROUP_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) N_GROUP_CODE
+        						, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = (SElECT N_GROUP_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) AND F_USE = 'Y') S_GROUP_NAME
+						FROM
+        						TB_VG_MANAGER A
+					) A
+			<where>
+				<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">
+					AND N_GROUP_CODE = #{N_GROUP_CODE}
+				</if>
+				<if test="N_MON_ID != '' and N_MON_ID != null">
+					AND N_MON_ID = #{N_MON_ID}
+				</if>
+				<if test="S_MON_NAME != '' and S_MON_NAME != null">
+					AND S_MON_NAME LIKE '%' || #{S_MON_NAME} || '%'
+				</if>
+				<if test="S_USER_NAME != '' and S_USER_NAME != null">
+					AND S_USER_NAME LIKE '%' || #{S_USER_NAME} || '%'
+				</if>
+				<if test="S_USER_PHONE != '' and S_USER_PHONE != null">
+					AND S_USER_PHONE LIKE '%' ||  #{S_USER_PHONE} || '%'
+				</if>
+			</where>
+  </select>
+
+  <select id="detail_info" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+
+            SELECT
+                    N_MON_ID, S_USER_NAME, S_USER_PHONE, S_USER_ID
+                    , (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME
+    		FROM
+					TB_VG_MANAGER A
+			WHERE
+					N_MON_ID = #{OLD_N_MON_ID} AND S_USER_NAME = #{OLD_S_USER_NAME} AND S_USER_PHONE = #{OLD_S_USER_PHONE}
+			AND		ROWNUM = 1
+
+  </select>
+
+  <insert id="insert_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  		INSERT INTO TB_VG_MANAGER(N_MON_ID, S_USER_NAME, S_USER_PHONE, S_USER_ID)
+  		SELECT #{N_MON_ID}, #{S_USER_NAME}, #{S_USER_PHONE}, 'VGMGR_' || (SELECT COUNT(*) + 1 FROM TB_VG_MANAGER) FROM dual
+  </insert>
+
+  <insert id="inser_data2" parameterType="java.util.HashMap" statementType="PREPARED">
+  		INSERT INTO TB_USER_INFO(
+  						S_USER_ID, S_USER_NAME, S_USER_PWD
+    					, N_GROUP_CODE, N_PER_CODE
+    					, F_USE, D_IN_DATE, D_UP_DATE
+						)
+  		SELECT 'VGMGR_' || (SELECT COUNT(*) + 1 FROM TB_VG_MANAGER), #{S_USER_NAME}, 'vgmanager', null, '999', 'Y', SYSDATE, SYSDATE FROM dual
+  </insert>
+
+  <update id="update_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  		UPDATE TB_VG_MANAGER
+  		SET
+  			N_MON_ID = #{N_MON_ID}
+  			, S_USER_NAME = #{S_USER_NAME}
+  			, S_USER_PHONE = #{S_USER_PHONE}
+  		WHERE
+			N_MON_ID = #{OLD_N_MON_ID} AND S_USER_NAME = #{OLD_S_USER_NAME} AND S_USER_PHONE = #{OLD_S_USER_PHONE}
+  </update>
+
+  <delete id="delete_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE FROM TB_VG_MANAGER
+  		WHERE N_MON_ID = #{OLD_N_MON_ID} AND S_USER_NAME = #{OLD_S_USER_NAME} AND S_USER_PHONE = #{OLD_S_USER_PHONE}
+  </delete>
+
+	<select id="dul_chk" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+    		SELECT
+    				COUNT(*) CNT
+    		FROM
+					TB_VG_MANAGER
+			WHERE
+					N_MON_ID = ${N_MON_ID} AND S_USER_NAME = #{S_USER_NAME} AND S_USER_PHONE = #{S_USER_PHONE}
+  </select>
+
+</mapper>

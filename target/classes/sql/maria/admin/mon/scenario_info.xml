@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="scenario_info">
+
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="select_list" resultType="hashmap" parameterType="hashmap">
+		SELECT @ROWNUM AS TOTAL_COUNT, X.* 
+		FROM (
+			SELECT 
+				@ROWNUM := @ROWNUM + 1 as rnum
+				, B.S_NAME
+				, C.S_GROUP_NAME
+				, A.S_COMPANY
+				, A.N_GROUP_CODE
+				, S_APP_ID
+				, S_APP_NAME
+				, S_APP_DESC
+			FROM  TB_CLI_IVR_APP_INFO A
+				, TB_CODE B, TB_SVR_GROUP C
+				, (select @ROWNUM := 0) R
+			WHERE 1=1
+			AND B.S_CODE = A.S_COMPANY
+			AND B.S_GROUP_CODE='COMPANY'
+			AND C.N_GROUP_CODE=A.N_GROUP_CODE
+			<if test="S_COMPANY != '' and S_COMPANY != null">
+				AND S_COMPANY LIKE CONCAT('%', #{S_COMPANY}, '%')
+			</if>
+			<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">
+				AND N_GROUP_CODE LIKE CONCAT('%', #{N_GROUP_CODE}, '%')
+			</if>
+			ORDER BY
+			<if test="sort == null">B.S_NAME, A.N_GROUP_CODE, S_APP_ID</if>
+			<if test="sort != null">
+				<choose>
+					<when test="sort.size() == 0">
+						B.S_NAME, A.N_GROUP_CODE, S_APP_ID
+					</when>
+					<otherwise>
+						<include refid="SQL_OderBy"/>
+					</otherwise>
+				</choose>
+			</if>
+		) X
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+	
+	<delete id="delete_data" parameterType="hashmap" statementType="PREPARED">
+		DELETE FROM TB_CLI_IVR_APP_INFO
+		 WHERE S_COMPANY = #{S_COMPANY}
+		 AND N_GROUP_CODE = #{N_GROUP_CODE}
+		 AND S_APP_ID = #{S_APP_ID}
+	</delete>
+
+	<insert id="insert_data" parameterType="hashmap" statementType="PREPARED">
+		INSERT INTO TB_CLI_IVR_APP_INFO (S_COMPANY, N_GROUP_CODE, S_APP_ID, S_APP_NAME, S_APP_DESC)
+		VALUES (#{S_COMPANY}, #{N_GROUP_CODE}, #{S_APP_ID}, #{S_APP_NAME}, #{S_APP_DESC})
+	</insert>
+	
+	<update id="update_data" parameterType="hashmap" statementType="PREPARED">
+		UPDATE TB_CLI_IVR_APP_INFO
+		SET
+		S_COMPANY = #{S_COMPANY}
+		, N_GROUP_CODE = #{N_GROUP_CODE}
+		, S_APP_ID = #{S_APP_ID}
+		, S_APP_NAME = #{S_APP_NAME}
+		, S_APP_DESC = #{S_APP_DESC}
+		WHERE S_COMPANY = #{S_COMPANY}
+		AND N_GROUP_CODE = #{N_GROUP_CODE}
+		AND S_APP_ID = #{S_APP_ID}
+	</update>
+	
+	<select id="detail_info" resultType="hashmap" parameterType="hashmap">
+		SELECT
+		S_COMPANY, N_GROUP_CODE, S_APP_ID, S_APP_NAME, S_APP_DESC
+		FROM TB_CLI_IVR_APP_INFO
+		WHERE S_COMPANY = #{S_COMPANY}
+		AND N_GROUP_CODE = #{N_GROUP_CODE}
+		AND S_APP_ID = #{S_APP_ID}
+	</select>
+
+	<select id="dul_chk" resultType="hashMap" parameterType="hashmap">
+		SELECT COUNT(*) CNT
+		  FROM TB_CLI_IVR_APP_INFO
+		WHERE S_COMPANY = #{S_COMPANY}
+		AND N_GROUP_CODE = #{N_GROUP_CODE}
+		AND S_APP_ID = #{S_APP_ID}
+	</select>
+</mapper>

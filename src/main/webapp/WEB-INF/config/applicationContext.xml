@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/mvc
+		http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+
+    <!-- Imports user-defined @Controller beans that process client requests -->
+    <import resource="action/controllers.xml" />
+    <import resource="database/datasource.xml" />
+
+	<bean id="downloadExcelView" class="com.nns.common.util.excel.DownloadExcelView"/>
+
+    <!--
+    ###########################################################
+    # Saves a locale change using a cookie
+    ###########################################################
+    -->
+    <bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver" />
+
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basenames">
+            <list>
+                <value>/WEB-INF/config/messages/msg_common</value>
+                <value>/WEB-INF/config/messages/msg_admin</value>
+                <value>/WEB-INF/config/messages/msg_watcher</value>
+                <value>/WEB-INF/config/messages/msg_program</value>
+            </list>
+        </property>
+        <property name="cacheSeconds" value="0" />
+    </bean>
+
+    <bean id="messageSourceAccessor" class="org.springframework.context.support.MessageSourceAccessor">
+        <constructor-arg>
+            <ref local="messageSource" />
+        </constructor-arg>
+    </bean>
+
+	<!--
+	###########################################################
+    # tiles viewResolver
+    ###########################################################
+    -->
+    <bean id="tilesConfigurer" class="org.springframework.web.servlet.view.tiles2.TilesConfigurer">
+        <property name="definitions">
+            <list>
+                <value>/WEB-INF/config/layout/layouts.xml</value>
+            </list>
+        </property>
+        <property name="preparerFactoryClass" value="org.springframework.web.servlet.view.tiles2.SpringBeanPreparerFactory"/>
+    </bean>
+    <!-- 타일즈를 위한 뷰 리졸버 -->
+    <bean class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+        <property name="viewClass" value="com.nns.common.NexPectorTilesView"/>
+        <property name="order" value="1"/>
+    </bean>
+    <!-- 일반적인 jsp 페이지도 추가할수 있어야한다. -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/views/" />
+        <property name="suffix" value=".jsp" />
+        <property name="contentType" value="text/html; charset=UTF-8"/>
+        <property name="order" value="2"/>
+    </bean>
+
+    <!--
+    ###########################################################
+    # Json
+    ###########################################################
+    -->
+    <bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
+        <property name="order" value="0" />
+    </bean>
+
+    <bean id="json" class="org.springframework.web.servlet.view.json.MappingJacksonJsonView" scope="singleton">
+        <property name="contentType" value="application/json" />
+    </bean>
+
+    <bean id="jsonView" class="org.springframework.web.servlet.view.json.MappingJacksonJsonView" scope="singleton">
+        <property name="contentType" value="text/html" />
+    </bean>
+
+    <bean id="jsonView2" class="com.nns.common.MappingJsonView" scope="singleton">
+        <property name="contentType" value="text/html" />
+    </bean>
+
+    <!-- <bean id="download" class="com.nns.gimjeSE.client.action.DownloadController"/> -->
+
+    <!-- <bean id="hssfExcel" class="com.nns.common.ExportPoiHssfExcel" /> -->
+
+    <!-- <bean id="hssfView" class="com.neonex.base.view.excel.ExportPoiHssfView" />
+    <bean id="fileView" class="com.neonex.base.view.common.FileDownloadView" /> -->
+
+    <!--
+    ###########################################################
+    # multipartResolver
+    ###########################################################
+    -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="UTF-8" />
+    </bean>
+
+    <!--
+    ###########################################################
+    # quartz(scheduler)
+    ###########################################################
+    -->
+
+	<!-- deleting job -->
+	<bean id="quartzJob1" class="org.springframework.scheduling.quartz.JobDetailBean">
+	    <property name="jobClass" value="com.nns.common.QuartzJob"/>
+	</bean>
+	
+	<!-- schedule Interval Time -->
+	<bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="quartzJob1"/>
+		<property name="cronExpression" value="0 0 3 * * ?"/> <!-- every day on 3:00 am -->
+		<!-- <property name="cronExpression" value="5 * * * * ?"/> --> <!-- every five minutes--> 
+	</bean>
+	
+	<bean id="mailReportQuartzJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.nns.common.MailReportQuartzJob"/>
+    </bean>
+	<bean id="mailReportCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="mailReportQuartzJob"/>
+		<property name="cronExpression" value="0 0 7 * * ?"/> <!-- every day on 7:00 am -->
+	</bean>
+	
+	<!-- scheduler -->
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="cronTrigger"/>
+				<ref bean="mailReportCronTrigger"/>
+			</list>
+		</property>
+		<property name="applicationContextSchedulerContextKey" value="applicationContext" />
+		<property name="quartzProperties">
+			<props>
+				<prop key="org.quartz.threadPool.class">org.quartz.simpl.SimpleThreadPool</prop>
+    			<prop key="org.quartz.threadPool.threadCount">3</prop>
+    			<prop key="org.quartz.threadPool.threadPriority">4</prop>
+    			<prop key="org.quartz.jobStore.class">org.quartz.simpl.RAMJobStore</prop>
+    			<prop key="org.quartz.jobStore.misfireThreshold">60000</prop>
+			</props>
+		</property>
+	</bean>
+	
+    <!-- For Pagination Tag -->
+    <bean id="imageRenderer" class="com.nns.common.ImagePaginationRenderer"/>
+    <bean id="textRenderer" class="egovframework.rte.ptl.mvc.tags.ui.pagination.DefaultPaginationRenderer"/>
+    <bean id="paginationManager" class="egovframework.rte.ptl.mvc.tags.ui.pagination.DefaultPaginationManager">
+        <property name="rendererType">
+            <map>
+                <entry key="image" value-ref="imageRenderer"/>
+                <entry key="text" value-ref="textRenderer"/>
+            </map>
+        </property>
+    </bean>
+
+	<bean id="seedCBC" class="com.neonexsoft.common.crypt.seed.SeedCBC">
+	</bean>
+</beans>

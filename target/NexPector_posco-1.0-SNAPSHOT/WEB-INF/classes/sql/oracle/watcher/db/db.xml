@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="db">
+
+    <sql id="SQL_OderBy">
+        <foreach collection="sort" item="s" separator=",">
+            ${s.field} ${s.dir}
+        </foreach>
+    </sql>
+
+    <!-- DB NETBACKUP Status Count -->
+    <select id="dbStatusInfoCountQry" resultType="java.lang.Integer" parameterType="java.util.HashMap">
+        SELECT /* db.dbStatusInfoCountQry */ COUNT(1)
+        FROM TB_CLI_DB_NETBACKUP_STATUS
+        WHERE MON_ID = #{N_MON_ID}
+    </select>
+
+    <!-- DB NETBACKUP Status Count -->
+    <select id="dbStatus2InfoCountQry" resultType="java.lang.Integer" parameterType="java.util.HashMap">
+        SELECT /* db.dbStatus2InfoCountQry */ COUNT(1)
+        FROM TB_CLI_DB_NETBACKUP_STATUS2
+        WHERE MON_ID = #{N_MON_ID}
+    </select>
+
+    <!-- DB NETBACKUP Status list -->
+    <select id="dbStatusInfoLstQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+        SELECT /* db.dbStatusInfoLstQry */
+                ROW_NUMBER() OVER (ORDER BY
+                <if test="sort == null">JOB_ID</if>
+                <if test="sort != null">
+                    <choose>
+                        <when test="sort.size() == 0">
+                            JOB_ID
+                        </when>
+                        <otherwise>
+                            <include refid="SQL_OderBy"/>
+                        </otherwise>
+                    </choose>
+                </if>
+                ) NUM
+                , FOUND_ROWS() AS TOTAL_COUNT
+                , JOB_ID, BACKUP_TYPE, STATE, STATUS, POLICY, SCHEDULE
+                , DEST_MED, CLIENT, STARTED, ENDED, ELAPSED, ATTEM, FILES, KILOBYTE
+        FROM TB_CLI_DB_NETBACKUP_STATUS
+        WHERE MON_ID = #{N_MON_ID}
+        ORDER BY START_TIME DESC
+    </select>
+
+    <!-- DB NETBACKUP Status list -->
+    <select id="dbStatus2InfoLstQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+        SELECT /* db.dbStatus2InfoLstQry */
+                ROW_NUMBER() OVER (ORDER BY
+                <if test="sort == null">JOB_ID</if>
+                <if test="sort != null">
+                    <choose>
+                        <when test="sort.size() == 0">
+                            JOB_ID
+                        </when>
+                        <otherwise>
+                            <include refid="SQL_OderBy"/>
+                        </otherwise>
+                    </choose>
+                </if>
+                ) NUM
+                , FOUND_ROWS() AS TOTAL_COUNT
+                , JOB_ID, JOB_TYPE, STATE, STATUS, POLICY
+                , SCHEDULE, CLIENT, DEST_MED, ACTIVE_PID, FATPIPE
+        FROM TB_CLI_DB_NETBACKUP_STATUS2
+        WHERE MON_ID = #{N_MON_ID}
+        ORDER BY START_TIME DESC
+    </select>
+
+    <!-- DB NETBACKUP TPCONF list -->
+    <select id="dbTpconfInfoLstQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+        SELECT /* db.dbTpconfInfoLstQry */ *
+        FROM (
+                SELECT
+                        ROW_NUMBER() OVER (ORDER BY
+                        <if test="sort == null">DRIVE_ID</if>
+                        <if test="sort != null">
+                            <choose>
+                                <when test="sort.size() == 0">
+                                    DRIVE_ID
+                                </when>
+                                <otherwise>
+                                    <include refid="SQL_OderBy"/>
+                                </otherwise>
+                            </choose>
+                        </if>
+                        ) NUM
+                        , FOUND_ROWS() AS TOTAL_COUNT
+                        , DRIVE_ID, DRIVE_NAME, DRIVE_TYPE, RESIDENCE, DRIVE_PATH, DRIVE_STATUS
+                FROM TB_CLI_DB_NETBACKUP_TPCONF
+                WHERE MON_ID = #{N_MON_ID}
+        ) X
+        WHERE num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
+    </select>
+
+    <!-- DB NETBACKUP Media list -->
+    <select id="dbMediaInfoLstQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+        SELECT /* db.dbMediaInfoLstQry */ *
+        FROM (
+                SELECT
+                        ROW_NUMBER() OVER (ORDER BY
+                        <if test="sort == null">MEDIA_ID</if>
+                        <if test="sort != null">
+                            <choose>
+                                <when test="sort.size() == 0">
+                                    MEDIA_ID
+                                </when>
+                                <otherwise>
+                                    <include refid="SQL_OderBy"/>
+                                </otherwise>
+                            </choose>
+                        </if>
+                        ) NUM
+                        , FOUND_ROWS() AS TOTAL_COUNT
+                        , MEDIA_ID, MEDIA_TYPE, ROBOT_TYPE, ROBOT_NUM
+                        , ROBOT_SLOT, SIDE_FACE, RET_LEVEL, SIZE_KBYTES, STATUS
+                FROM TB_CLI_DB_NETBACKUP_MEDIA
+                WHERE MON_ID = #{N_MON_ID}
+        ) X
+        WHERE num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
+    </select>
+
+</mapper>

@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dashboard_call">
+
+	<!-- DashBoard 시간별 콜 추이 (본점 / 영업점)-->
+	<select id="dashboardTimeCallIncrease" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* dashboard_call.dashboardTimeCallIncrease */
+		SELECT
+		  BASE_T.N_TIME,
+		  N_DATE,
+		  COALESCE(OUTBOUND_CALL, 0) AS OUTBOUND_CALL,
+		  COALESCE(EXT_CALL, 0)      AS EXT_CALL,
+		  COALESCE(INBOUND_CALL, 0)  AS INBOUND_CALL
+		FROM (SELECT N_TIME
+			  FROM tb_minute_pivot
+			  <![CDATA[
+			  WHERE N_TIME <= DATE_FORMAT(NOW(), '%H:%i')
+			  ]]>
+			  ORDER BY N_TIME DESC
+			  LIMIT 60) AS BASE_T
+		  LEFT OUTER JOIN
+		  (
+			SELECT
+			  N_DATE,
+			  N_TIME,
+			  COALESCE(SUM(CASE CALL_TYPE
+						   WHEN 1
+							 THEN 1 END), 0) AS OUTBOUND_CALL,
+			  COALESCE(SUM(CASE CALL_TYPE
+						   WHEN 2
+							 THEN 1 END), 0) AS EXT_CALL,
+			  COALESCE(SUM(CASE CALL_TYPE
+						   WHEN 3
+							 THEN 1 END), 0) AS INBOUND_CALL
+			FROM (
+			  SELECT
+				N_DATE,
+				DATE_FORMAT(STR_TO_DATE(concat(N_DATE, N_TIME), '%Y%m%d%H%i%s'), '%H:%i') AS N_TIME,
+				CASE CSA.N_CALL_TYPE
+				WHEN 1
+				  THEN 2
+				WHEN 6
+				  THEN 3
+				ELSE 1 END                                                                AS CALL_TYPE
+			  FROM TB_CALL_STATE_ACCRUE CSA
+				, (SELECT *
+				   FROM TB_NUM_CODE
+				   WHERE S_GROUP_CODE = 'CALL_TYPE') NC
+			  WHERE CSA.N_CALL_TYPE = NC.N_CODE
+					AND CSA.N_DATE = DATE_FORMAT(NOW(), '%Y%m%d')
+					AND CSA.N_TIME >= CAST(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 MINUTE), '%H%i') AS SIGNED) <!-- MYSQL --> 
+					<![CDATA[
+					AND CSA.N_TIME <= CAST( DATE_FORMAT(NOW(), '%H%i') AS SIGNED)
+					]]>													<!-- MYSQL -->
+					<choose>
+						<when test="GROUP_TYPE == 'HQ'">
+							AND   CSA.N_CLUSTER = 1
+						</when>
+						<when test="GROUP_TYPE == 'NHQ'">
+							AND   CSA.N_CLUSTER IN (2, 3)
+						</when>
+						<otherwise>
+							AND   CSA.N_CLUSTER = 0
+						</otherwise>
+					</choose>
+			) A
+			GROUP BY N_DATE, N_TIME
+		  ) TT ON BASE_T.N_TIME = TT.N_TIME
+		ORDER BY BASE_T.N_TIME
+
+	</select>
+	
+	<!-- Dashboard 쿨러스터별 콜 추이(본점/영업점1/영업점2/SME) -->
+	<select id="dashboardClusterCallIncrease" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* dashboard_call.dashboardClusterCallIncrease */
+		SELECT
+		  BASE_T.N_TIME,
+		  N_DATE,
+		  COALESCE(WAIT, 0)       AS WAIT,
+		  COALESCE(CONNECTING, 0) AS CONNECTING,
+		  COALESCE(COLLING, 0)    AS COLLING
+		FROM (SELECT N_TIME
+			  FROM tb_minute_pivot
+			  <![CDATA[
+			  WHERE N_TIME <= DATE_FORMAT(NOW(), '%H:%i')
+			  ]]>
+
+			  ORDER BY N_TIME DESC
+			  LIMIT 60) BASE_T LEFT OUTER JOIN
+		  (
+			SELECT
+			  N_DATE,
+			  DATE_FORMAT(STR_TO_DATE(CONCAT(N_DATE , N_TIME), '%Y%m%d%H%i'), '%H:%i') AS N_TIME,
+			  COALESCE(SUM(CASE N_STATE
+						   WHEN 0
+							 THEN N_COUNT END), 0)                            AS WAIT,
+			  COALESCE(SUM(CASE N_STATE
+						   WHEN 1
+							 THEN N_COUNT END), 0)                            AS CONNECTING,
+			  COALESCE(SUM(CASE N_STATE
+						   WHEN 2
+							 THEN N_COUNT END), 0)                            AS COLLING
+
+			FROM TB_CALL_STATE_ACCRUE
+			WHERE N_CLUSTER = #{N_CLUSTER}
+				  AND N_DATE = DATE_FORMAT(NOW(), '%Y%m%d')
+				  AND N_TIME >= CAST(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL - 1 HOUR ), '%H%i') AS SIGNED) <!-- MYSQL -->
+				  <![CDATA[
+				  AND N_TIME <= CAST(DATE_FORMAT(NOW(), '%H%i') AS SIGNED)
+				  ]]> 											<!-- MYSQL -->
+			GROUP BY N_DATE, N_TIME
+			ORDER BY N_TIME
+		  ) TT ON BASE_T.N_TIME = TT.N_TIME
+		ORDER BY BASE_T.N_TIME
+	</select>
+	
+	<!-- DashBoard 콜 TOP10 (본점 부서별, 지점별)-->
+	<select id="dashboardCallTop10" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* dashboard_call.dashboardCallTop10 */
+		SELECT *
+		FROM (
+			   SELECT
+				 T.*,
+
+				 @ROWNUM := @ROWNUM + 1 AS NUM
+			   FROM (
+					  SELECT
+						CA.GROUP_CODE,
+						OI.GROUP_NAME,
+						COUNT(*) AS CALL_COUNT
+					  FROM TB_CALL_ACCRUE CA
+						, (
+
+							SELECT *
+							FROM TB_ORG_INFO
+							WHERE GROUP_CODE NOT IN (
+							  SELECT n_group_code
+							  FROM (
+									 SELECT hierarchy_connect_by_parent_org_info(n_group_code) AS n_group_code
+									 FROM (
+											SELECT
+											  @start_with := 'SHHQ016',
+											  @n_group_code := @start_with,
+											  @LEVEL := 0
+										  ) vars, tb_svr_group
+									 WHERE @n_group_code IS NOT NULL
+								   ) GROUP_CODE)
+						  ) OI
+					  WHERE CA.GROUP_CODE = OI.GROUP_CODE
+							AND CA.N_DAY = DATE_FORMAT(NOW(), '%Y%m%d')
+							AND OI.USE_YN = 'Y'
+							<choose>
+								<when test="CALL_TYPE == 'SUM'">
+									AND CA.N_CALL_TYPE IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 51)
+								</when>
+								<when test="CALL_TYPE == 'INBOUND'">
+									AND CA.N_CALL_TYPE IN (51)
+								</when>
+								<when test="CALL_TYPE == 'OUTBOUND'">
+									AND CA.N_CALL_TYPE IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+								</when>
+								<when test="CALL_TYPE == 'REC'">
+									AND CA.N_CALL_TYPE IN (50)
+								</when>
+								<otherwise>
+									AND CA.N_CALL_TYPE IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 51)
+								</otherwise>
+							</choose>
+					  GROUP BY CA.GROUP_CODE
+						, OI.GROUP_NAME
+					) T
+			 ) AA, (SELECT @ROWNUM := 0) R
+		LIMIT 10
+	</select>
+	
+	<!-- DashBoard 콜 통계 (전체, INBOUND, OUTBOUND, 내선 - 실시간(본점, 영업점), 누적(본점, 영업점))-->
+	<select id="dashboardCallStatis" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+	/* dashboard_call.dashboardCallStatis */
+	SELECT 
+		OUT_PK + IN_PK AS TOTAL_PK,
+		OUT_PK, 
+		IN_PK,
+		OUT_SE + IN_SE AS TOTAL_SE,
+		OUT_SE,
+		IN_SE
+	FROM (
+		SELECT 
+			(SELECT COALESCE(SUM(OBEXCONN),0) FROM TB_ERS_AGTOUTBOUND) AS OUT_SE,
+			(SELECT COALESCE(SUM(NUM),0) FROM TB_ERS_GROUPTOP WHERE IBG LIKE 'VO_%') AS IN_SE,
+			0 AS OUT_PK,
+			0 AS IN_PK
+		FROM DUAL
+	) A
+	</select>
+	
+	<!-- DashBoard 콜 증감 추이 (전일대비 시간대별)-->
+	<select id="dashboardCallIncrease" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* dashboard_call.dashboardCallIncrease */
+		SELECT
+		  TB.N_TIME,
+		  COALESCE(CURRENT_HQ, 0)  AS CURRENT_HQ,
+		  COALESCE(CURRENT_NHQ, 0) AS CURRENT_NHQ,
+		  COALESCE(BEFORE_HQ, 0)   AS BEFORE_HQ,
+		  COALESCE(BEFORE_NHQ, 0)  AS BEFORE_NHQ
+		FROM (
+			   SELECT N_TIME
+			   FROM tb_minute_pivot
+			   <![CDATA[
+			   WHERE N_TIME <= DATE_FORMAT(NOW(), '%H:%i')
+				]]>
+			   ORDER BY N_TIME DESC
+			   LIMIT 60
+			 ) TB LEFT OUTER JOIN (
+									SELECT
+									  N_TIME,
+									  COALESCE(CASE DAY_CLUSTER
+											   WHEN concat(${S_CUR_DT}, '_', '1')
+												 THEN SUM(N_COUNT) END, 0) AS CURRENT_HQ,
+									  COALESCE(CASE DAY_CLUSTER
+											   WHEN concat(${S_CUR_DT}, '_', '2')
+												 THEN SUM(N_COUNT) END, 0) AS CURRENT_NHQ,
+									  COALESCE(CASE DAY_CLUSTER
+											   WHEN concat(
+												   DATE_FORMAT(DATE_ADD(STR_TO_DATE(${S_CUR_DT}, '%Y%m%d'), INTERVAL -1 DAY),
+															   '%Y%m%d'), '_', '1')
+												 THEN SUM(N_COUNT) END, 0) AS BEFORE_HQ,
+									  COALESCE(CASE DAY_CLUSTER
+											   WHEN concat(
+												   DATE_FORMAT(DATE_ADD(STR_TO_DATE(${S_CUR_DT}, '%Y%m%d'), INTERVAL -1 DAY),
+															   '%Y%m%d'), '_', '2')
+												 THEN SUM(N_COUNT) END, 0) AS BEFORE_NHQ
+									FROM (
+										   SELECT
+											 concat(CSA.N_DATE, '_', CASE CSA.N_CLUSTER
+																	 WHEN 1
+																	   THEN 1
+																	 ELSE 2 END)                                            AS DAY_CLUSTER,
+											 DATE_FORMAT(STR_TO_DATE(concat(CSA.N_DATE, CSA.N_TIME), '%Y%m%d%H%i'),
+														 '%H%i')                                                            AS N_TIME,
+											 CSA.N_COUNT                                                                    AS N_COUNT
+										   FROM TB_CALL_STATE_ACCRUE CSA
+											 , TB_NUM_CODE NC
+										   WHERE CSA.N_CALL_TYPE = NC.N_CODE
+												 AND NC.S_GROUP_CODE = 'CALL_TYPE'
+												 AND CSA.N_DATE >=
+													 CAST(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 DAY), '%Y%m%d') AS SIGNED) <!-- MYSQL -->
+												 AND CSA.N_TIME >=
+													 CAST(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 DAY), '%Y%m%d') AS SIGNED) <!-- MYSQL -->
+												 AND CSA.N_CLUSTER > 0
+										 ) A
+									GROUP BY DAY_CLUSTER, N_TIME
+									ORDER BY N_TIME
+								  ) TA ON TB.N_TIME = TA.N_TIME
+		ORDER BY TB.N_TIME
+	</select>
+	
+	<select id="dashboardSkillTop" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT IBG AS FIELD, IBGNAME AS FIELD_NAME, ANS AS CNT
+		FROM TB_ERS_GROUPTOP
+		ORDER BY NUM
+		LIMIT 5
+	</select>
+	
+	<select id="dashboardIvrTop" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT DID AS FIELD, SVC AS FIELD_NAME, CNT AS CNT
+		FROM TB_ERS_IVRTOP
+		ORDER BY NUM
+		LIMIT 5
+	</select>
+	
+	<select id="dashboardSeoulCallIncrease" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT AA.HH24, AA.DID, AA.NAME, AA.DID_SUM, IFNULL(HH24_CNT, 0) CNT
+		FROM (	
+			SELECT HOURS.HH24,  A.* FROM (
+				SELECT '00' HH24 FROM DUAL UNION ALL 
+				SELECT '01' HH24 FROM DUAL UNION ALL 
+				SELECT '02' HH24 FROM DUAL UNION ALL 
+				SELECT '03' HH24 FROM DUAL UNION ALL 
+				SELECT '04' HH24 FROM DUAL UNION ALL 
+				SELECT '05' HH24 FROM DUAL UNION ALL 
+				SELECT '06' HH24 FROM DUAL UNION ALL 
+				SELECT '07' HH24 FROM DUAL UNION ALL 
+				SELECT '08' HH24 FROM DUAL UNION ALL 
+				SELECT '09' HH24 FROM DUAL UNION ALL
+				SELECT '10' HH24 FROM DUAL UNION ALL 
+				SELECT '11' HH24 FROM DUAL UNION ALL 
+				SELECT '12' HH24 FROM DUAL UNION ALL 
+				SELECT '13' HH24 FROM DUAL UNION ALL 
+				SELECT '14' HH24 FROM DUAL UNION ALL 
+				SELECT '15' HH24 FROM DUAL UNION ALL 
+				SELECT '16' HH24 FROM DUAL UNION ALL 
+				SELECT '17' HH24 FROM DUAL UNION ALL 
+				SELECT '18' HH24 FROM DUAL UNION ALL 
+				SELECT '19' HH24 FROM DUAL UNION ALL 
+				SELECT '20' HH24 FROM DUAL UNION ALL 
+				SELECT '21' HH24 FROM DUAL UNION ALL 
+				SELECT '22' HH24 FROM DUAL UNION ALL 
+				SELECT '23' HH24 FROM DUAL
+			) HOURS, (
+				SELECT DID, NAME, CONCAT(NAME, '(', SUM(CNT), ')') AS DID_SUM
+				FROM TB_ERS_IVRDNISTIME
+				WHERE DID IN('1000001', '1000011', '1000021', '1000031')
+				GROUP BY DID, NAME
+			) A
+		) AA LEFT OUTER JOIN
+		(	SELECT HH24, DID, NAME, IFNULL(MAX(CNT), 0) AS HH24_CNT
+			FROM TB_ERS_IVRDNISTIME
+			WHERE DID IN('1000001', '1000011', '1000021', '1000031')
+			GROUP BY HH24, DID, NAME
+		) BB
+		ON AA.HH24 = BB.HH24 AND  AA.DID = BB.DID
+	</select>
+	
+	<select id="dashboardTrunkTop" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT B.S_MON_NAME AS FIELD_NAME, COUNT(*) AS CNT, 95 AS TOTAL
+		FROM TB_CLI_IVR_LIST_SESSIONS A, TB_MON_INFO B
+		WHERE A.MON_ID = B.N_MON_ID
+		GROUP BY B.N_MON_ID, B.S_MON_NAME
+		ORDER BY CNT DESC
+		LIMIT 5
+	</select>
+</mapper>

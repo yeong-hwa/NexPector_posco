@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="snmp_m16">
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+	
+	<select id="FanInfoQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* snmp_m11.M11FanInfoQry */
+		SELECT
+			*
+		FROM
+			TB_CLI_VG_FAN A
+		WHERE
+			MON_ID = #{N_MON_ID}
+	</select>
+	
+	<select id="PowerInfoQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* snmp_m11.M11PowerInfoQry */
+		SELECT
+			*
+		FROM
+			TB_CLI_VG_POWER A
+		WHERE
+			MON_ID = #{N_MON_ID}
+	</select>
+	
+	<select id="TempInfoQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* snmp_m11.M11PowerInfoQry */
+		SELECT
+			*
+		FROM
+			TB_CLI_VG_TEMP A
+		WHERE
+			MON_ID = #{N_MON_ID}
+	</select>
+	
+	<select id="VoipInfoQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* snmp_m11.M11VoipInfoQry */
+		SELECT
+			A.*, DATE_FORMAT(INSERT_TIME, '%Y-%m-%d %H:%i:%s') AS S_INSERT_TIME
+		FROM
+			TB_CLI_VG_VOIP A
+		WHERE
+			MON_ID = #{N_MON_ID}
+	</select>
+	
+	<select id="VoipDspInfoQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* snmp_m11.M11VoipDspInfoQry */
+		SELECT X.*, @NUM AS TOTAL_COUNT 
+		FROM (
+			SELECT
+				A.*, DATE_FORMAT(INSERT_TIME, '%Y-%m-%d %H:%i:%s') AS S_INSERT_TIME, @NUM := @NUM + 1 AS NUM
+			FROM
+				TB_CLI_VG_VOIP_DSP A, (SELECT @NUM := 0) R
+			WHERE
+				MON_ID = #{N_MON_ID}
+		) X
+		ORDER BY
+		<choose>
+			<when test="sort == null || sort.size() == 0">
+				S_SLOT, INSERT_TIME DESC
+			</when>
+			<otherwise>
+				<include refid="SQL_OderBy"/>
+			</otherwise>
+		</choose>
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+</mapper>

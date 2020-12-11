@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="snmp_m03">
+
+	<select id="E1DailyChannelStat" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+    SELECT
+            N_DAY
+            , SUM(CASE WHEN N_TIME = 00 THEN N_ACTIVE ELSE 0 END) TIME_00
+            , SUM(CASE WHEN N_TIME = 01 THEN N_ACTIVE ELSE 0 END) TIME_01
+            , SUM(CASE WHEN N_TIME = 02 THEN N_ACTIVE ELSE 0 END) TIME_02
+            , SUM(CASE WHEN N_TIME = 03 THEN N_ACTIVE ELSE 0 END) TIME_03
+            , SUM(CASE WHEN N_TIME = 04 THEN N_ACTIVE ELSE 0 END) TIME_04
+            , SUM(CASE WHEN N_TIME = 05 THEN N_ACTIVE ELSE 0 END) TIME_05
+            , SUM(CASE WHEN N_TIME = 06 THEN N_ACTIVE ELSE 0 END) TIME_06
+            , SUM(CASE WHEN N_TIME = 07 THEN N_ACTIVE ELSE 0 END) TIME_07
+            , SUM(CASE WHEN N_TIME = 08 THEN N_ACTIVE ELSE 0 END) TIME_08
+            , SUM(CASE WHEN N_TIME = 09 THEN N_ACTIVE ELSE 0 END) TIME_09
+            , SUM(CASE WHEN N_TIME = 10 THEN N_ACTIVE ELSE 0 END) TIME_10
+            , SUM(CASE WHEN N_TIME = 11 THEN N_ACTIVE ELSE 0 END) TIME_11
+            , SUM(CASE WHEN N_TIME = 12 THEN N_ACTIVE ELSE 0 END) TIME_12
+            , SUM(CASE WHEN N_TIME = 13 THEN N_ACTIVE ELSE 0 END) TIME_13
+            , SUM(CASE WHEN N_TIME = 14 THEN N_ACTIVE ELSE 0 END) TIME_14
+            , SUM(CASE WHEN N_TIME = 15 THEN N_ACTIVE ELSE 0 END) TIME_15
+            , SUM(CASE WHEN N_TIME = 16 THEN N_ACTIVE ELSE 0 END) TIME_16
+            , SUM(CASE WHEN N_TIME = 17 THEN N_ACTIVE ELSE 0 END) TIME_17
+            , SUM(CASE WHEN N_TIME = 18 THEN N_ACTIVE ELSE 0 END) TIME_18
+            , SUM(CASE WHEN N_TIME = 19 THEN N_ACTIVE ELSE 0 END) TIME_19
+            , SUM(CASE WHEN N_TIME = 20 THEN N_ACTIVE ELSE 0 END) TIME_20
+            , SUM(CASE WHEN N_TIME = 21 THEN N_ACTIVE ELSE 0 END) TIME_21
+            , SUM(CASE WHEN N_TIME = 22 THEN N_ACTIVE ELSE 0 END) TIME_22
+            , SUM(CASE WHEN N_TIME = 23 THEN N_ACTIVE ELSE 0 END) TIME_23
+		FROM
+				(
+					SELECT                        
+					 N_MON_ID, N_DAY, N_TIME, N_ACTIVE
+					FROM
+			        TB_SNMP_REAL_M03_E1_PEAK
+			     ) A
+		WHERE 	A.N_MON_ID = #{N_MON_ID}
+		AND     A.N_DAY = #{N_DAY}
+	</select>
+
+	<select id="M03E1ChannelInfoStatus" resultType="java.util.HashMap" parameterType="java.util.HashMap">			
+		WITH SUB_TB AS
+		(
+			SELECT A.N_MON_ID, A.N_STATUS FROM TB_SNMP_REAL_M03_E1_STATUS A, TB_SNMP_REAL_M03_IF B 
+			WHERE B.N_INDEX = A.N_GRP_INDEX AND B.N_TYPE='18' AND A.N_MON_ID =${N_MON_ID}
+		)
+		SELECT
+			(SELECT COUNT(FX.N_MON_ID) FROM SUB_TB FX WHERE FX.N_STATUS IN (1,2,3,4)) AS "TOTAL",
+			(SELECT COUNT(FX.N_MON_ID) FROM SUB_TB FX WHERE FX.N_STATUS = 1) AS "WAIT",
+			(SELECT COUNT(FX.N_MON_ID) FROM SUB_TB FX WHERE FX.N_STATUS IN (2, 3, 4)) AS "ON"
+		FROM DUAL		
+	</select>
+
+	<select id="M03E1IndexLstQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+				DISTINCT(A.N_INDEX)
+		FROM
+				TB_SNMP_REAL_M03_E1_PEAK_STAT A
+		WHERE		A.N_MON_ID = ${N_MON_ID}
+		AND		TO_CHAR(A.N_DAY, 'yyyymmdd') = #{N_DAY}
+		ORDER BY
+				A.N_INDEX
+	</select>
+
+</mapper>

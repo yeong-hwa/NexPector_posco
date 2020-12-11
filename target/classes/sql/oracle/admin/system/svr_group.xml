@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="svr_group">
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+	
+  <select id="select_list" resultType="hashmap" parameterType="hashmap">
+		SELECT /* svr_group.select_list */ *, @NUM AS TOTAL_COUNT
+		FROM (
+			SELECT
+	  				@NUM := @NUM + 1 AS NUM
+    				, N_GROUP_CODE AS KEY_COL, N_GROUP_CODE AS N_GROUP_CODE, S_GROUP_NAME AS S_GROUP_NAME, F_USE AS F_USE
+    				, N_UP_CODE AS N_UP_CODE, PARENT_NAME AS PARENT_NAME, DATE_FORMAT(D_IN_DATE, '%Y-%m-%d %H:%m:%s') AS D_IN_DATE, DATE_FORMAT(D_UP_DATE, '%Y-%m-%d %H:%m:%s') AS D_UP_DATE
+    		FROM 
+					(SELECT A.*, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = A.N_UP_CODE AND F_USE = 'Y') PARENT_NAME FROM TB_SVR_GROUP A) X,
+					(SELECT @NUM := 0) R
+			<where>
+				<if test="S_GROUP_NAME != '' and S_GROUP_NAME != null">
+					AND S_GROUP_NAME LIKE CONCAT('%', #{S_GROUP_NAME}, '%') 
+				</if>
+			</where>
+		) X
+		ORDER BY
+		<if test="sort == null">N_GROUP_CODE</if>
+		<if test="sort != null">
+	 		<choose>
+				<when test="sort.size() == 0">
+						N_GROUP_CODE
+				</when>
+				<otherwise>
+					<include refid="SQL_OderBy"/>
+				</otherwise>
+			</choose>
+		</if>
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+  </select>
+  
+  <insert id="insert_data" parameterType="hashmap" statementType="PREPARED">
+  		INSERT INTO TB_SVR_GROUP(
+  			N_GROUP_CODE
+	  		<if test="S_GROUP_NAME != '' and S_GROUP_NAME != null">, S_GROUP_NAME</if>
+	  		<if test="F_USE != '' and F_USE != null">, F_USE</if>
+	  		<if test="N_UP_CODE != '' and N_UP_CODE != null">, N_UP_CODE</if>
+	  		, D_IN_DATE
+	  		, D_UP_DATE	
+  		)
+  		VALUES (
+  			#{N_GROUP_CODE}
+	  		<if test="S_GROUP_NAME != '' and S_GROUP_NAME != null">, #{S_GROUP_NAME}</if>
+	  		<if test="F_USE != '' and F_USE != null">, #{F_USE}</if>
+	  		<if test="N_UP_CODE != '' and N_UP_CODE != null">, #{N_UP_CODE}</if>
+	  		, NOW()
+	  		, NOW()
+  		)
+  </insert>
+  
+  <update id="update_data" parameterType="hashmap" statementType="PREPARED">
+  		UPDATE TB_SVR_GROUP
+  		SET 
+  			S_GROUP_NAME = #{S_GROUP_NAME}
+	  		<if test="F_USE != '' and F_USE != null">, F_USE = #{F_USE}</if>
+	  		<if test="N_UP_CODE != '' and N_UP_CODE != null">, N_UP_CODE = #{N_UP_CODE}</if>
+  			, D_UP_DATE = NOW()
+  		WHERE
+  			N_GROUP_CODE = #{N_GROUP_CODE}
+  </update>
+  
+  <delete id="delete_data" parameterType="hashmap" statementType="PREPARED">
+  		DELETE	FROM TB_SVR_GROUP
+  		WHERE
+  				N_GROUP_CODE = #{N_GROUP_CODE}
+  </delete>
+  
+  <select id="dul_chk" resultType="hashMap" parameterType="hashmap">   	
+    		SELECT
+    				COUNT(*) CNT
+    		FROM 
+					TB_SVR_GROUP
+			WHERE
+					N_GROUP_CODE = #{N_GROUP_CODE}
+			AND 	F_USE = 'Y'
+  </select>
+    
+  <select id="detail_info" resultType="hashmap" parameterType="hashmap">
+  			SELECT
+  					N_GROUP_CODE AS N_GROUP_CODE, S_GROUP_NAME AS S_GROUP_NAME, F_USE AS F_USE
+    				, N_UP_CODE AS N_UP_CODE, D_IN_DATE AS D_IN_DATE, D_UP_DATE AS D_UP_DATE
+  			FROM
+  					TB_SVR_GROUP
+  			WHERE
+  					N_GROUP_CODE = #{N_GROUP_CODE}
+			AND 	F_USE = 'Y'  					
+  </select>
+  
+  
+
+</mapper>

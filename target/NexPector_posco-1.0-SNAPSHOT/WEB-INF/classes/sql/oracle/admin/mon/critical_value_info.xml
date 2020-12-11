@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="critical_value_info">
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+  
+  <select id="select_list" resultType="hashmap" parameterType="hashmap">
+  		SELECT * FROM (
+			SELECT
+	  				ROW_NUMBER() OVER (ORDER BY
+										  <if test="sort == null">N_MON_ID</if>
+										  <if test="sort != null">
+											  <choose>
+												  <when test="sort.size() == 0">
+													  N_MON_ID
+												  </when>
+												  <otherwise>
+													  <include refid="SQL_OderBy"/>
+												  </otherwise>
+											  </choose>
+										  </if>) NUM, FOUND_ROWS() AS TOTAL_COUNT
+     						, N_MON_ID KEY_COL, N_MON_ID, N_GROUP_CODE, S_MON_NAME, S_MON_IP, S_GROUP_NAME, N_TYPE_CODE, S_TYPE_NAME
+     						, MAX(CPU_MINOR) CPU_MINOR, MAX(CPU_MAJOR) CPU_MAJOR, MAX(CPU_CRITICAL) CPU_CRITICAL
+     						, MAX(MEM_MINOR) MEM_MINOR, MAX(MEM_MAJOR) MEM_MAJOR, MAX(MEM_CRITICAL) MEM_CRITICAL
+     						, MAX(DISK_MINOR) DISK_MINOR, MAX(DISK_MAJOR) DISK_MAJOR, MAX(DISK_CRITICAL) DISK_CRITICAL
+     						, MAX(PROCESS_MINOR) PROCESS_MINOR, MAX(PROCESS_MAJOR) PROCESS_MAJOR, MAX(PROCESS_CRITICAL) PROCESS_CRITICAL
+     						, MAX(SERVICE_MINOR) SERVICE_MINOR, MAX(SERVICE_MAJOR) SERVICE_MAJOR, MAX(SERVICE_CRITICAL) SERVICE_CRITICAL
+     						, MAX(TH_TEMPERATURE) TH_TEMPERATURE, MAX(TH_HUMIDITY) TH_HUMIDITY
+			FROM
+     						(
+         						SELECT
+                 						N_MON_ID
+										, (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME
+										, (SELECT S_MON_IP FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_IP
+										, (SELECT N_GROUP_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) N_GROUP_CODE
+                 						, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = (SELECT N_GROUP_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) AND F_USE = 'Y') S_GROUP_NAME
+                 						, (SELECT N_TYPE_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) N_TYPE_CODE
+                 						, (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = (SELECT N_TYPE_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID)) S_TYPE_NAME
+                 						, CASE WHEN N_MON_TYPE = 0 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END CPU_MINOR
+                 						, CASE WHEN N_MON_TYPE = 0 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END CPU_MAJOR
+                 						, CASE WHEN N_MON_TYPE = 0 AND N_ALM_RAT = 1 AND S_DATA_TYPE = 'I' THEN S_VALUE1 || ' ~ ' || S_VALUE2 END CPU_CRITICAL
+                 						, CASE WHEN N_MON_TYPE = 1 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END MEM_MINOR
+                 						, CASE WHEN N_MON_TYPE = 1 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END MEM_MAJOR
+                 						, CASE WHEN N_MON_TYPE = 1 AND N_ALM_RAT = 1 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END MEM_CRITICAL
+                 						, CASE WHEN N_MON_TYPE = 2 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END DISK_MINOR
+                 						, CASE WHEN N_MON_TYPE = 2 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END DISK_MAJOR
+                 						, CASE WHEN N_MON_TYPE = 2 AND N_ALM_RAT = 1 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END DISK_CRITICAL
+                 						, CASE WHEN N_MON_TYPE = 3 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END PROCESS_MINOR
+                 						, CASE WHEN N_MON_TYPE = 3 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END PROCESS_MAJOR
+                 						, CASE WHEN N_MON_TYPE = 3 AND N_ALM_RAT = 1 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END PROCESS_CRITICAL
+                 						, CASE WHEN N_MON_TYPE = 4 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END SERVICE_MINOR
+                 						, CASE WHEN N_MON_TYPE = 4 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END SERVICE_MAJOR
+                 						, CASE WHEN N_MON_TYPE = 4 AND N_ALM_RAT = 1 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END SERVICE_CRITICAL
+										, CASE WHEN N_MON_TYPE = 0 AND N_ALM_RAT = 1 AND S_DATA_TYPE = 'C' THEN S_VALUE1 END AS TH_TEMPERATURE
+                 						, CASE WHEN N_MON_TYPE = 1 AND N_ALM_RAT = 1 AND S_DATA_TYPE = 'C' THEN S_VALUE1 END AS TH_HUMIDITY
+         						FROM
+                 						TB_ALM_GEN_LEGEND A
+                 				WHERE
+                 						N_MON_ID > 0
+     						) A
+     						WHERE 1=1
+								<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">
+									AND N_GROUP_CODE = #{N_GROUP_CODE} 
+								</if>
+								<if test="N_TYPE_CODE != '' and N_TYPE_CODE != null">
+									AND N_TYPE_CODE = #{N_TYPE_CODE} 
+								</if>     						
+								<if test="N_MON_ID != '' and N_MON_ID != null">
+									AND N_MON_ID LIKE  '%' || #{N_MON_ID} || '%'
+								</if>
+								<if test="S_MON_NAME != '' and S_MON_NAME != null">
+									AND S_MON_NAME LIKE '%'|| #{S_MON_NAME} || '%' 
+								</if>
+								<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'ID'">
+									AND N_MON_ID LIKE '%' || #{SEARCH_KEYWORD} || '%'
+								</if>
+								<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'NM'">
+									AND S_MON_NAME LIKE '%' || #{SEARCH_KEYWORD} || '%'
+								</if>
+								<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'IP'">
+									AND S_MON_IP LIKE '%' || #{SEARCH_KEYWORD} || '%'
+								</if>								
+			GROUP BY
+     						N_MON_ID, S_MON_NAME, S_MON_IP, N_GROUP_CODE, S_GROUP_NAME, N_TYPE_CODE, S_TYPE_NAME
+	  ) X
+	  WHERE num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
+
+  </select>
+  
+  <insert id="insert_data" parameterType="hashmap" statementType="PREPARED">
+  		INSERT INTO TB_ALM_GEN_LEGEND(N_MON_ID, N_ALM_TYPE, N_ALM_CODE, N_MON_TYPE, S_DATA_TYPE, S_VALUE1, S_VALUE2, N_ALM_RAT)
+		SELECT
+        		N_MON_ID, N_ALM_TYPE, N_ALM_CODE, N_MON_TYPE, 'I' S_DATA_TYPE, S_VALUE1, S_VALUE2, N_ALM_RAT
+		FROM
+		        (
+            		<foreach item="item" collection="svr_lst" separator="UNION">
+						SELECT #{item} N_MON_ID FROM dual
+					</foreach>
+        		) A,
+        		(
+        			SELECT * FROM
+        			(
+            			SELECT '10001' N_ALM_TYPE, '0' N_ALM_CODE, '0' N_MON_TYPE, '3' N_ALM_RAT, #{CPU_MINOR1} S_VALUE1,#{CPU_MINOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '0' N_ALM_CODE, '0' N_MON_TYPE, '2' N_ALM_RAT, #{CPU_MAJOR1} S_VALUE1,#{CPU_MAJOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '0' N_ALM_CODE, '0' N_MON_TYPE, '1' N_ALM_RAT, #{CPU_CRITICAL1} S_VALUE1,#{CPU_CRITICAL2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '1' N_ALM_CODE, '1' N_MON_TYPE, '3' N_ALM_RAT, #{MEM_MINOR1} S_VALUE1,#{MEM_MINOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '1' N_ALM_CODE, '1' N_MON_TYPE, '2' N_ALM_RAT, #{MEM_MAJOR1} S_VALUE1,#{MEM_MAJOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '1' N_ALM_CODE, '1' N_MON_TYPE, '1' N_ALM_RAT, #{MEM_CRITICAL1} S_VALUE1,#{MEM_CRITICAL2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '2' N_ALM_CODE, '2' N_MON_TYPE, '3' N_ALM_RAT, #{DISK_MINOR1} S_VALUE1,#{DISK_MINOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '2' N_ALM_CODE, '2' N_MON_TYPE, '2' N_ALM_RAT, #{DISK_MAJOR1} S_VALUE1,#{DISK_MAJOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '2' N_ALM_CODE, '2' N_MON_TYPE, '1' N_ALM_RAT, #{DISK_CRITICAL1} S_VALUE1,#{DISK_CRITICAL2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '3' N_ALM_CODE, '3' N_MON_TYPE, '3' N_ALM_RAT, #{PROCESS_MINOR1} S_VALUE1,#{PROCESS_MINOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '3' N_ALM_CODE, '3' N_MON_TYPE, '2' N_ALM_RAT, #{PROCESS_MAJOR1} S_VALUE1,#{PROCESS_MAJOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '3' N_ALM_CODE, '3' N_MON_TYPE, '1' N_ALM_RAT, #{PROCESS_CRITICAL1} S_VALUE1,#{PROCESS_CRITICAL2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '4' N_ALM_CODE, '4' N_MON_TYPE, '3' N_ALM_RAT, #{SERVICE_MINOR1} S_VALUE1,#{SERVICE_MINOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '4' N_ALM_CODE, '4' N_MON_TYPE, '2' N_ALM_RAT, #{SERVICE_MAJOR1} S_VALUE1,#{SERVICE_MAJOR2} S_VALUE2 FROM dual UNION
+            			SELECT '10001' N_ALM_TYPE, '4' N_ALM_CODE, '4' N_MON_TYPE, '1' N_ALM_RAT, #{SERVICE_CRITICAL1} S_VALUE1,#{SERVICE_CRITICAL2} S_VALUE2 FROM dual
+            		) A
+            		WHERE
+            				S_VALUE1 != '' OR S_VALUE1 IS NOT NULL
+        		) B
+  </insert>
+  
+  <update id="update_data" parameterType="hashmap" statementType="PREPARED">
+  		
+  </update>
+  
+  <delete id="delete_data" parameterType="hashmap" statementType="PREPARED">
+  		DELETE FROM TB_ALM_GEN_LEGEND
+		WHERE N_MON_ID IN (
+					<foreach item="item" collection="svr_lst" separator="UNION">
+						SELECT #{item} N_MON_ID FROM dual
+					</foreach>
+				)
+  </delete>
+  
+  <select id="dul_chk" resultType="hashMap" parameterType="hashmap">   	
+    		
+  </select>
+    
+  <select id="detail_info" resultType="hashmap" parameterType="hashmap">
+  			SELECT
+                   N_MON_ID, S_MON_NAME, S_GROUP_NAME, S_TYPE_NAME
+                   , MAX(CPU_MINOR) CPU_MINOR, MAX(CPU_MAJOR) CPU_MAJOR, MAX(CPU_CRITICAL) CPU_CRITICAL
+                   , MAX(MEM_MINOR) MEM_MINOR, MAX(MEM_MAJOR) MEM_MAJOR, MAX(MEM_CRITICAL) MEM_CRITICAL
+                   , MAX(DISK_MINOR) DISK_MINOR, MAX(DISK_MAJOR) DISK_MAJOR, MAX(DISK_CRITICAL) DISK_CRITICAL
+                   , MAX(PROCESS_MINOR) PROCESS_MINOR, MAX(PROCESS_MAJOR) PROCESS_MAJOR, MAX(PROCESS_CRITICAL) PROCESS_CRITICAL
+                   , MAX(SERVICE_MINOR) SERVICE_MINOR, MAX(SERVICE_MAJOR) SERVICE_MAJOR, MAX(SERVICE_CRITICAL) SERVICE_CRITICAL
+           FROM
+                   (
+                       SELECT
+                               N_MON_ID
+                               , (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME
+                               , (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = (SELECT N_GROUP_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) AND F_USE = 'Y') S_GROUP_NAME
+                               , (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = (SELECT N_TYPE_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID)) S_TYPE_NAME
+                               , CASE WHEN N_MON_TYPE = 0 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END CPU_MINOR
+                               , CASE WHEN N_MON_TYPE = 0 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END CPU_MAJOR
+                               , CASE WHEN N_MON_TYPE = 0 AND N_ALM_RAT = 1 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END CPU_CRITICAL
+                               , CASE WHEN N_MON_TYPE = 1 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END MEM_MINOR
+                               , CASE WHEN N_MON_TYPE = 1 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END MEM_MAJOR
+                               , CASE WHEN N_MON_TYPE = 1 AND N_ALM_RAT = 1 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END MEM_CRITICAL
+                               , CASE WHEN N_MON_TYPE = 2 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END DISK_MINOR
+                               , CASE WHEN N_MON_TYPE = 2 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END DISK_MAJOR
+                               , CASE WHEN N_MON_TYPE = 2 AND N_ALM_RAT = 1 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END DISK_CRITICAL
+                               , CASE WHEN N_MON_TYPE = 3 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END PROCESS_MINOR
+                               , CASE WHEN N_MON_TYPE = 3 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END PROCESS_MAJOR
+                               , CASE WHEN N_MON_TYPE = 3 AND N_ALM_RAT = 1 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END PROCESS_CRITICAL
+                               , CASE WHEN N_MON_TYPE = 4 AND N_ALM_RAT = 3 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END SERVICE_MINOR
+                               , CASE WHEN N_MON_TYPE = 4 AND N_ALM_RAT = 2 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END SERVICE_MAJOR
+                               , CASE WHEN N_MON_TYPE = 4 AND N_ALM_RAT = 1 THEN S_VALUE1 || ' ~ ' || S_VALUE2 END SERVICE_CRITICAL
+                       FROM
+                               TB_ALM_GEN_LEGEND A
+                       WHERE
+                       		N_MON_ID = COALESCE(${N_MON_ID},0)
+                   ) A
+           GROUP BY
+                   N_MON_ID, S_MON_NAME, S_GROUP_NAME, S_TYPE_NAME
+  </select>
+  
+  
+
+</mapper>

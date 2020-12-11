@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="svr_sub_menu_info">
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="select_list" resultType="hashmap" parameterType="hashmap">
+		SELECT /* svr_sub_menu_info.select_list */ *, @NUM AS TOTAL_COUNT  
+		FROM (
+			SELECT
+				@NUM := @NUM + 1 AS NUM,
+				A.SEQ_SVR_TAB_MENU AS SEQ_SVR_TAB_MENU,
+				A.TAB_KEY AS TAB_KEY,
+				A.TAB_NAME AS TAB_NAME,
+				A.TAB_URL AS TAB_URL,
+				B.ORDER_NUM AS ORDER_NUM,
+				B.N_TYPE_CODE AS N_TYPE_CODE,
+				(SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = B.N_TYPE_CODE) AS S_TYPE_NAME
+			FROM
+				(SELECT @NUM := 0) R, TB_SVR_TAB_MENU A LEFT OUTER JOIN TB_SVR_TAB B
+			ON 	A.SEQ_SVR_TAB_MENU = B.SEQ_SVR_TAB_MENU
+			<if test="N_TYPE_CODE == ''">
+				WHERE 	B.N_TYPE_CODE IS NOT NULL
+			</if>
+			<if test="N_TYPE_CODE != ''">
+				WHERE 	B.N_TYPE_CODE = #{N_TYPE_CODE, jdbcType=INTEGER}
+			</if>
+			<if test="TAB_NAME != null and TAB_NAME != ''">
+			AND 	A.TAB_NAME LIKE CONCAT('%', #{TAB_NAME}, '%')
+			</if>
+		) X
+		ORDER BY
+		<if test="sort == null">N_TYPE_CODE, ORDER_NUM</if>
+		<if test="sort != null">
+			<choose>
+				<when test="sort.size() == 0">
+					N_TYPE_CODE, ORDER_NUM
+				</when>
+				<otherwise>
+					<include refid="SQL_OderBy"/>
+				</otherwise>
+			</choose>
+		</if>
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+
+	<insert id="insert_server_tab_menu_data" parameterType="hashmap">
+		<selectKey resultType="java.lang.Integer" keyProperty="SEQ_SVR_TAB_MENU" order="BEFORE">
+			SELECT IFNULL(MAX(SEQ_SVR_TAB_MENU), 0) + 1 FROM TB_SVR_TAB_MENU
+		</selectKey>
+		INSERT INTO /* svr_sub_menu_info.insert_server_tab_menu_data */ TB_SVR_TAB_MENU
+			(SEQ_SVR_TAB_MENU, TAB_KEY, TAB_NAME, TAB_URL)
+		VALUES ( #{SEQ_SVR_TAB_MENU}, #{TAB_KEY}, #{TAB_NAME}, #{TAB_URL} )
+	</insert>
+	
+	<insert id="insert_server_tab_data" parameterType="hashmap">
+		INSERT INTO /* svr_sub_menu_info.insert_server_tab_data */ TB_SVR_TAB
+			(N_TYPE_CODE, SEQ_SVR_TAB_MENU, ORDER_NUM)
+		VALUES ( #{N_TYPE_CODE}, #{SEQ_SVR_TAB_MENU}, #{ORDER_NUM} )
+	</insert>
+
+	<update id="update_server_tab_menu_data" parameterType="hashmap">
+		UPDATE /* svr_sub_menu_info.update_server_tab_menu_data */ TB_SVR_TAB_MENU
+		SET    TAB_KEY          = #{TAB_KEY, jdbcType=VARCHAR},
+		       TAB_NAME         = #{TAB_NAME},
+		       TAB_URL          = #{TAB_URL}
+		WHERE  SEQ_SVR_TAB_MENU = #{SEQ_SVR_TAB_MENU}
+	</update>
+
+	<update id="update_server_tab_data" parameterType="hashmap">
+		UPDATE /* svr_sub_menu_info.update_server_tab_data */ TB_SVR_TAB
+		SET    N_TYPE_CODE      = #{N_TYPE_CODE},
+		       ORDER_NUM        = #{ORDER_NUM}
+        WHERE  SEQ_SVR_TAB_MENU = #{SEQ_SVR_TAB_MENU}
+	</update>
+
+	<delete id="delete_server_tab_menu_data" parameterType="hashmap">
+		DELETE FROM /* svr_sub_menu_info.delete_server_tab_menu_data */ TB_SVR_TAB_MENU
+		WHERE SEQ_SVR_TAB_MENU = #{SEQ_SVR_TAB_MENU}
+	</delete>
+
+	<delete id="delete_server_tab_data" parameterType="hashmap">
+		DELETE FROM /* svr_sub_menu_info.delete_server_tab_data */ TB_SVR_TAB
+		WHERE SEQ_SVR_TAB_MENU = #{SEQ_SVR_TAB_MENU}
+	</delete>
+</mapper>

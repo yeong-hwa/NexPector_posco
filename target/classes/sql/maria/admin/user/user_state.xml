@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="user_state">
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="select_list" resultType="hashmap" parameterType="hashmap">
+		SELECT /* user_state.select_list */ @NUM AS TOTAL_COUNT, X.*
+		FROM (
+			SELECT
+				@NUM := @NUM + 1 NUM, A.S_USER_ID, A.S_USER_NAME, 
+				DATEDIFF(STR_TO_DATE(DATE_FORMAT(NOW(), '%Y%m%d'), '%Y%m%d'), STR_TO_DATE(DATE_FORMAT(A.D_PASSWORD_CHANGE, '%Y%m%d'), '%Y%m%d')) AS D_PASS_UPDATED, 
+				A.N_LOGIN_FAIL_CNT, B.N_STATE, DATE_FORMAT(A.D_PASSWORD_CHANGE, '%Y/%m/%d %H:%i:%s') AS D_PASSWORD_CHANGE,  
+				(SELECT S_NAME FROM TB_NUM_CODE WHERE S_GROUP_CODE = 'USER_LOGIN_STATE' AND N_CODE = B.N_STATE) AS N_STATE_NAME
+			FROM TB_USER_INFO A, 
+				 TB_USER_LOGIN B,
+				 (SELECT @NUM := 0) R
+			WHERE A.S_USER_ID = B.S_USER_ID
+			<if test="S_USER_ID != null and S_USER_ID != ''">
+				AND A.S_USER_ID LIKE CONCAT('%', #{S_USER_ID}, '%')
+			</if>
+			<if test="S_USER_NAME != null and S_USER_NAME != ''">
+				AND A.S_USER_NAME LIKE CONCAT('%', #{S_USER_NAME}, '%')
+			</if>
+			ORDER BY	
+			<if test="sort == null">S_USER_ID</if>
+			<if test="sort != null">
+				<choose>
+					<when test="sort.size() == 0">
+						S_USER_ID
+					</when>
+					<otherwise>
+						<include refid="SQL_OderBy"/>
+					</otherwise>
+				</choose>
+			</if>
+			LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+		) X
+	</select>
+   
+	<insert id="update_login_state" parameterType="hashmap" statementType="PREPARED">
+		INSERT INTO TB_USER_LOGIN (S_USER_ID, D_UPDATE_TIME, N_STATE) VALUES (#{S_USER_ID}, NOW(), #{N_STATE})
+		ON DUPLICATE KEY UPDATE N_STATE = #{N_STATE}, D_UPDATE_TIME = NOW()
+	</insert>
+</mapper>

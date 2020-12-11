@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="trunk_group_info">
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="select_list" resultType="hashmap" parameterType="hashmap">
+		/* trunk_group_info.select_list */ 
+		SELECT *, @NUM AS TOTAL_COUNT 
+		FROM (
+			SELECT	@NUM := @NUM + 1 NUM,
+					N_DIALING_CODE, S_COMPANY, S_DIALING_NAME, CNT, 
+					(SELECT S_NAME FROM TB_SNMP_REAL_M01_TRUNK WHERE N_NUM = N_GROUP_NUM LIMIT 1) AS S_NAME,
+					(SELECT N_GROUP_CODE FROM TB_SVR_GROUP WHERE N_GROUP_CODE = '10000') AS N_GROUP_CODE
+			FROM (
+				SELECT I.N_DIALING_CODE, I.S_CENTER, I.S_COMPANY, T.S_DIALING_NAME, COUNT(N_GROUP_NUM) CNT, MAX(N_GROUP_NUM) N_GROUP_NUM
+				FROM TB_CLI_TRUNK_DIALING_TYPE T, 
+					 TB_CLI_TRUNK_DIALING_INFO I
+				WHERE I.N_DIALING_CODE = T.N_DIALING_CODE
+				GROUP BY I.N_DIALING_CODE, I.S_CENTER, I.S_COMPANY, T.S_DIALING_NAME
+			) F, (SELECT @NUM := 0) R
+		) X
+		<where>
+			<if test="N_GROUP_CODE != null and N_GROUP_CODE != ''">
+			AND X.N_GROUP_CODE = #{N_GROUP_CODE}
+			</if>
+			<if test="S_DIALING_NAME != null and S_DIALING_NAME != ''">
+			AND X.S_DIALING_NAME LIKE CONCAT('%', #{S_DIALING_NAME}, '%')
+			</if>
+		</where>
+		ORDER BY
+		<if test="sort == null">X.S_COMPANY, X.S_NAME</if>
+		<if test="sort != null">
+			<choose>
+				<when test="sort.size() == 0">
+					X.S_COMPANY, X.S_NAME
+				</when>
+				<otherwise>
+					<include refid="SQL_OderBy"/>
+				</otherwise>
+			</choose>
+		</if>
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+
+	<select id="select_trunk_list" resultType="hashmap" parameterType="hashmap">
+		/* trunk_group_info.select_trunk_list */
+		SELECT 
+				FOUND_ROWS() AS TOTAL_COUNT,
+				trunk.N_MON_ID, trunk.N_NUM, trunk.S_NAME, mon.S_MON_IP
+		FROM
+				TB_SNMP_REAL_M01_TRUNK trunk
+		INNER JOIN
+				TB_MON_INFO mon
+		ON 		trunk.N_MON_ID = mon.N_MON_ID
+		AND EXISTS (SELECT 1 FROM TB_USER_MON_LIST WHERE S_USER_ID = #{SESSION_USER_ID} AND N_MON_ID = mon.N_MON_ID)
+		AND EXISTS (SELECT 1 FROM TB_SVR_GROUP WHERE N_GROUP_CODE = #{N_GROUP_CODE} AND F_USE = 'Y')
+	</select>
+
+	<select id="selectDetailDialingType" parameterType="hashmap" resultType="hashmap">
+		/* trunk_group_info.selectDetailDialingType */
+		SELECT 
+				FOUND_ROWS() AS TOTAL_COUNT,
+				N_DIALING_CODE,
+				S_COMPANY,
+				S_CENTER,
+				S_DIALING_NAME
+		FROM 	TB_CLI_TRUNK_DIALING_TYPE
+		WHERE	N_DIALING_CODE = #{N_DIALING_CODE}
+	</select>
+
+	<select id="selectDetailDialingInfo" parameterType="hashmap" resultType="hashmap">
+		/* trunk_group_info.selectDetailDialingInfo */
+		SELECT 
+				FOUND_ROWS() AS TOTAL_COUNT,
+				A.N_MON_ID,
+				(SELECT S_MON_IP FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) AS S_MON_IP,
+				B.N_NUM,
+				B.S_NAME
+		FROM 	TB_CLI_TRUNK_DIALING_INFO A
+		INNER JOIN TB_SNMP_REAL_M01_TRUNK B
+		ON 		A.N_MON_ID = B.N_MON_ID
+		AND 	A.N_GROUP_NUM = B.N_NUM
+		AND 	A.N_DIALING_CODE = #{N_DIALING_CODE}
+	</select>
+
+	<insert id="insertDialingType" parameterType="hashmap">
+		<selectKey resultType="java.lang.Integer" keyProperty="N_DIALING_CODE" order="BEFORE">
+			SELECT COALESCE(MAX(N_DIALING_CODE), 0) + 1 FROM TB_CLI_TRUNK_DIALING_TYPE
+		</selectKey>
+		INSERT INTO /* trunk_group_info.insertDialingType */ TB_CLI_TRUNK_DIALING_TYPE
+		(N_DIALING_CODE, S_COMPANY, S_CENTER, S_DIALING_NAME)
+		VALUES
+		( #{N_DIALING_CODE}, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = #{S_COMPANY}), (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = #{S_COMPANY}), #{S_DIALING_NAME} )
+	</insert>
+
+	<insert id="insertDialingInfo" parameterType="hashmap">
+		INSERT INTO /* trunk_group_info.insertDialingInfo */TB_CLI_TRUNK_DIALING_INFO
+		(N_DIALING_CODE, S_COMPANY, S_CENTER, N_MON_ID, N_GROUP_NUM)
+		VALUES
+		(#{N_DIALING_CODE}, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = #{S_COMPANY}), (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = #{S_COMPANY}), #{N_MON_ID}, #{N_GROUP_NUM})
+	</insert>
+
+
+	<update id="updateDialingType" parameterType="hashmap">
+		UPDATE TB_CLI_TRUNK_DIALING_TYPE
+		SET	   S_COMPANY       = #{S_COMPANY},
+			   S_DIALING_NAME = #{S_DIALING_NAME}
+		WHERE  N_DIALING_CODE = #{N_DIALING_CODE}
+	</update>
+
+	<delete id="deleteDialingType" parameterType="hashmap">
+		DELETE FROM /* trunk_group_info.deleteDialingType */ TB_CLI_TRUNK_DIALING_TYPE
+		WHERE N_DIALING_CODE = #{N_DIALING_CODE}
+	</delete>
+
+	<delete id="deleteDialingInfo" parameterType="hashmap">
+		DELETE FROM /* trunk_group_info.deleteDialingInfo */ TB_CLI_TRUNK_DIALING_INFO
+		WHERE N_DIALING_CODE = #{N_DIALING_CODE}
+	</delete>
+
+</mapper>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="batch">
+	<select id="cntTbAlm" resultType="java.lang.Integer">
+		/* batch.cntTbAlm */
+		SELECT COUNT(*) AS CNT 
+		FROM TB_ALM 
+		WHERE D_UPDATE_TIME &lt; DATE_ADD(now(), INTERVAL -365 DAY)
+	</select>
+
+	<select id="cntTbAlmHistory" resultType="java.lang.Integer">
+		/* batch.cntTbAlmHistory */
+		SELECT COUNT(*) AS CNT 
+		FROM TB_ALM_HISTORY
+		WHERE D_UPDATE_TIME &lt; DATE_ADD(now(), INTERVAL -365 DAY)
+	</select>
+
+	<select id="cntTbMonAccrueResource" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS CNT
+		FROM TB_MON_ACCRUE_RESOURCE
+		WHERE STR_TO_DATE(N_DAY, '%Y%m%d') &lt; DATE_ADD(now(), INTERVAL -365 DAY)
+	</select>
+
+	<select id="cntTbCliPbxTrafficTrunkAvg" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS CNT
+		FROM TB_CLI_PBX_TRAFFIC_TRUNK_AVG
+		WHERE STR_TO_DATE(S_DAY, '%Y%m%d') &lt; DATE_ADD(now(), INTERVAL -365 DAY)
+	</select>
+
+	<delete id="deleteTbAlm">
+		/* batch.deleteTbAlm */
+		DELETE 
+		FROM TB_ALM 
+		WHERE D_UPDATE_TIME &lt; DATE_ADD(now(), INTERVAL -365 DAY)
+		ORDER BY D_UPDATE_TIME ASC
+		LIMIT 1000
+	</delete>
+
+	<delete id="deleteTbAlmHistory">
+		/* batch.deleteTbAlmHistory */
+		DELETE 
+		FROM TB_ALM_HISTORY 
+		WHERE D_UPDATE_TIME &lt; DATE_ADD(now(), INTERVAL -365 DAY)
+		ORDER BY D_UPDATE_TIME ASC
+		LIMIT 1000
+	</delete>
+
+	<delete id="deleteTbMonAccrueResource">
+		/* batch.deleteTbMonAccrueResource */
+		DELETE 
+		FROM TB_MON_ACCRUE_RESOURCE 
+		WHERE STR_TO_DATE(N_DAY, '%Y%m%d') &lt;  DATE_ADD(now(), INTERVAL -365 DAY)
+		ORDER BY N_DAY ASC
+		LIMIT 1000
+	</delete>
+	
+	<delete id="deleteTbCliPbxTrafficTrunkAvg">
+		/* batch.deleteTbCliPbxTrafficTrunkAvg */
+		DELETE 
+		FROM TB_CLI_PBX_TRAFFIC_TRUNK_AVG 
+		WHERE STR_TO_DATE(S_DAY, '%Y%m%d') &lt; DATE_ADD(now(), INTERVAL -365 DAY)
+		ORDER BY S_DAY ASC
+		LIMIT 1000
+	</delete>
+
+</mapper>

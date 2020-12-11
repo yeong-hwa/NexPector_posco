@@ -1,0 +1,57 @@
+@charset "utf-8";
+
+/*=========================================================
+사이트 메뉴 css정의 / kipilco
+===========================================================*/
+
+.popupBox1{width:908px; float:left;}
+.popupBox1 .p_bg_zone{width:908px; float:left;}
+.popupBox1 .p_bg_zone .m_bg{width:908px; background:url(../images/popup/error_bg1.jpg) repeat-y left top; float:left;}
+.popupBox1 .p_bg_zone .b_bg{width:908px; height:18px; background:url(../images/popup/error_bg2.jpg) repeat-y left top; float:left;}
+
+.p_title1{width:860px; float:left; height:30px; line-height:30px;}
+.p_title1 strong{padding:0 5px 0 13px; background:url(../images/popup/ico_arrow1.jpg) no-repeat 0px 0px;}
+.p_title1 span{padding:0 10px 0 5px;}
+
+.p_title2{width:860px; float:left; height:30px; line-height:30px;}
+.p_title2 strong{padding:0 5px 0 13px; background:url(../images/popup/ico_arrow1.jpg) no-repeat 0px 0px; color:#035198;}
+
+.p_cont1_th{width:860px; margin:0 0 0 20px;}
+.p_cont1{width:860px; margin:30px 0 0 0;}
+
+.p_cont1_th .p_error_1{border-collapse:collapse; margin:0px 0 0px 0px;  border-top:0px solid #6f6f6f; border-left:0px solid #6f6f6f; width:100%; table-layout:fixed; float:left;}
+.p_cont1_th .p_error_1 caption{visibility:hidden; width:0px; height:0px; overflow:hidden; font-size:0px; line-height:0px; /*position:absolute;*/}
+.p_cont1_th .p_error_1 th{height:15px; text-align:center; padding:6px 5px 3px 5px; border-bottom:0px solid #6f6f6f; border-right:0px solid #6f6f6f; line-height:14px; background:#8a8a8a; color:#fff; }
+
+.p_cont1 .p_error_1{border-collapse:collapse; margin:0px 0 0px 0px;  border-top:1px solid #eeeeee; border-left:1px solid #eeeeee; width:100%; table-layout:fixed; float:left;}
+.p_cont1 .p_error_1 caption{visibility:hidden; width:0px; height:0px; overflow:hidden; font-size:0px; line-height:0px; /*position:absolute;*/}
+.p_cont1 .p_error_1 th{height:15px; text-align:center; padding:6px 5px 3px 5px; border-bottom:1px solid #eeeeee; border-right:1px solid #eeeeee; line-height:14px; background:#8a8a8a; color:#fff; }
+.p_cont1 .p_error_1 td{height:15px; text-align:center; padding:6px 5px 3px 5px; border-bottom:1px solid #eeeeee; border-right:1px solid #eeeeee; line-height:14px; background:#f6f6f6; color:#575c5f;}
+.p_cont1 .p_error_1 .filed_A{background:#e9e9e9; color:#363636;}
+.p_cont1 .p_error_1 .filed_B{background:#fcfdfd; color:#575c5f;}
+.p_cont1 .p_error_1 .left{text-align:left;}
+
+.info_box{width:820px; float:left; border-top:1px solid #a8b4c4; border-bottom:1px solid #c5c5c5; background:#eeeeee; padding:20px 20px;}
+
+.info_box .info_tb1{border-collapse:collapse; margin:0px 0 0px 0px;  border-top:0px solid #eeeeee; border-left:0px solid #eeeeee; width:820px; table-layout:fixed; float:left;}
+.info_box .info_tb1 caption{visibility:hidden; width:0px; height:0px; overflow:hidden; font-size:0px; line-height:0px; /*position:absolute;*/}
+.info_box .info_tb1 td{height:15px; text-align:left; padding:3px 5px 2px 5px; border-bottom:0px solid #eeeeee; border-right:0px solid #eeeeee; line-height:14px;  color:#575c5f;}
+
+.txt_in_box{border:1px solid #707070; width:100%; height:80px;}
+.select_box_ty1{border:1px solid #707070; height:22px; line-height:22px;}
+.input_box_ty1{border:1px solid #707070; height:19px; line-height:19px;}
+
+.pop_btn_box{width:860px; float:left; margin:20px 0 20px 20px; text-align:center;}
+.pop_btn_box img{padding:0px 10px;}
+
+.popupBox2{width:400px; float:left; height:450; overflow:hidden;}
+.popupBox2 .title_btn{width:100%; float:left; padding:10px 0 10px 0px; border-top:2px solid #cad3e2; border-bottom:2px solid #cad3e2; margin-bottom:10px;}
+.popupBox2 .title_btn strong{background:url(../images/popup/icon_next.jpg) no-repeat 0px 3px; padding:0 0 0 20px; margin-left:10px; height:25px; line-height:25px; display:inline-block;}
+.popupBox2 .title_btn span{float:right; padding-right:10px;}
+
+.popupBox2 .user_title{background:url(../images/popup/icon_result.jpg) no-repeat 0px 7px; padding:0 0 0 18px; margin-left:10px; height:30px; line-height:30px; display:inline-block; font-weight:bold;
+    color:#999;}
+
+.popupBox2 .conSort{}
+.popupBox2 .conSort li{width:98%; height:25px; background:#efefef; border:1px solid #3f3f3f; line-height:25px; padding:0 0 0 5px; margin:2px;} 
+

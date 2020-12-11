@@ -1,0 +1,52 @@
+﻿/*마스터 CSS*/
+@import url("layout.css");
+@import url("font.css");
+@import url("jquery.mCustomScrollbar.css");
+
+* {margin:0; padding:0}
+body{ 
+	font: 0.75em/1.8em "Gulim", "Dotum", "tahoma";
+	background-image: url(/common/dashboard/images/bg01.png);
+	color: #555;
+	text-align: left;
+	line-height: 120%;
+	text-decoration:none;
+	border-collapse: collapse;
+	margin:0px;
+	scrollbar-arrow-color: #000000;
+	scrollbar-highlight-color: #ffffff;
+	scrollbar-shadow-color: #B4B4B4;
+	scrollbar-darkshadow-color: #EEEEEE;
+	scrollbar-3dlight-color: #EEEEEE;
+	scrollbar-track-color: #FAFAFA;
+	scrollbar-face-color: #EEEEEE;
+ }
+/* link */
+a{color:#555;/*outline:none;*/}
+a:link{color:#555;text-decoration:none;}
+a:Visited{color:#555;text-decoration:none;}
+a:hover{color:#237ec4; text-decoration:underline;}
+/* basic tag */
+hr{ display: none; }
+p{ margin: 0; padding: 0; }
+ol, ul, dt{ margin: 0; padding: 0; }
+ul{ list-style-type: none; }
+form{ margin: 0; padding: 0; border: none; }
+caption{display: none;} 
+legend{display: none;}
+img{ border: none; }
+img.left{ float: left; }
+img.right{ float: right; }
+fieldset{ border: none; padding: 0; margin: 0; }
+select{ font-size: 100%; font-family:"Gulim", "Dotum", "Lucida Grande", Helvetica, Arial,Verdana, AppleGothic, sans-serif;}
+input, textarea{ font-size:100%;  font-family:"Gulim", "Dotum", "Lucida Grande", Helvetica, Arial,Verdana, AppleGothic, sans-serif;}
+caption, cite, code, dfn, var{ font-style: normal;font-weight: normal; }
+
+.alignRight{text-align:right;}
+.alignCenter{text-align:center;}
+
+.hide{ display: none; }
+
+#layerPop{width:810px;height:445px;position:absolute;display:none;border:1px solid #ccc;padding:10px;}
+#layerPop .close{position:absolute;bottom:5px;right:5px;}
+

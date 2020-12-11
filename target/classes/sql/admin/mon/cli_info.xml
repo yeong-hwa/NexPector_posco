@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cli_info">
+
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="select_server_list" resultType="hashmap" parameterType="hashmap">
+		SELECT /* cli_info.select_server_list */ *, @NUM AS TOTAL_COUNT 
+		FROM (
+			SELECT
+				@NUM := @NUM + 1 NUM,
+				A.MON_ID,
+				B.S_MON_NAME AS MON_NAME,
+				A.SVR_IP,
+				A.SVR_PORT,
+				C.S_NAME AS TERMINAL,
+				DATE_FORMAT(A.MODIFY_DATE, '%Y-%m-%d') AS MODIFY_DATE
+			FROM 
+				TB_CLI_SERVER_INFO A INNER JOIN TB_MON_INFO B
+				ON A.MON_ID = B.N_MON_ID
+				INNER JOIN TB_CODE C
+				ON S_GROUP_CODE = 'TERMINAL' AND C.S_CODE = A.TERMINAL
+				, (SELECT @NUM := 0) R
+			<where>
+				<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">
+				  		AND B.N_GROUP_CODE IN (SELECT N_GROUP_CODE FROM TB_SVR_GROUP WHERE IFNULL(N_UP_CODE, N_GROUP_CODE) = #{N_GROUP_CODE} AND F_USE = 'Y')
+				</if>
+				<if test="SEARCH_KEYWORD != null and SEARCH_KEYWORD != ''">
+					<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'ID'">
+					  	AND A.MON_ID LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+					</if>
+					<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'NM'">
+					  	AND B.S_MON_NAME LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+					</if>
+					<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'IP'">
+					  	AND A.SVR_IP LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+					</if>
+				</if>
+				<if test="TERMINAL != null and TERMINAL != ''">
+						AND C.S_NAME LIKE CONCAT('%', #{TERMINAL}, '%')
+				</if>
+			</where>
+		) X
+		ORDER BY
+		<if test="sort == null">MODIFY_DATE DESC</if>
+		<if test="sort != null">
+			<choose>
+				<when test="sort.size() == 0">
+					MODIFY_DATE DESC
+				</when>
+				<otherwise>
+					<include refid="SQL_OderBy"/>
+				</otherwise>
+			</choose>
+		</if>
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+
+	<select id="select_script_list" resultType="hashmap" parameterType="hashmap">
+		SELECT *, @NUM AS TOTAL_COUNT
+		FROM (
+			SELECT 
+				@NUM := @NUM + 1 NUM,
+				MON_ID,
+				SCRIPT_ID,
+				PATH,
+				TIMEOUT,
+				INTERVAL_VAL,
+				RETRY_CNT,
+				(SELECT S_NAME FROM TB_CODE WHERE S_GROUP_CODE = 'USE_YN' AND S_CODE = USE_YN) AS USE_YN,
+				DATE_FORMAT(MODIFY_DATE, '%Y-%m-%d') AS MODIFY_DATE
+			FROM TB_CLI_SCRIPT_INFO,
+				 (SELECT @NUM := 0) R
+			WHERE MON_ID = #{MON_ID}
+		) X
+		ORDER BY
+		<if test="sort == null">MODIFY_DATE DESC</if>
+		<if test="sort != null">
+			<choose>
+				<when test="sort.size() == 0">
+					MODIFY_DATE DESC
+				</when>
+				<otherwise>
+					<include refid="SQL_OderBy"/>
+				</otherwise>
+			</choose>
+		</if>
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+	
+	<delete id="delete_server_data" parameterType="hashmap" statementType="PREPARED">
+		DELETE FROM TB_CLI_SERVER_INFO
+		 WHERE MON_ID = #{MON_ID}
+	</delete>
+	
+	<delete id="delete_script_data" parameterType="hashmap" statementType="PREPARED">
+		DELETE FROM TB_CLI_SCRIPT_INFO
+		 WHERE MON_ID = #{MON_ID}
+		 <if test="SCRIPT_ID != null and SCRIPT_ID != ''">
+		   AND SCRIPT_ID = #{SCRIPT_ID}
+		 </if>
+	</delete>
+	
+	<select id="dul_server_chk" resultType="hashMap" parameterType="hashmap">
+		SELECT COUNT(*) CNT
+		  FROM TB_CLI_SERVER_INFO
+		 WHERE MON_ID = #{MON_ID}
+	</select>
+	
+	<select id="dul_script_chk" resultType="hashMap" parameterType="hashmap">
+		SELECT COUNT(*) CNT
+		  FROM TB_CLI_SCRIPT_INFO
+		 WHERE MON_ID = #{MON_ID}
+		   AND SCRIPT_ID = #{SCRIPT_ID}
+	</select>
+
+	<insert id="insert_server_data" parameterType="hashmap" statementType="PREPARED">
+		INSERT INTO TB_CLI_SERVER_INFO (MON_ID, SVR_IP, SVR_PORT, TERMINAL, REGIST_DATE, MODIFY_DATE)
+		VALUES (#{MON_ID}, #{SVR_IP}, #{SVR_PORT}, #{TERMINAL}, NOW(), NOW())
+	</insert>
+	
+	<insert id="insert_script_data" parameterType="hashmap" statementType="PREPARED">
+		INSERT INTO TB_CLI_SCRIPT_INFO ( 
+			MON_ID, SCRIPT_ID, PATH, USER_ID, USER_PW,
+			TIMEOUT,  
+			INTERVAL_VAL,  
+			RETRY_CNT, 
+			REGIST_DATE, MODIFY_DATE, PARSE_IMPL_CLASS, RES_TABLE_NAME, USE_YN 
+		)
+		VALUES (
+			#{MON_ID}, #{SCRIPT_ID}, #{PATH}, #{USER_ID}, #{USER_PW}, 
+			#{TIMEOUT},  
+			#{INTERVAL_VAL}, 
+			#{RETRY_CNT}, 
+			NOW(), NOW(), #{PARSE_IMPL_CLASS}, #{RES_TABLE_NAME}, #{USE_YN}
+		)
+	</insert>	
+
+	<update id="update_server_data" parameterType="hashmap" statementType="PREPARED">
+		UPDATE TB_CLI_SERVER_INFO
+		SET
+			MON_ID = #{MON_ID}
+			, SVR_IP = #{SVR_IP}
+			, SVR_PORT = #{SVR_PORT}
+			, TERMINAL = #{TERMINAL}
+			, MODIFY_DATE = NOW()
+		WHERE MON_ID = #{MON_ID}
+	</update>
+
+	<update id="update_script_data" parameterType="hashmap" statementType="PREPARED">
+		UPDATE TB_CLI_SCRIPT_INFO
+		SET
+			MON_ID = #{MON_ID}
+			, SCRIPT_ID = #{SCRIPT_ID}
+			, PATH = #{PATH}
+			, USER_ID = #{USER_ID}
+			<if test="USER_PW != null and USER_PW != ''">, USER_PW = #{USER_PW} </if>
+			, TIMEOUT = #{TIMEOUT}
+			, INTERVAL_VAL = #{INTERVAL_VAL}
+			, RETRY_CNT = #{RETRY_CNT}
+			, RES_TABLE_NAME = #{RES_TABLE_NAME}
+			, USE_YN = #{USE_YN}
+			, PARSE_IMPL_CLASS = #{PARSE_IMPL_CLASS}
+			, MODIFY_DATE = NOW()
+		WHERE MON_ID = #{MON_ID}
+		  AND SCRIPT_ID = #{SCRIPT_ID}
+	</update>
+	
+	<select id="server_detail_info" resultType="hashmap" parameterType="hashmap">
+		SELECT MON_ID, SVR_IP, SVR_PORT, TERMINAL
+		FROM TB_CLI_SERVER_INFO
+		WHERE MON_ID = #{MON_ID}
+	</select>
+
+	<select id="script_detail_info" resultType="hashmap" parameterType="hashmap">
+		SELECT
+			MON_ID,
+			(SELECT SVR_IP FROM TB_CLI_SERVER_INFO WHERE MON_ID = A.MON_ID) AS SVR_IP,
+			SCRIPT_ID, PATH, USER_ID, USER_PW, TIMEOUT,
+	 		INTERVAL_VAL, RETRY_CNT, PARSE_IMPL_CLASS,
+	 		REGIST_DATE, MODIFY_DATE, RES_TABLE_NAME,
+	 		USE_YN
+		FROM TB_CLI_SCRIPT_INFO A
+		WHERE MON_ID = #{MON_ID}
+			AND SCRIPT_ID = #{SCRIPT_ID}
+	</select>
+
+	<select id="dul_chk" resultType="hashMap" parameterType="hashmap">
+		SELECT COUNT(*) CNT
+		FROM TB_CLI_SERVER_INFO A, TB_CLI_SCRIPT_INFO B
+		WHERE A.MON_ID = B.MON_ID
+			AND A.MON_ID = #{MON_ID}
+			AND B.SCRIPT_ID = #{SCRIPT_ID}
+	</select>
+</mapper>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+
+    <entry key="program.common.number">번호</entry>
+    <entry key="program.common.manage">관리</entry>
+    <entry key="program.common.show">보기</entry>
+    <entry key="program.common.add">추가</entry>
+    <entry key="program.common.day">일</entry>
+
+	
+    <entry key="program.programProg.title">프로그램명</entry>
+    <entry key="program.programProg.addExpr">체험학습 추가</entry>
+    <entry key="program.programProg.weight">가중치</entry>
+    <entry key="program.programProg.eduDay">교육일수</entry>
+    <entry key="program.programProg.chkProgNm">프로그램명을 입력해주세요.</entry>
+    <entry key="program.programProg.chkEduDay">교육일을 입력해주세요.</entry>
+    <entry key="program.programProg.chkExprId">같은 체험학습을 선택하셨습니다.\n 다시 선택해 주세요.</entry>
+    <entry key="program.programProg.chkWeightPnt">가중치의 합은 100이 되어야 합니다.\n 다시 입력해 주세요.</entry>
+    
+    <entry key="program.programExpr.title">체험학습명</entry>
+    
+    <entry key="program.programQuest.title">평가서</entry>
+    <entry key="program.programQuest.name">평가서 명</entry>
+    <entry key="program.programQuest.itemType">문항유형</entry>
+    <entry key="program.programQuest.itemAnswerCnt">답항수</entry>
+    <entry key="program.programQuest.addItemMent">필요한 문항정보를 입력하세요.</entry>
+    <entry key="program.programQuest.item">문항</entry>
+    <entry key="program.programQuest.allot">배점</entry>
+    <entry key="program.programQuest.lumpEval">일괄평가</entry>
+    <entry key="program.programQuest.chkEvalInfoNm">평가서 명을 입력해주세요.</entry>
+    <entry key="program.programQuest.chkItemLeng">하나 이상의 문항을 등록해야 합니다.</entry>
+    <entry key="program.programQuest.chkInputVal">내용을 입력해주세요.</entry>
+        
+</properties>

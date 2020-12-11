@@ -1,0 +1,127 @@
+﻿@charset "utf-8";
+
+/*reset*/
+/*html,body{width:100%; height:100%}*/
+*{-webkit-box-sizing: border-box; -moz-box-sizing:border-box; box-sizing:border-box}
+body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,form,fieldset,p,button {margin:0;padding:0}
+body, h1,h2,h3,h4,input,button{ 
+	font-family:"NotoS_R","Malgun Gothic", "Dotum", "Gulim", "tahoma";
+	font-size:14px;
+	color:#737373;
+	text-align:left;
+	line-height:120%;
+	text-decoration:none;
+	border-collapse:collapse;
+	margin:0px;
+	scrollbar-arrow-color: #000000;/*bar화살표컬러*/
+	scrollbar-highlight-color:#ffffff;/*bar하이라이트컬러*/
+	scrollbar-shadow-color: #B4B4B4;/*bar그림자컬러*/
+	scrollbar-darkshadow-color:#EEEEEE;/*bar바탕의 어두운부분컬러*/
+	scrollbar-3dlight-color: #EEEEEE;/*bar하이라이트컬러*/
+	scrollbar-track-color: #FAFAFA;/*bar 없는 곳 기본 컬러*/
+	scrollbar-face-color: #EEEEEE;/*bar기본컬러*/
+    word-break:break-all;
+	-ms-word-break:break-all} 
+img,fieldset,iframe {border:0 none}
+li {list-style:none}
+input,select,button {vertical-align:middle}
+img{vertical-align:top}
+i,em,address{font-style:normal}
+button{position:relative; margin:0; padding:0; cursor:pointer}
+button img{left:-3px;*left:auto}
+option{padding-right:6px}
+hr{display:none; -webkit-box-sizing:content-box; -moz-box-sizing:content-box; box-sizing:content-box}
+legend{*width:0}
+
+table{width:100%; border-collapse:collapse; border-spacing:0}
+caption{display: none}
+td,th {padding: 0;}
+input, textarea{font-family:NotoS_R; -webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box}
+input:-ms-clear{display:none}
+input::-webkit-input-placeholder{color:#101b2d}
+input:-moz-placeholder{color:#101b2d}
+input:-ms-input-placeholder{color:#101b2d}
+input[type=text]:disabled {background: #eeeeee; color:#919191}
+textarea {vertical-align:middle; resize:vertical /*none:조절불가, both:가로/세로 조절 가능, horizontal:가로 조절만 가능, vertical:세로조절만 가능*/}
+/* a link */
+a:link{color:#333; text-decoration:none}
+a:visited{color:#333; text-decoration:none}
+a:active{color:#333; text-decoration:none}
+a:hover{color:#333; text-decoration:none}
+
+
+/* 숨김영역 */
+.skip, hr,legend,caption{	position:absolute;	width:0; height:0; line-height:0;	overflow:hidden; text-indent:-2000px; left:-500px;}
+
+
+/* common */
+/* *float* */
+.fl {float: left !important}
+.fr {float: right !important}
+
+
+/* Padding */
+.pd24{padding: 24px 0px !important}
+/* *위* */
+.pdt8 {padding-top: 8px !important}
+
+/* *오른쪽* */
+.pdr6 {padding-right: 6px !important}
+
+/* *아래* */
+/*.pdb20 {padding-bottom: 20px !important}*/
+
+/* *왼쪽* */
+.pdl5 {padding-left: 5px !important}
+.pdl10 {padding-left: 10px !important}
+
+
+
+/* Margin */
+/* *위* */
+.mgt10 {margin-top: 10px !important}
+.mgt18 {margin-top: 18px !important}
+.mgt29 {margin-top: 29px !important}
+.mgt45 {margin-top: 45px !important}
+
+/* *오른쪽* */
+.mgr8 {margin-right: 8px !important}
+.mgr10 {margin-right: 10px !important}
+.mgr13 {margin-right: 13px !important}
+
+.mgr16 {margin-right: 16px !important}
+.mgr20 {margin-right: 20px !important}
+
+/* *아래* */
+.mgb4 {margin-bottom: 4px !important}
+.mgb9 {margin-bottom: 9px !important}
+.mgb10 {margin-bottom: 10px !important}
+.mgb15 {margin-bottom: 15px !important}
+.mgb20 {margin-bottom: 20px !important}
+
+
+/* *왼쪽* */
+.mgl2 {margin-left: 2px  !important }
+.mgl10 {margin-left: 10px  !important }
+.mgl12 {margin-left: 12px  !important }
+.mgl15 {margin-left: 15px  !important }
+.mgl53 {margin-left: 53px  !important }
+
+/* Text-align */
+.tal {text-align:left !important}
+.tar {text-align:right !important}
+.tac {text-align:center !important}
+
+/* Vertical-align */
+.vam {vertical-align:middle;}
+.vat {vertical-align:top;}
+.vab {vertical-align:bottom}
+
+
+
+/* Border */
+.bl0 {border-left:0px !important}
+.br0 {border-right:0px !important}
+.bt0 {border-top:0px !important}
+.bb0 {border-bottom:0px !important}
+

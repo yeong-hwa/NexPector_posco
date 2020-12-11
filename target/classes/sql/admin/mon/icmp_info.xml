@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icmp_info">
+  	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+ <select id="select_list" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+  	SELECT * FROM (
+    		SELECT
+				ROW_NUMBER() OVER (ORDER BY
+					  <if test="sort == null">N_MON_ID</if>
+					  <if test="sort != null">
+						  <choose>
+							  <when test="sort.size() == 0">
+								  N_MON_ID
+							  </when>
+							  <otherwise>
+								  <include refid="SQL_OderBy"/>
+							  </otherwise>
+						  </choose>
+					  </if>) NUM, FOUND_ROWS() AS TOTAL_COUNT
+        			, N_MON_ID || S_ICMP_IP KEY_COL, N_MON_ID, S_ICMP_IP, N_MON_ID OLD_N_MON_ID, S_ICMP_IP OLD_S_ICMP_IP
+        			, S_ICMP_NAME
+        			, N_CHECK_TIME        			
+        			, N_RES_TIME, N_TIME_OUT, N_ALM_CNT
+        			, N_ALM_RAT
+        			, D_IN_DATE, D_UP_DATE
+        			, (SELECT S_ALM_RATING_NAME FROM TB_ALM_RATING_CODE WHERE N_ALM_RATING = A.N_ALM_RAT) S_ALM_RATING_NAME
+			FROM
+        			TB_MON_ICMP_INFO A
+				<where>
+					<if test="N_MON_ID != '' and N_MON_ID != null">
+						N_MON_ID = #{N_MON_ID}
+					</if>
+				</where>
+	) X
+	WHERE num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
+  </select>
+  
+  <select id="DetailRetrieveIcmpQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+    	
+    		SELECT
+        			A.N_MON_ID, A.S_ICMP_IP
+        			, A.N_CHECK_TIME, A.N_RES_TIME, A.N_TIME_OUT, A.N_ALM_CNT
+        			, A.N_ALM_RAT, A.S_ICMP_NAME
+        			, A.D_IN_DATE, A.D_UP_DATE
+        			, B.S_MON_NAME, B.S_MON_IP
+        			, (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = B.N_TYPE_CODE) TYPE_NAME
+        			, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = B.N_GROUP_CODE AND F_USE = 'Y') GROUP_NAME
+        			, (SELECT S_DESC FROM TB_SVR_STYLE WHERE N_STYLE_CODE = B.N_STYLE_CODE) STYLE_NAME 
+        			, B.B_CON_INFO
+			FROM
+        			TB_MON_ICMP_INFO A INNER JOIN TB_MON_INFO B ON B.N_MON_ID = A.N_MON_ID
+			WHERE
+			<where>
+				<if test="N_MON_ID != '' and N_MON_ID != null">
+       				AND A.N_MON_ID = #{N_MON_ID}
+       			</if>
+				<if test="S_ICMP_IP != '' and S_ICMP_IP != null">
+					AND 	S_ICMP_IP = #{S_ICMP_IP}
+				</if>
+			</where>
+  </select>
+ 
+  <insert id="insert_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  			INSERT INTO TB_MON_ICMP_INFO(N_MON_ID, S_ICMP_IP, S_ICMP_NAME, N_CHECK_TIME, N_RES_TIME, N_TIME_OUT, N_ALM_CNT, N_ALM_RAT, D_IN_DATE, D_UP_DATE)
+  			VALUES(#{N_MON_ID}, #{S_ICMP_IP}, #{S_ICMP_NAME}, #{N_CHECK_TIME}, #{N_RES_TIME}, #{N_TIME_OUT}, #{N_ALM_CNT}, #{N_ALM_RAT}, SYSDATE, SYSDATE)
+	</insert>
+	
+  <insert id="insIcmp2" parameterType="java.util.HashMap" statementType="PREPARED">
+  			INSERT INTO TB_MON_ICMP_RES(N_MON_ID, S_ICMP_IP, D_CHECK_TIME, N_RES_TYPE, N_RES_TIME)
+  			SELECT 
+  					N_MON_ID, S_ICMP_IP, SYSDATE, 0,0
+  			FROM 
+  					TB_MON_ICMP_INFO A
+  			WHERE
+  					N_MON_ID = #{N_MON_ID}
+  			AND		NOT EXISTS (
+  							SELECT 1 FROM TB_MON_ICMP_RES
+  							WHERE S_ICMP_IP = A.S_ICMP_IP
+  							AND N_MON_ID = A.N_MON_ID
+  						   ) 
+	</insert>
+	
+	<delete id="delete_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE FROM TB_MON_ICMP_INFO  		
+  		WHERE
+  				N_MON_ID = #{N_MON_ID}
+  		AND 	S_ICMP_IP = #{S_ICMP_IP}
+  	</delete>
+	
+  <update id="update_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  		UPDATE
+  				TB_MON_ICMP_INFO
+  		SET
+  				S_ICMP_NAME = #{S_ICMP_NAME}
+  				, N_CHECK_TIME = #{N_CHECK_TIME}
+  				, N_RES_TIME = #{N_RES_TIME}
+  				, N_TIME_OUT = #{N_TIME_OUT}
+  				, N_ALM_CNT = #{N_ALM_CNT}
+  				, N_ALM_RAT = #{N_ALM_RAT}
+  				, D_UP_DATE = SYSDATE
+  		WHERE
+  				N_MON_ID = #{N_MON_ID}
+  		AND 	S_ICMP_IP = #{S_ICMP_IP}
+  </update>
+
+	<select id="chkIcmp" resultType="java.lang.String" parameterType="java.util.HashMap">
+    		SELECT
+    				COUNT(*) CNT
+    		FROM
+					TB_MON_ICMP_INFO
+			WHERE
+					N_MON_ID = #{N_MON_ID} AND S_ICMP_IP = #{S_ICMP_IP}
+  </select>
+  
+  <select id="IcmpDetailServerQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+    	
+    		SELECT
+        			N_MON_ID, S_MON_NAME, S_MON_IP
+        			, (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = B.N_TYPE_CODE) TYPE_NAME
+        			, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = B.N_GROUP_CODE AND F_USE = 'Y') GROUP_NAME
+        			, (SELECT S_DESC FROM TB_SVR_STYLE WHERE N_STYLE_CODE = B.N_STYLE_CODE) STYLE_NAME
+        			, B.B_CON_INFO
+			FROM
+        			TB_MON_INFO B
+			<where>
+				<if test="N_MON_ID != '' and N_MON_ID != null">
+					N_MON_ID = #{N_MON_ID}
+				</if>
+			</where>
+  </select>
+
+ 	<insert id="insIcmpExcel1" parameterType="java.util.HashMap" statementType="PREPARED">
+  			INSERT INTO ping_info(p_sid, ip, p_name, check_time, delay_time, timeout_time, err_cnt, err_rating)
+  			VALUES (
+  				<foreach collection="ex_data" item="lst_data" index="j" separator=",">
+  				 	'${lst_data}'
+  				</foreach>
+  			)
+	</insert>
+	
+	<insert id="insIcmpExcel2" parameterType="java.util.HashMap" statementType="PREPARED">
+			INSERT INTO ping_result(seq, p_sid)
+  			SELECT 
+  					seq, p_sid 
+  			FROM 
+  					ping_info A
+  			WHERE
+  					p_sid IN
+  					( 
+  						<foreach collection="ex_data" item="lst_data" index="j" separator=",">
+  				 			<if test="j==0">'${lst_data}'</if>
+  						</foreach>
+  					)  					
+  			AND		NOT EXISTS (
+  							SELECT 1 FROM ping_result
+  							WHERE seq = A.seq
+  							AND p_sid = A.p_sid
+  						   )   			
+	</insert>
+	
+	<delete id="delIcmp1" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE FROM	TB_MON_ICMP_INFO	
+  		WHERE
+  				N_MON_ID = #{N_MON_ID}
+  		AND 	S_ICMP_IP = #{S_ICMP_IP}
+  </delete>
+  <delete id="delIcmp2" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE FROM	TB_MON_ICMP_RES  		
+  		WHERE
+  				N_MON_ID = #{N_MON_ID}
+  		AND 	S_ICMP_IP = #{S_ICMP_IP}
+  </delete>
+  
+  <select id="icmp_svrlst" resultType="hashMap" parameterType="hashMap">
+  SELECT * FROM (
+    		SELECT
+			ROW_NUMBER() OVER (ORDER BY
+				  <if test="sort == null">N_MON_ID</if>
+				  <if test="sort != null">
+					  <choose>
+						  <when test="sort.size() == 0">
+							  N_MON_ID
+						  </when>
+						  <otherwise>
+							  <include refid="SQL_OderBy"/>
+						  </otherwise>
+					  </choose>
+				  </if>) NUM, FOUND_ROWS() AS TOTAL_COUNT
+    				, N_MON_ID, S_MON_NAME, S_MON_IP, N_TYPE_CODE
+        			, (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = A.N_TYPE_CODE) TYPE_NAME
+        			, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = A.N_GROUP_CODE AND F_USE = 'Y') GROUP_NAME
+        			, (SELECT S_DESC FROM TB_SVR_STYLE WHERE N_STYLE_CODE = A.N_STYLE_CODE) STYLE_NAME
+    		FROM 
+					TB_MON_INFO A
+			<where>
+				<if test="SN_MON_ID != '' and SN_MON_ID != null">
+					AND N_MON_ID LIKE '%' || #{SN_MON_ID} || '%' 
+				</if>
+				<if test="SS_MON_NAME != '' and SS_MON_NAME != null">
+					AND S_MON_NAME LIKE '%' || #{SS_MON_NAME} || '%' 
+				</if>
+				<if test="SS_MON_IP != '' and SS_MON_IP != null">
+					AND S_MON_IP LIKE '%' || #{SS_MON_IP} || '%' 
+				</if>
+				<if test="f_N_STYLE_CODE != '' and f_N_STYLE_CODE != null">
+					AND N_STYLE_CODE = #{f_N_STYLE_CODE} 
+				</if>
+				<if test="f_N_GROUP_CODE != '' and f_N_GROUP_CODE != null">
+					AND N_GROUP_CODE = #{f_N_GROUP_CODE}
+				</if>
+				<if test="f_N_TYPE_CODE != '' and f_N_TYPE_CODE != null">
+					AND N_TYPE_CODE = #{f_N_TYPE_CODE}
+				</if>
+				<if test="N_GROUP_CODE != null and N_GROUP_CODE != ''">
+					AND N_GROUP_CODE = #{N_GROUP_CODE}
+				</if>
+				<if test="N_TYPE_CODE != null and N_TYPE_CODE != ''">
+					AND N_TYPE_CODE = #{N_TYPE_CODE}
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'ID'">
+					AND N_MON_ID LIKE '%' || #{SEARCH_KEYWORD} || '%'
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'NM'">
+					AND S_MON_NAME LIKE '%' || #{SEARCH_KEYWORD} || '%'
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'IP'">
+					AND S_MON_IP LIKE '%' || #{SEARCH_KEYWORD} || '%'
+				</if>				
+			</where>
+	) X
+	WHERE num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
+
+  </select>
+  
+  <select id="dul_chk" resultType="hashMap" parameterType="hashmap">   	
+    		SELECT
+    				COUNT(*) CNT
+    		FROM 
+					TB_MON_ICMP_INFO
+			<where>
+				<if test="N_MON_ID != '' and N_MON_ID != null">
+					N_MON_ID = #{N_MON_ID}
+				</if>
+				<if test="N_MON_ID == '' and N_MON_ID == null">
+					N_MON_ID = ''
+				</if>
+			</where>
+  </select>
+  
+  <select id="detail_info" resultType="hashmap" parameterType="hashmap">
+  	SELECT
+        			N_MON_ID || S_ICMP_IP KEY_COL, N_MON_ID, S_ICMP_IP, S_ICMP_NAME
+        			, N_CHECK_TIME        			
+        			, N_RES_TIME, N_TIME_OUT, N_ALM_CNT
+        			, N_ALM_RAT
+        			, D_IN_DATE, D_UP_DATE
+        			, (SELECT S_ALM_RATING_NAME FROM TB_ALM_RATING_CODE WHERE N_ALM_RATING = A.N_ALM_RAT) S_ALM_RATING_NAME
+        			, (SELECT N_ALM_RATING FROM TB_ALM_RATING_CODE WHERE N_ALM_RATING = A.N_ALM_RAT) N_ALM_RATING
+			FROM
+        			TB_MON_ICMP_INFO A
+			<where>
+				<if test="N_MON_ID != '' and N_MON_ID != null">
+					AND N_MON_ID = #{N_MON_ID}
+				</if>
+				<if test="N_MON_ID == '' and N_MON_ID == null">
+					AND N_MON_ID = ''
+				</if>
+				<if test="S_ICMP_IP != '' and S_ICMP_IP != null">
+					AND S_ICMP_IP = #{S_ICMP_IP}
+				</if>
+			</where>
+  </select>
+
+</mapper>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dash_system">
+
+	<!-- DashbBoard System 전국 전화기 장애 현황 -->
+	<select id="select_system_mid_info" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT /* dash_system.select_system_mid_info */ 
+			A.N_GROUP_CODE, A.S_GROUP_NAME, A.S_GUBUN, A.S_NAME, A.S_RUNNING, A.S_EXT_NUM, A.S_IP_ADDRESS, A.S_ADDRESS, A.S_BIGO, DATE_FORMAT(A.D_INS_DATE, '%Y-%m-%d %H:%i:%s') AS D_INS_DATE, DATE_FORMAT(B.D_UPDATE_TIME, '%Y-%m-%d %H:%i:%s') AS D_UPDATE_TIME, TIMESTAMPDIFF(SECOND, D_UPDATE_TIME, NOW()) AS ELAPSE_TIME, B.N_ALM_STATUS, B.N_REPEAT
+			FROM TB_MON_IPPHONE_INFO A INNER JOIN TB_ALM_PHONE B ON A.S_IP_ADDRESS = B.S_IP_ADDRESS
+			LEFT OUTER JOIN TB_DASH_ALM_SKIP DAS ON A.S_IP_ADDRESS = DAS.S_IP_ADDRESS
+		WHERE	1 = 1
+		AND (ISNULL(DAS.D_SKIP_TIME) OR DAS.D_SKIP_TIME &lt;= SYSDATE())
+		AND B.N_ALM_STATUS > 1
+		<if test="N_GROUP_CODE != null">
+			AND		N_GROUP_CODE = #{N_GROUP_CODE}
+		</if>
+		<if test="S_IP_ADDRESS != null">
+			AND		A.S_IP_ADDRESS = #{S_IP_ADDRESS}
+		</if>
+		<if test="PHONE_GUBUN == '지점'">
+			AND 	A.S_GUBUN =  '지점'
+		</if>
+		<if test="PHONE_GUBUN == '러닝'">
+			AND 	A.S_GUBUN =  '러닝'
+		</if>
+		<choose>
+			<when test='SORT == "1"'>
+				ORDER BY B.D_UPDATE_TIME ASC
+			</when>
+			<otherwise>
+				ORDER BY B.D_UPDATE_TIME DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 시스템 장애 현황 -->
+	<select id="select_system_err_status" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT S.N_TYPE_CODE, A.N_ALM_RATING, COUNT(S.N_TYPE_CODE)
+		FROM TB_SVR_TYPE S
+		   INNER JOIN TB_MON_INFO M ON S.N_TYPE_CODE = M.N_TYPE_CODE
+		   INNER JOIN TB_ALM A ON M.N_MON_ID = A.N_MON_ID
+		   LEFT OUTER JOIN TB_DASH_ALM_SKIP DAS ON M.S_MON_IP = DAS.S_IP_ADDRESS
+		WHERE
+					A.N_ALM_STATUS > 1
+		AND			(ISNULL(DAS.D_SKIP_TIME) OR DAS.D_SKIP_TIME &lt;= SYSDATE())
+		GROUP BY	S.N_TYPE_CODE, A.N_ALM_RATING
+		ORDER BY	S.N_TYPE_CODE, A.N_ALM_RATING DESC
+	</select>
+	
+	<!-- 시스템 장애 현황 상세 -->
+	<select id="select_system_err_list" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT S.N_TYPE_CODE, S.S_TYPE_NAME,
+		   M.N_MON_ID, M.S_MON_NAME, M.S_MON_IP, M.N_GROUP_CODE,
+		   A.N_ALM_STATUS, A.N_ALM_RATING, A.S_ALM_KEY
+		   , f_make_alm_msg(A.S_ALM_KEY, A.N_ALM_STATUS, A.D_UPDATE_TIME) AS ALM_MSG
+		   , DATE_FORMAT(A.D_UPDATE_TIME, '%Y-%m-%d %H:%i:%s') AS D_UPDATE_TIME, TIMESTAMPDIFF(SECOND, D_UPDATE_TIME, NOW()) AS ELAPSE_TIME
+		   , (SELECT S_GROUP_NAME FROM TB_SVR_GROUP SG WHERE M.N_GROUP_CODE = SG.N_GROUP_CODE) AS S_GROUP_NAME
+		FROM TB_SVR_TYPE S
+		   INNER JOIN TB_MON_INFO M ON S.N_TYPE_CODE = M.N_TYPE_CODE
+		   INNER JOIN TB_ALM A ON M.N_MON_ID = A.N_MON_ID
+		   LEFT OUTER JOIN TB_DASH_ALM_SKIP DAS ON M.S_MON_IP = DAS.S_IP_ADDRESS
+		WHERE
+		   			A.N_ALM_STATUS > 1
+		AND			(ISNULL(DAS.D_SKIP_TIME) OR DAS.D_SKIP_TIME &lt;= SYSDATE())
+		<choose>
+			<when test='SORT == "1"'>
+				ORDER BY A.D_UPDATE_TIME ASC
+			</when>
+			<otherwise>
+				ORDER BY A.D_UPDATE_TIME DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 주의, 경고, 장애 -->
+	<select id="select_alm_err_count" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT A.N_ALM_RATING, COUNT(S.N_TYPE_CODE) AS N_ALM_COUNT
+		FROM TB_SVR_TYPE S
+		   INNER JOIN TB_MON_INFO M ON S.N_TYPE_CODE = M.N_TYPE_CODE
+		   INNER JOIN TB_ALM A ON M.N_MON_ID = A.N_MON_ID
+		   LEFT OUTER JOIN TB_DASH_ALM_SKIP DAS ON M.S_MON_IP = DAS.S_IP_ADDRESS
+		WHERE
+					A.N_ALM_STATUS > 1 
+		AND			(ISNULL(DAS.D_SKIP_TIME) OR DAS.D_SKIP_TIME &lt;= SYSDATE())
+		GROUP BY A.N_ALM_RATING
+	</select>
+	
+	<!-- 장비 건수 -->
+	<select id="select_mon_tot_count" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT COUNT(S.N_TYPE_CODE) AS N_MON_TOT_COUNT
+		FROM TB_SVR_TYPE S
+		   INNER JOIN TB_MON_INFO M ON S.N_TYPE_CODE = M.N_TYPE_CODE
+		WHERE
+		   S.F_USE = 'Y'
+	</select>
+	
+	<!-- 장비 장애 건수 -->
+	<select id="select_mon_err_count" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			SUM(TT.MON_ALARM) AS N_MON_ERR_COUNT
+		FROM (
+		   SELECT M.N_MON_ID, 1 AS MON_ALARM
+		   FROM TB_SVR_TYPE S
+		      INNER JOIN TB_MON_INFO M ON S.N_TYPE_CODE = M.N_TYPE_CODE
+		      INNER JOIN TB_ALM A ON M.N_MON_ID = A.N_MON_ID
+		      LEFT OUTER JOIN TB_DASH_ALM_SKIP DAS ON M.S_MON_IP = DAS.S_IP_ADDRESS
+		   WHERE
+						A.N_ALM_STATUS > 1
+			AND			(ISNULL(DAS.D_SKIP_TIME) OR DAS.D_SKIP_TIME &lt;= SYSDATE())
+		   GROUP BY M.N_MON_ID
+		) TT
+	</select>
+	
+	<insert id="ins_alm_skip" parameterType="java.util.HashMap">
+		INSERT INTO TB_DASH_ALM_SKIP (
+			S_IP_ADDRESS, N_MON_ID, D_INS_TIME, D_SKIP_TIME, S_USER
+		)
+		VALUES (
+			#{S_IP_ADDRESS}, #{N_MON_ID}, SYSDATE(), DATE_ADD(SYSDATE(), INTERVAL #{N_SKIP_VAL} DAY), #{S_USER}
+		)
+		ON DUPLICATE KEY UPDATE D_SKIP_TIME = DATE_ADD(SYSDATE(), INTERVAL #{N_SKIP_VAL} DAY)
+	</insert>
+
+	<delete id="del_phone" parameterType="java.util.HashMap">
+		DELETE FROM TB_MON_IPPHONE_INFO WHERE S_IP_ADDRESS = #{S_IP_ADDRESS} 
+	</delete>	
+	
+	
+	<delete id="del_phone_res" parameterType="java.util.HashMap" statementType="PREPARED">
+		DELETE	FROM TB_MON_IPPHONE_RES
+		WHERE
+			S_IP_ADDRESS = #{S_IP_ADDRESS}
+	</delete>
+	
+	<delete id="del_alm_phone" parameterType="java.util.HashMap">
+		DELETE FROM TB_ALM_PHONE WHERE S_IP_ADDRESS = #{S_IP_ADDRESS} 
+	</delete>	
+		
+	<delete id="del_alm_histroy_phone" parameterType="java.util.HashMap">
+		DELETE FROM TB_ALM_HISTORY_PHONE WHERE S_IP_ADDRESS = #{S_IP_ADDRESS}
+	</delete>	
+	
+	<update id="update_phone_ipaddress" parameterType="java.util.HashMap">
+		UPDATE TB_MON_IPPHONE_INFO SET S_IP_ADDRESS = #{NEW_S_IP_ADDRESS}, D_INS_DATE = SYSDATE() WHERE S_IP_ADDRESS = #{S_IP_ADDRESS}
+	</update>	
+	
+</mapper>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="phone_history_stats">
+	<!-- kendo grid order by -->
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+	
+	<!-- kendo grid order by 필드 변경-->
+	<sql id="SQL_OderByCustomizing1">
+		<foreach collection="sort" item="s" separator=",">
+			<choose>
+				<when test="s.field == 'IN_TIME'">
+					IN_TIME_I
+				</when>
+				<when test="s.field == 'OUT_TIME'">
+					OUT_TIME_I
+				</when>
+				<when test="s.field == 'EXT_TIME'">
+					EXT_TIME_I
+				</when>
+				<otherwise>
+				${s.field} 
+				</otherwise>
+			</choose>
+			 ${s.dir}
+		</foreach>
+	</sql>
+	
+	<select id="statsPhoneErrorHistoryRetrieveQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT /* phone_history_stats.statsPhoneErrorHistoryRetrieveQry */ @NUM AS TOTAL_COUNT, X.*
+		  FROM (
+		        <include refid="SQL_statsPhoneErrorHistoryQry"></include>
+		       ) X
+		 LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+	
+	<select id="statsPhoneErrorHistoryRetrieveExcelQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		<include refid="SQL_statsPhoneErrorHistoryQry"></include>
+	</select>
+	
+	<sql id="SQL_statsPhoneErrorHistoryQry">
+		SELECT @NUM := @NUM + 1 NUM
+		     , S_ALM_PHONE_KEY
+		     , D_UPDATE_TIME
+		     , N_ALM_STATUS
+		     , S_ALM_STATUS_NAME
+		     , S_LOCATION
+		     , S_NAME
+		     , S_RUNNING
+		     , S_IP_ADDRESS
+		     , S_EXT_NUM
+		     , D_SKIP_TIME
+		  FROM (
+		        SELECT CONCAT(TAP.D_UPDATE_TIME, ' ', TAP.S_IP_ADDRESS)        S_ALM_PHONE_KEY
+		             , DATE_FORMAT(TAP.D_UPDATE_TIME, '%Y-%m-%d %H:%i:%s')     D_UPDATE_TIME
+		             , TAP.N_ALM_STATUS                                        N_ALM_STATUS
+		             , TASC.S_ALM_STATUS_NAME                                  S_ALM_STATUS_NAME
+		             , (SELECT S_NAME FROM TB_NUM_CODE WHERE S_GROUP_CODE = 'IPPHONE_GROUP' AND N_CODE =  TMII.N_GROUP_CODE) AS S_LOCATION
+		             , TMII.S_NAME                                             S_NAME
+		             , TMII.S_RUNNING                                          S_RUNNING
+		             , TAP.S_IP_ADDRESS                                        S_IP_ADDRESS
+		             , TMII.S_EXT_NUM                                          S_EXT_NUM
+		             , (SELECT D_SKIP_TIME FROM TB_DASH_ALM_SKIP WHERE S_IP_ADDRESS =  TAP.S_IP_ADDRESS) AS D_SKIP_TIME
+		          FROM TB_ALM_PHONE        TAP
+		             , TB_MON_IPPHONE_INFO TMII
+
+		             , TB_ALM_STATUS_CODE  TASC
+		         WHERE TAP.S_IP_ADDRESS = TMII.S_IP_ADDRESS
+		           AND TAP.N_ALM_STATUS = TASC.N_ALM_STATUS
+		           AND TAP.D_UPDATE_TIME BETWEEN STR_TO_DATE(CONCAT(#{S_ST_DT}, '000000'), '%Y%m%d%H%i%s') AND STR_TO_DATE(CONCAT(#{S_ED_DT}, '235959'), '%Y%m%d%H%i%s')
+		           <if test="S_LOCATION != null and S_LOCAION != '' and S_LOCATION != 'ALL'">
+		             AND TMII.N_GROUP_CODE = #{S_LOCATION} 
+		           </if>
+		       ) A
+		     , (
+		        SELECT @NUM := 0
+		       ) R
+		 ORDER BY 
+		 <if test="sort == null">D_UPDATE_TIME DESC</if>
+		 <if test="sort != null">
+		   <choose>
+		     <when test="sort.size() == 0">
+		       D_UPDATE_TIME DESC
+		     </when>
+		     <otherwise>
+		       <include refid="SQL_OderBy"/>
+		     </otherwise>
+		   </choose>
+		 </if>
+	</sql>
+	
+	<select id="statsPhoneErrorHistoryRetrieveCntQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT /* phone_history_stats.statsPhoneErrorHistoryRetrieveCntQry */
+		       COUNT(*) CNT
+		  FROM TB_ALM_PHONE        TAP
+		     , TB_MON_IPPHONE_INFO TMII
+		 WHERE TAP.S_IP_ADDRESS = TMII.S_IP_ADDRESS
+		   AND TAP.D_UPDATE_TIME BETWEEN STR_TO_DATE(CONCAT(#{S_ST_DT}, '000000'), '%Y%m%d%H%i%s') AND STR_TO_DATE(CONCAT(#{S_ED_DT}, '235959'), '%Y%m%d%H%i%s')
+	</select>
+	
+	<update id="delDSkipTime" parameterType="java.util.HashMap">
+		UPDATE TB_DASH_ALM_SKIP
+		   SET D_SKIP_TIME = NULL
+		 WHERE S_IP_ADDRESS = #{S_IP_ADDRESS}
+	</update>
+</mapper>

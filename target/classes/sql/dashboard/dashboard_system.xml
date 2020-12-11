@@ -1,0 +1,595 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dashboard_system">
+
+	<!-- DashbBoard System 장애 현황 -->
+	<select id="SystemErrorCntQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT /* dashboard_system.SystemErrorCntQry */
+			D.N_ALM_RATING N_ALM_RATING, LPAD(COALESCE(SUB.CNT,0), 2, '0') CNT
+			FROM
+			TB_ALM_RATING_CODE D
+			LEFT OUTER JOIN (
+				SELECT
+					COUNT(A.S_ALM_KEY) AS CNT, A.N_ALM_RATING
+				FROM
+					TB_ALM A
+					JOIN TB_ALM_CODE B ON B.N_ALM_TYPE = A.N_ALM_TYPE AND B.N_ALM_CODE = A.N_ALM_CODE
+					JOIN TB_MON_INFO C ON C.N_MON_ID = A.N_MON_ID
+					JOIN TB_USER_MON_LIST D ON D.N_MON_ID = C.N_MON_ID 
+				WHERE A.N_ALM_STATUS > 1 AND D.S_USER_ID = #{SESSION_USER_ID}
+				GROUP BY A.N_ALM_RATING
+			) SUB ON SUB.N_ALM_RATING = D.N_ALM_RATING
+	</select>
+	
+	<!-- DashBoard System Group별 장애 현황-->
+	<select id="SystemErrorGroupQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* dashboard_system.SystemErrorGroupQry */
+		SELECT
+		 	PVT.N_GROUP_CODE,
+		  	(SELECT S_GROUP_NAME FROM TB_SVR_GROUP SG WHERE N_GROUP_CODE = PVT.N_GROUP_CODE) AS S_GROUP_NAME,
+		  	(COALESCE(SUM(EX_TOTAL), 0) + COALESCE(SUM(DB_TOTAL), 0) + COALESCE(SUM(CTI_TOTAL), 0) +
+		  	 COALESCE(SUM(IVR_TOTAL), 0) + COALESCE(SUM(MC_TOTAL), 0) + COALESCE(SUM(CS_TOTAL), 0) + 
+		  	 COALESCE(SUM(VC_TOTAL), 0) + COALESCE(SUM(CC_TOTAL), 0) + COALESCE(SUM(REC_TOTAL), 0) +
+		  	 COALESCE(SUM(KMS_TOTAL), 0)
+		  	) AS TOTAL,
+		  	(COALESCE(SUM(EX_FAIL), 0) + COALESCE(SUM(DB_FAIL), 0) + COALESCE(SUM(CTI_FAIL), 0) +
+		  	 COALESCE(SUM(IVR_FAIL), 0) + COALESCE(SUM(MC_FAIL), 0) + COALESCE(SUM(CS_FAIL), 0) + 
+		  	 COALESCE(SUM(VC_FAIL), 0) + COALESCE(SUM(CC_FAIL), 0) + COALESCE(SUM(REC_FAIL), 0) +
+		  	 COALESCE(SUM(KMS_FAIL), 0)
+		  	) AS FAIL,
+		  	(COALESCE(SUM(EX_FAIL2), 0) + COALESCE(SUM(DB_FAIL2), 0) + COALESCE(SUM(CTI_FAIL2), 0) +
+		  	 COALESCE(SUM(IVR_FAIL2), 0) + COALESCE(SUM(MC_FAIL2), 0) + COALESCE(SUM(CS_FAIL2), 0) + 
+		  	 COALESCE(SUM(VC_FAIL2), 0) + COALESCE(SUM(CC_FAIL2), 0) + COALESCE(SUM(REC_FAIL2), 0) +
+		  	 COALESCE(SUM(KMS_FAIL2), 0)
+		  	) AS FAIL2,
+		  	COALESCE(SUM(EX_TOTAL), 0)			AS EX_TOTAL,
+		  	COALESCE(SUM(DB_TOTAL), 0)  		AS DB_TOTAL,
+		  	COALESCE(SUM(CTI_TOTAL), 0) 		AS CTI_TOTAL,
+		  	COALESCE(SUM(IVR_TOTAL), 0) 		AS IVR_TOTAL,
+		  	COALESCE(SUM(MC_TOTAL), 0)  		AS MC_TOTAL,
+		  	COALESCE(SUM(CS_TOTAL), 0)  		AS CS_TOTAL,
+		  	COALESCE(SUM(VC_TOTAL), 0)  		AS VC_TOTAL,
+		  	COALESCE(SUM(CC_TOTAL), 0)  		AS CC_TOTAL,
+		  	COALESCE(SUM(REC_TOTAL), 0) 		AS REC_TOTAL,
+		  	COALESCE(SUM(KMS_TOTAL), 0) 		AS KMS_TOTAL,
+		  	COALESCE(SUM(EX_FAIL), 0)   		AS EX_FAIL,
+		  	COALESCE(SUM(DB_FAIL), 0)   		AS DB_FAIL,
+		  	COALESCE(SUM(CTI_FAIL), 0)  		AS CTI_FAIL,
+		  	COALESCE(SUM(IVR_FAIL), 0)  		AS IVR_FAIL,
+		  	COALESCE(SUM(MC_FAIL), 0)   		AS MC_FAIL,
+		  	COALESCE(SUM(CS_FAIL), 0)   		AS CS_FAIL,
+		  	COALESCE(SUM(VC_FAIL), 0)   		AS VC_FAIL,
+		  	COALESCE(SUM(CC_FAIL), 0)   		AS CC_FAIL,
+		  	COALESCE(SUM(REC_FAIL), 0)  		AS REC_FAIL,
+		  	COALESCE(SUM(KMS_FAIL), 0)  		AS KMS_FAIL,
+		  	COALESCE(MIN(EX_ALM_RATING), 999)   AS EX_ALM_RATING,
+		  	COALESCE(MIN(DB_ALM_RATING), 999)   AS DB_ALM_RATING,
+		  	COALESCE(MIN(CTI_ALM_RATING), 999)  AS CTI_ALM_RATING,
+		  	COALESCE(MIN(IVR_ALM_RATING), 999)  AS IVR_ALM_RATING,
+		  	COALESCE(MIN(MC_ALM_RATING), 999)   AS MC_ALM_RATING,
+		  	COALESCE(MIN(CS_ALM_RATING), 999) 	AS CS_ALM_RATING,
+		  	COALESCE(MIN(VC_ALM_RATING), 999)   AS VC_ALM_RATING,
+		  	COALESCE(MIN(CC_ALM_RATING), 999)   AS CC_ALM_RATING,
+		  	COALESCE(MIN(REC_ALM_RATING), 999)  AS REC_ALM_RATING,
+		  	COALESCE(MIN(KMS_ALM_RATING), 999)  AS KMS_ALM_RATING,
+			COALESCE(SUM(EX_FAIL2), 0)    		AS EX_FAIL2,
+			COALESCE(SUM(DB_FAIL2), 0)    		AS DB_FAIL2,
+		   	COALESCE(SUM(CTI_FAIL2), 0)    		AS CTI_FAIL2,
+		   	COALESCE(SUM(IVR_FAIL2), 0)    		AS IVR_FAIL2,
+		   	COALESCE(SUM(MC_FAIL2), 0)    		AS MC_FAIL2,
+		   	COALESCE(SUM(CS_FAIL2), 0)    		AS CS_FAIL2,
+		   	COALESCE(SUM(VC_FAIL2), 0)    		AS VC_FAIL2,
+		   	COALESCE(SUM(CC_FAIL2), 0)    		AS CC_FAIL2,
+		   	COALESCE(SUM(REC_FAIL2), 0)    		AS REC_FAIL2,
+		   	COALESCE(SUM(KMS_FAIL2), 0)    		AS KMS_FAIL2
+		FROM (
+			   SELECT
+				 N_GROUP_CODE,
+				 CASE N_TYPE_CODE WHEN 1000 THEN COALESCE(COUNT(*), 0) END		AS EX_TOTAL,
+				 CASE N_TYPE_CODE WHEN 1000 THEN MIN(N_ALM_RATING) END      	AS EX_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 1000 THEN COALESCE(SUM(FAIL), 0) END 	AS EX_FAIL,
+				 CASE N_TYPE_CODE WHEN 1000 THEN COALESCE(SUM(FAIL2), 0) END 	AS EX_FAIL2,
+				 CASE N_TYPE_CODE WHEN 5000 THEN COALESCE(COUNT(*), 0) END  	AS DB_TOTAL, 
+				 CASE N_TYPE_CODE WHEN 5000 THEN MIN(N_ALM_RATING) END      	AS DB_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 5000 THEN COALESCE(SUM(FAIL), 0) END 	AS DB_FAIL,
+				 CASE N_TYPE_CODE WHEN 5000 THEN COALESCE(SUM(FAIL2), 0) END  	AS DB_FAIL2,				   
+				 CASE N_TYPE_CODE WHEN 2000 THEN COALESCE(COUNT(*), 0) END  	AS CTI_TOTAL,
+				 CASE N_TYPE_CODE WHEN 2000 THEN MIN(N_ALM_RATING) END      	AS CTI_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 2000 THEN COALESCE(SUM(FAIL), 0) END 	AS CTI_FAIL,
+				 CASE N_TYPE_CODE WHEN 2000 THEN COALESCE(SUM(FAIL2), 0) END  	AS CTI_FAIL2,				   
+				 CASE N_TYPE_CODE WHEN 3000 THEN COALESCE(COUNT(*), 0) END  	AS IVR_TOTAL,
+				 CASE N_TYPE_CODE WHEN 3000 THEN MIN(N_ALM_RATING) END      	AS IVR_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 3000 THEN COALESCE(SUM(FAIL), 0) END 	AS IVR_FAIL,
+				 CASE N_TYPE_CODE WHEN 3000 THEN COALESCE(SUM(FAIL2), 0) END  	AS IVR_FAIL2,					   
+				 CASE N_TYPE_CODE WHEN 4000 THEN COALESCE(COUNT(*), 0) END  	AS MC_TOTAL,
+				 CASE N_TYPE_CODE WHEN 4000 THEN MIN(N_ALM_RATING) END      	AS MC_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 4000 THEN COALESCE(SUM(FAIL), 0) END 	AS MC_FAIL,
+				 CASE N_TYPE_CODE WHEN 4000 THEN COALESCE(SUM(FAIL2), 0) END  	AS MC_FAIL2,						   
+				 CASE N_TYPE_CODE WHEN 9000 THEN COALESCE(COUNT(*), 0) END  	AS CS_TOTAL,
+				 CASE N_TYPE_CODE WHEN 9000 THEN MIN(N_ALM_RATING) END      	AS CS_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 9000 THEN COALESCE(SUM(FAIL), 0) END 	AS CS_FAIL,
+				 CASE N_TYPE_CODE WHEN 9000 THEN COALESCE(SUM(FAIL2), 0) END  	AS CS_FAIL2,				   
+				 CASE N_TYPE_CODE WHEN 7000 THEN COALESCE(COUNT(*), 0) END  	AS VC_TOTAL,
+				 CASE N_TYPE_CODE WHEN 7000 THEN MIN(N_ALM_RATING) END      	AS VC_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 7000 THEN COALESCE(SUM(FAIL), 0) END 	AS VC_FAIL,
+				 CASE N_TYPE_CODE WHEN 7000 THEN COALESCE(SUM(FAIL2), 0) END  	AS VC_FAIL2,				   
+				 CASE N_TYPE_CODE WHEN 8000 THEN COALESCE(COUNT(*), 0) END  	AS CC_TOTAL,
+				 CASE N_TYPE_CODE WHEN 8000 THEN MIN(N_ALM_RATING) END      	AS CC_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 8000 THEN COALESCE(SUM(FAIL), 0) END 	AS CC_FAIL,
+				 CASE N_TYPE_CODE WHEN 8000 THEN COALESCE(SUM(FAIL2), 0) END  	AS CC_FAIL2,				   
+				 CASE N_TYPE_CODE WHEN 6000 THEN COALESCE(COUNT(*), 0) END  	AS REC_TOTAL,
+				 CASE N_TYPE_CODE WHEN 6000 THEN MIN(N_ALM_RATING) END      	AS REC_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 6000 THEN COALESCE(SUM(FAIL), 0) END 	AS REC_FAIL,	
+				 CASE N_TYPE_CODE WHEN 6000 THEN COALESCE(SUM(FAIL2), 0) END  	AS REC_FAIL2,								   
+				 CASE N_TYPE_CODE WHEN 7500 THEN COALESCE(COUNT(*), 0) END  	AS KMS_TOTAL,
+				 CASE N_TYPE_CODE WHEN 7500 THEN MIN(N_ALM_RATING) END      	AS KMS_ALM_RATING,
+				 CASE N_TYPE_CODE WHEN 7500 THEN COALESCE(SUM(FAIL), 0) END 	AS KMS_FAIL,				   
+				 CASE N_TYPE_CODE WHEN 7500 THEN COALESCE(SUM(FAIL2), 0) END 	AS KMS_FAIL2
+			   FROM (
+			   		SELECT
+						COALESCE(SG.N_UP_CODE, SG.N_GROUP_CODE) AS N_GROUP_CODE,
+						MI.N_TYPE_CODE,
+						N_ALM_RATING,
+						A.FAIL,
+						A.FAIL2
+					FROM TB_MON_INFO MI INNER JOIN
+						 TB_SVR_GROUP SG INNER JOIN
+						 TB_USER_MON_LIST ML
+					ON MI.N_GROUP_CODE = SG.N_GROUP_CODE AND MI.N_MON_ID = ML.N_MON_ID AND ML.S_USER_ID = #{SESSION_USER_ID}
+					LEFT OUTER JOIN 
+						(SELECT
+						 	A.N_MON_ID AS ALM_MON_ID,
+						 	A.N_ALM_RATING,
+						 	COUNT(A.N_MON_ID) AS FAIL,
+							COUNT(distinct(A.N_MON_ID)) AS FAIL2
+						 FROM TB_ALM A
+						 WHERE A.N_ALM_STATUS > 1
+						 GROUP BY A.N_MON_ID, A.N_ALM_RATING) A 
+					ON MI.N_MON_ID = A.ALM_MON_ID
+					) A
+			   GROUP BY N_GROUP_CODE, N_TYPE_CODE
+			   ORDER BY N_GROUP_CODE
+			 ) PVT
+		GROUP BY PVT.N_GROUP_CODE
+		ORDER BY PVT.N_GROUP_CODE
+	</select>
+	
+	<!-- DashBoard E1 사용현황 (죽전센터, 본점) -->
+	<select id="E1UsingStatsQty" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* dashboard_system.E1UsingStatsQty */
+		SELECT
+		  N_CODE                                                                                                          AS N_CODE,
+		  S_NAME                                                                                                          AS S_NAME,
+		  COALESCE(NHQ_VG1, 0)                                                                                            AS NHQ_VG1,
+		  COALESCE(NHQ_VG2, 0)                                                                                            AS NHQ_VG2,
+		  COALESCE(NHQ_VG3, 0)                                                                                            AS NHQ_VG3,
+		  COALESCE(NHQ_VG4, 0)                                                                                            AS NHQ_VG4,
+		  COALESCE(NHQ_VG5, 0)                                                                                            AS NHQ_VG5,
+		  COALESCE(NHQ_VG1, 0) + COALESCE(NHQ_VG2, 0) + COALESCE(NHQ_VG3, 0)
+			  + COALESCE(NHQ_VG4, 0) + COALESCE(NHQ_VG5, 0)                                                               AS NHQ_TOTAL,
+		  COALESCE(HQ_VG1, 0)                                                                                             AS HQ_VG1,
+		  COALESCE(HQ_VG2, 0)                                                                                             AS HQ_VG2,
+		  COALESCE(HQ_VG1, 0) + COALESCE(HQ_VG2, 0)                                                                       AS HQ_TOTAL
+		FROM (SELECT *
+			  FROM TB_NUM_CODE
+			  WHERE S_GROUP_CODE = 'E1_STATUS') NC LEFT OUTER JOIN
+		  (SELECT
+			 N_STATUS,
+			 COALESCE(NHQ_VG1, 0)                      AS NHQ_VG1,
+			 COALESCE(NHQ_VG2, 0)                      AS NHQ_VG2,
+			 COALESCE(NHQ_VG3, 0)                      AS NHQ_VG3,
+			 COALESCE(NHQ_VG4, 0)                      AS NHQ_VG4,
+			 COALESCE(NHQ_VG5, 0)                      AS NHQ_VG5,
+			 COALESCE(NHQ_VG1, 0) + COALESCE(NHQ_VG2, 0) + COALESCE(NHQ_VG3, 0) + COALESCE(NHQ_VG4, 0) +
+			 COALESCE(NHQ_VG5, 0)                      AS NHQ_TOTAL,
+			 COALESCE(HQ_VG1, 0)                       AS HQ_VG1,
+			 COALESCE(HQ_VG2, 0)                       AS HQ_VG2,
+			 COALESCE(HQ_VG1, 0) + COALESCE(HQ_VG2, 0) AS HQ_TOTAL
+		   FROM (
+				  SELECT
+					N_STATUS,
+					COALESCE(CASE VG_TYPE_ID
+							 WHEN '11_3001'
+							   THEN SUM(cnt) END, 0) AS NHQ_VG1,
+					COALESCE(CASE VG_TYPE_ID
+							 WHEN '11_3002'
+							   THEN SUM(cnt) END, 0) AS NHQ_VG2,
+					COALESCE(CASE VG_TYPE_ID
+							 WHEN '12_3003'
+							   THEN SUM(cnt) END, 0) AS NHQ_VG3,
+					COALESCE(CASE VG_TYPE_ID
+							 WHEN '12_3004'
+							   THEN SUM(cnt) END, 0) AS NHQ_VG4,
+					COALESCE(CASE VG_TYPE_ID
+							 WHEN '12_3005'
+							   THEN SUM(cnt) END, 0) AS NHQ_VG5,
+					COALESCE(CASE VG_TYPE_ID
+							 WHEN '01_3001'
+							   THEN SUM(cnt) END, 0) AS HQ_VG1,
+					COALESCE(CASE VG_TYPE_ID
+							 WHEN '02_3002'
+							   THEN SUM(cnt) END, 0) AS HQ_VG2
+				  FROM (
+						 SELECT
+						   CASE COALESCE(SRMES.N_STATUS, 0)
+						   WHEN 0
+							 THEN 0
+						   WHEN 1
+							 THEN 1
+						   ELSE 2 END                               AS N_STATUS,
+						   COUNT(*)                                 AS CNT,
+						   CONCAT(MI.S_VG_TYPE, '_', SRMI.N_MON_ID) AS VG_TYPE_ID
+						 FROM TB_SNMP_REAL_M03_E1_STATUS SRMES
+						   , TB_SNMP_REAL_M03_IF SRMI
+						   , TB_MON_INFO MI
+						 WHERE SRMES.N_MON_ID = SRMI.N_MON_ID
+							   AND SRMES.N_GRP_INDEX = SRMI.N_INDEX
+							   AND SRMI.N_TYPE = '18'
+							   AND SRMES.N_MON_ID = MI.N_MON_ID
+							   AND MI.N_GROUP_CODE = #{N_GROUP_CODE}
+							   AND SRMES.N_STATUS IN (1, 2, 3, 4)
+						 GROUP BY MI.N_GROUP_CODE, SRMI.N_MON_ID, MI.S_MON_NAME, MI.S_VG_TYPE, SRMES.N_STATUS WITH ROLLUP
+					   ) N_STATUS_COUNT
+				  GROUP BY N_STATUS, VG_TYPE_ID
+				) A
+		  ) T ON NC.N_CODE = T.N_STATUS
+		ORDER BY N_ORDER_IDX
+	</select>
+	
+	<!-- DashBoard Chart CPU, MEMORY 사용률 Top10 -->
+	<select id="SystemUsingTop10Qty" resultType="java.util.HashMap" parameterType="java.util.HashMap" flushCache="true">
+		/* dashboard_system.SystemUsingTop10Qty */
+		SELECT
+			N_MON_ID,
+			<if test="N_MON_TYPE != 2">
+			S_MON_NAME,
+			</if>
+			<if test="N_MON_TYPE == 2">
+			CONCAT(S_MON_NAME, '_', RIGHT(CONVERT(S_MAP_KEY,CHAR), 2)) AS S_MON_NAME,
+			</if>
+			N_PER_USE,
+			CASE 
+				WHEN N_PER_USE <![CDATA[ >= ]]> 70 AND N_PER_USE <![CDATA[ < ]]> 80 THEN '#F9CA05'
+				WHEN N_PER_USE <![CDATA[ >= ]]> 80 AND N_PER_USE <![CDATA[ < ]]> 90 THEN '#F96705'
+				WHEN N_PER_USE <![CDATA[ >= ]]> 90 THEN '#F90505'
+			ELSE '#05F953'
+			END AS N_PER_USE_COLOR
+		FROM (
+			SELECT
+				A.N_MON_ID,
+				A.S_MON_NAME,
+				B.S_MAP_KEY,
+				COALESCE(B.N_PER_USE, 0) N_PER_USE
+			FROM 
+				TB_MON_INFO A
+			INNER JOIN (	
+				SELECT n_group_code
+				FROM (
+					SELECT hierarchy_connect_by_parent_svr_group(n_group_code) AS n_group_code
+					FROM (
+						SELECT
+							@start_with := 0,
+							@n_group_code := @start_with,
+							@LEVEL := 0
+					) vars, tb_svr_group
+					WHERE @n_group_code IS NOT NULL
+				) GROUP_CODE
+			) SG
+			ON A.N_GROUP_CODE = SG.N_GROUP_CODE
+			INNER JOIN TB_MON_REAL_RESOURCE B
+			ON A.N_MON_ID = B.N_MON_ID
+			INNER JOIN TB_MON_MAP C
+			ON A.N_MON_ID = C.N_MON_ID AND C.S_MAP_KEY = B.S_MAP_KEY AND C.N_MON_TYPE = #{N_MON_TYPE} AND F_USE = 'Y'
+			WHERE 
+				A.N_MON_ID IN ( 
+					SELECT N_MON_ID
+			   		FROM TB_USER_MON_LIST
+			   		WHERE S_USER_ID = #{SESSION_USER_ID}
+						AND N_MON_ID = A.N_MON_ID
+				)
+				<if test="N_MON_TYPE == 2">
+				AND A.N_TYPE_CODE != 8500
+		  		</if>
+			ORDER BY N_PER_USE DESC
+		) A
+		LIMIT 5
+	</select>
+	
+	<!-- DashBoard Chart E1 채널 사용률 Top10 -->
+	<select id="E1ChanelUsingTop10Qty" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* dashboard_system.E1ChanelUsingTop10Qty */
+		SELECT *
+		FROM (SELECT
+				MI.N_MON_ID,
+				MI.S_MON_NAME,
+				COUNT(*)                                   AS ALL_COUNT,
+				SUM(CASE SRMES.N_STATUS
+					WHEN 1
+					  THEN 1
+					ELSE 0 END)                            AS USE_COUNT,
+				SUM(CASE SRMES.N_STATUS
+					WHEN 0
+					  THEN 1
+					ELSE 0 END)                            AS WAIT_COUNT,
+				ROUND(SUM(CASE SRMES.N_STATUS
+						  WHEN 1
+							THEN 1
+						  ELSE 0 END) / COUNT(*) * 100, 0) AS N_PER_USE
+			  FROM TB_MON_INFO MI
+				, TB_SNMP_REAL_M03_IF SRMI LEFT OUTER JOIN
+				TB_SNMP_REAL_M03_E1_STATUS SRMES ON SRMI.N_MON_ID = SRMES.N_MON_ID AND SRMI.N_INDEX = SRMES.N_GRP_INDEX
+				, (SELECT hierarchy_connect_by_parent_svr_group(n_group_code) AS n_group_code
+				   FROM (
+						  SELECT
+							@start_with := 0,
+							@n_group_code := @start_with,
+							@LEVEL := 0
+						) vars, tb_svr_group
+				   WHERE @n_group_code IS NOT NULL
+				  ) SG
+			  WHERE MI.N_MON_ID = SRMI.N_MON_ID
+					AND SRMI.N_TYPE = 18
+					AND MI.N_GROUP_CODE = SG.N_GROUP_CODE
+			  GROUP BY MI.N_MON_ID
+				, MI.S_MON_NAME
+			  ORDER BY ROUND(SUM(CASE SRMES.N_STATUS
+								 WHEN 1
+								   THEN 1
+								 ELSE 0 END) / COUNT(*) * 100, 0) DESC) A
+		LIMIT 10
+	</select>
+	
+	<!-- DashBoard System 장애현황 리스트 -->
+	<select id="SystemErrorQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT X.* /* dashboard_system.SystemErrorQry */
+		FROM (
+			SELECT 
+				S_ALM_KEY, N_ALM_STATUS, S_ALM_STATUS, N_ALM_RATING, S_ALM_RATING
+				, IFNULL(ALM_SERVICE_CODE, S_SERVICE_CODE) S_SERVICE_CODE
+				, N_MON_ID, S_MAP_KEY, D_UPDATE_TIME, S_MON_NAME, N_ALM_TYPE, N_ALM_CODE, N_GROUP_CODE
+				, (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = A.N_TYPE_CODE) AS S_TYPE_NAME
+				, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = A.N_GROUP_CODE) AS S_GROUP_NAME
+				, IF(SIGN(LENGTH(A.S_ALM_MSG) - 100) = 1, concat(SUBSTR(A.S_ALM_MSG, 1, 100), '...'), A.S_ALM_MSG) AS S_ALM_MSG
+			FROM (
+				SELECT
+					A.S_ALM_KEY,
+					A.N_ALM_STATUS,
+					(SELECT S_ALM_STATUS_NAME FROM TB_ALM_STATUS_CODE WHERE N_ALM_STATUS = A.N_ALM_STATUS) AS S_ALM_STATUS,
+					N_ALM_RATING,
+					(SELECT S_ALM_RATING_NAME FROM TB_ALM_RATING_CODE WHERE N_ALM_RATING = A.N_ALM_RATING) AS S_ALM_RATING,
+					A.N_MON_ID,
+					A.S_MAP_KEY,
+					DATE_FORMAT(A.D_UPDATE_TIME, '%Y.%m.%d %H:%i')                                      AS D_UPDATE_TIME,
+					C.S_MON_NAME,
+					C.S_SERVICE_CODE,
+					B.N_ALM_TYPE,
+					B.N_ALM_CODE,
+					(SELECT N_TYPE_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID)                  AS N_TYPE_CODE,
+					(SELECT N_GROUP_CODE FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID)                  AS N_GROUP_CODE,
+					f_make_only_alm_msg(A.S_ALM_KEY, A.N_ALM_STATUS, A.D_UPDATE_TIME) S_ALM_MSG,
+					f_get_service_code(a.N_ALM_TYPE, a.N_ALM_CODE, a.S_MAP_KEY, a.N_MON_ID) AS ALM_SERVICE_CODE
+				FROM TB_ALM A
+					LEFT OUTER JOIN TB_ALM_CODE B 
+						ON B.N_ALM_TYPE = A.N_ALM_TYPE AND B.N_ALM_CODE = A.N_ALM_CODE
+					INNER JOIN TB_MON_INFO C ON C.N_MON_ID = A.N_MON_ID
+					INNER JOIN TB_USER_MON_LIST D ON C.N_MON_ID = D.N_MON_ID
+				<where>
+					D.S_USER_ID = #{SESSION_USER_ID} 
+					AND A.N_ALM_STATUS > 1 AND C.N_GROUP_CODE != 19000
+					<if test="ALM_KEY != null and ALM_KEY != ''">
+						AND A.S_ALM_KEY = #{ALM_KEY}
+					</if>
+					<if test="GROUP_CODE != null and GROUP_CODE != ''">
+						AND C.N_GROUP_CODE = #{GROUP_CODE}
+					</if>
+					<if test="MAP_ID != null and MAP_ID != ''">
+						<choose>
+							<when test="F_PARENT != null and F_PARENT != '' and F_PARENT == 'Y'.toString()">
+								AND A.N_MON_ID IN (SELECT MON_ID FROM TB_DASHBOARD_NETWORK_MAP WHERE PARENT_MAP_ID = #{MAP_ID} OR MAP_ID = #{MAP_ID}) 
+							</when>
+							<otherwise>
+								AND A.N_MON_ID IN (SELECT MON_ID FROM TB_DASHBOARD_NETWORK_MAP WHERE MAP_ID = #{MAP_ID}) 
+							</otherwise>
+						</choose>
+					</if>
+			    </where>
+			) A
+		) X
+		<where>
+			<if test="SERVICE_CODE != null and SERVICE_CODE != ''">
+				S_SERVICE_CODE = #{SERVICE_CODE}
+			</if>
+		</where>
+		ORDER BY D_UPDATE_TIME DESC
+	</select>
+	
+	<!-- DashBoard System 그룹 현황 -->
+	<select id="ServerGroupInfoQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* dashboard_system.ServerGroupInfoQry */
+		SELECT
+		  N_UP_CODE,
+		  N_GROUP_CODE,
+		  S_GROUP_NAME,
+		  TOTAL,
+		  B_CON,
+		  COALESCE(N_ALM_RATING, 999)                                        AS N_ALM_RATING,
+		  CASE TOTAL WHEN 0 THEN 0 ELSE ROUND(B_CON / TOTAL * 100, 0) END                 AS USING_RATIO,
+		  TRUNCATE(CASE TOTAL WHEN 0 THEN 0 ELSE ROUND(B_CON / TOTAL * 100, 0) END, -1) / 10 AS RATIO_DIV
+		FROM (
+			   SELECT
+				 SG.N_GROUP_CODE,
+				 COALESCE(SG.N_UP_CODE, -1)                       AS N_UP_CODE,
+				 SG.S_GROUP_NAME,
+				 COUNT(*)                                         AS TOTAL,
+				 SUM(CASE MI.B_CON_INFO WHEN 'Y' THEN 1 ELSE 0 END)            AS B_CON,
+				 MIN(CASE MI.B_CON_INFO WHEN 'N' THEN 0 ELSE N_ALM_RATING END) AS N_ALM_RATING
+			   FROM TB_MON_INFO MI INNER JOIN TB_SVR_GROUP SG ON MI.N_GROUP_CODE = SG.N_GROUP_CODE
+				   LEFT OUTER JOIN (SELECT
+					  A.N_MON_ID        AS ALM_MON_ID,
+					  A.N_ALM_RATING,
+					  COUNT(A.N_MON_ID) AS FAIL_COUNT
+					FROM TB_ALM A
+					WHERE A.N_ALM_STATUS > 1
+						  AND A.D_UPDATE_TIME >= STR_TO_DATE(DATE_FORMAT(NOW(), '%Y%m%d'), '%Y%m%d')
+							<![CDATA[
+						  AND A.D_UPDATE_TIME < STR_TO_DATE(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL +1 DAY), '%Y%m%d'), '%Y%m%d')
+							]]>
+					GROUP BY A.N_MON_ID, A.N_ALM_RATING
+				   ) A ON MI.N_MON_ID = A.ALM_MON_ID
+			   WHERE 1=1
+					 AND SG.N_GROUP_CODE != 300000
+			   GROUP BY SG.N_UP_CODE
+				 , SG.N_GROUP_CODE
+				 , SG.S_GROUP_NAME
+			   ORDER BY N_UP_CODE, N_GROUP_CODE
+			 ) T
+		LIMIT 10
+	</select>
+
+    <select id="DbInfoQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+        /* dashboard_system.DbInfoQry */
+		SELECT
+		 DB.S_NAME
+		 , DB.S_DBNAME
+		 , DB.N_MON_ID
+		 , DB.N_CONNECTION
+		 , DB.N_CONNECTION_PEEK
+		 , DB.N_TABLESPACECUR
+		 , DB.TABLESPACE_RATIO
+		 , (SELECT count(*) FROM TB_ALM 
+		       WHERE N_ALM_STATUS > 1 AND N_MON_ID = DB.N_MON_ID AND N_ALM_TYPE = 10001 AND N_ALM_CODE = 9) AS ERR_CONLIMIT_CNT      
+		 , (SELECT count(*) FROM TB_ALM 
+		       WHERE N_ALM_STATUS > 1 AND N_MON_ID = DB.N_MON_ID AND N_ALM_TYPE = 10001 AND N_ALM_CODE = 10) AS ERR_TABLESPACE_CNT
+		 , (SELECT count(*) FROM TB_ALM 
+		       WHERE N_ALM_STATUS > 1 AND N_MON_ID = DB.N_MON_ID AND N_ALM_TYPE = 10001 AND N_ALM_CODE = 11) AS ERR_CONFAIL_CNT                       
+		FROM
+		 (
+		   SELECT
+		     A.S_NAME
+		     , A.S_DBNAME
+		     , A.N_MON_ID
+		     , B.N_CONNECTION
+		     , B.N_CONNECTION_PEEK
+		     , B.N_TABLESPACECUR
+		     , CASE WHEN B.N_TABLESPACEMAX IS NULL OR B.N_TABLESPACEMAX = 0
+		       THEN 999
+		       WHEN B.N_TABLESPACEMAX IS NOT NULL OR B.N_TABLESPACEMAX > 0
+		       THEN ROUND(B.N_TABLESPACECUR / B.N_TABLESPACEMAX * 100)
+		       END AS TABLESPACE_RATIO
+		   FROM
+		     TB_DB_INFO A
+		     , TB_DB_STATE B
+		     , TB_USER_MON_LIST C
+		   WHERE
+		     A.N_DB_ID = B.N_DB_ID AND A.N_MON_ID = C.N_MON_ID AND C.S_USER_ID = #{SESSION_USER_ID}
+		 ) DB 		
+    </select>
+
+	<select id="selectSnmpManagerCheckQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT A.D_UP_DATE, B.S_IS_WORKING
+		FROM (
+			SELECT DATE_FORMAT(MAX(D_UP_DATE), '%Y.%m.%d %H:%i:%s') AS D_UP_DATE
+			FROM TB_MON_REAL_RESOURCE
+		) A, (
+			SELECT CASE WHEN TIMESTAMPDIFF(SECOND, MAX(D_UP_DATE), NOW()) > 60 THEN 'N' ELSE 'Y' END S_IS_WORKING
+			FROM TB_MON_REAL_RESOURCE
+		) B
+	</select>
+	
+	<select id="SystemTotalCntQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT * /* dashboard_system.SystemTotalCntQry */
+		FROM (
+			SELECT 'TOTAL_MON' AS TOTAL_MON, COUNT(A.N_MON_ID) AS TOTAL_CNT  -- 전체 장비  개수
+			FROM TB_MON_INFO A, TB_USER_MON_LIST B, TB_SVR_GROUP C, TB_SVR_TYPE D
+			WHERE 
+				A.N_MON_ID = B.N_MON_ID AND B.S_USER_ID = #{SESSION_USER_ID}
+				AND A.N_GROUP_CODE = C.N_GROUP_CODE AND C.F_USE = 'Y' AND A.N_GROUP_CODE != 19000
+				AND A.N_TYPE_CODE = D.N_TYPE_CODE AND D.F_USE = 'Y'
+		) TOTAL, 
+		(
+			SELECT 'TOTAL_CON' AS TOTAL_CON, COUNT(A.N_MON_ID) AS TOTAL_CON_CNT   -- 전체 연결 개수
+			FROM TB_MON_INFO A, TB_USER_MON_LIST B, TB_SVR_GROUP C, TB_SVR_TYPE D
+			WHERE A.N_MON_ID = B.N_MON_ID AND B.S_USER_ID = #{SESSION_USER_ID}
+			   AND A.N_GROUP_CODE = C.N_GROUP_CODE AND C.F_USE = 'Y' AND A.N_GROUP_CODE != 19000
+			   AND A.N_TYPE_CODE = D.N_TYPE_CODE AND D.F_USE = 'Y'
+			   AND A.N_MON_ID NOT IN (SELECT N_MON_ID FROM TB_ALM WHERE N_MON_ID = A.N_MON_ID AND N_ALM_STATUS IN (2, 3))
+		) TOTAL_CON,
+		(
+			SELECT 'TOTAL_ALM' AS TOTAL_ALM, COUNT(A.N_MON_ID) AS TOTAL_ALM_CNT -- 전체 장애 개수
+			FROM TB_MON_INFO A, TB_USER_MON_LIST B, TB_SVR_GROUP C, TB_SVR_TYPE D, TB_ALM E
+			WHERE A.N_MON_ID = B.N_MON_ID AND B.S_USER_ID = #{SESSION_USER_ID}
+			   AND A.N_GROUP_CODE = C.N_GROUP_CODE AND C.F_USE = 'Y' AND A.N_GROUP_CODE != 19000 
+			   AND A.N_TYPE_CODE = D.N_TYPE_CODE AND D.F_USE = 'Y'
+			   AND A.N_MON_ID = E.N_MON_ID AND E.N_ALM_STATUS IN (2, 3, 5)
+		) TOTAL_ALM,
+		(
+			SELECT 'TOTAL_ERR_MON' AS TOTAL_ERR_MON, COUNT(A.N_MON_ID) AS TOTAL_ERR_MON_CNT -- 전체 장애 장비 대수
+			FROM TB_MON_INFO A, TB_USER_MON_LIST B, TB_SVR_GROUP C, TB_SVR_TYPE D
+				, ( SELECT N_MON_ID 
+					FROM TB_ALM  
+					WHERE N_ALM_STATUS IN (2, 3, 5)
+					GROUP BY N_MON_ID
+				) E
+			WHERE A.N_MON_ID = B.N_MON_ID AND B.S_USER_ID = #{SESSION_USER_ID}
+			  AND A.N_GROUP_CODE = C.N_GROUP_CODE AND C.F_USE = 'Y' AND A.N_GROUP_CODE != 19000 
+			  AND A.N_TYPE_CODE = D.N_TYPE_CODE AND D.F_USE = 'Y'
+			  AND A.N_MON_ID = E.N_MON_ID
+		) TOTAL_ERR_MON
+	</select>
+	
+	<select id="SystemTypeMonCntQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT /* dashboard_system.SystemTypeCntQry */ A.N_GROUP_CODE, S_SERVICE_CODE, COUNT(A.N_MON_ID) AS ALL_MON_CNT  -- IPT / IPCC 장비 개수
+		FROM TB_MON_INFO A, TB_USER_MON_LIST B, TB_SVR_GROUP C, TB_SVR_TYPE D
+		WHERE 
+			A.N_MON_ID = B.N_MON_ID AND B.S_USER_ID = #{SESSION_USER_ID}
+			AND A.N_GROUP_CODE = C.N_GROUP_CODE AND C.F_USE = 'Y' AND A.N_GROUP_CODE != 19000 AND A.N_GROUP_CODE IN (10000, 15000) AND S_SERVICE_CODE IN ('CM', 'CTI', 'VM')
+			AND A.N_TYPE_CODE = D.N_TYPE_CODE AND D.F_USE = 'Y'
+		GROUP BY A.N_GROUP_CODE, A.S_SERVICE_CODE
+		UNION ALL
+		SELECT A.N_GROUP_CODE, S_SERVICE_CODE, COUNT(A.N_MON_ID) AS ALL_MON_CNT  -- IVR / TTS / NETWORK Switch 장비 개수
+		FROM TB_MON_INFO A, TB_USER_MON_LIST B, TB_SVR_GROUP C, TB_SVR_TYPE D
+		WHERE 
+			A.N_MON_ID = B.N_MON_ID AND B.S_USER_ID = #{SESSION_USER_ID}
+			AND A.N_GROUP_CODE = C.N_GROUP_CODE AND C.F_USE = 'Y' AND A.N_GROUP_CODE != 19000 AND A.N_GROUP_CODE IN (15550, 18000) AND S_SERVICE_CODE IN ('IVR', 'TTS', 'L3S')
+			AND A.N_TYPE_CODE = D.N_TYPE_CODE AND D.F_USE = 'Y'
+		GROUP BY A.N_GROUP_CODE, A.S_SERVICE_CODE
+		UNION ALL
+		SELECT A.N_GROUP_CODE, S_SERVICE_CODE, COUNT(A.N_MON_ID) AS ALL_MON_CNT  -- 녹취 장비 개수(대면, 착신전환 제외)
+		FROM TB_MON_INFO A, TB_USER_MON_LIST B, TB_SVR_GROUP C, TB_SVR_TYPE D
+		WHERE 
+			A.N_MON_ID = B.N_MON_ID AND B.S_USER_ID = #{SESSION_USER_ID}
+			AND A.N_GROUP_CODE = C.N_GROUP_CODE AND C.F_USE = 'Y' AND A.N_GROUP_CODE != 19000 AND A.N_GROUP_CODE = 16000 AND S_SERVICE_CODE IN ('TR', 'SR', 'NR', 'HR' )
+			AND A.N_TYPE_CODE = D.N_TYPE_CODE AND D.F_USE = 'Y'
+		GROUP BY A.N_GROUP_CODE, A.S_SERVICE_CODE
+		UNION ALL
+		SELECT 16000, 'FR', 2 -- 녹취 대면
+		UNION ALL
+		SELECT 16000, 'MR', 2 -- 녹취 착신전환
+		UNION ALL
+		SELECT A.N_GROUP_CODE, S_SERVICE_CODE, COUNT(A.N_MON_ID) AS ALL_MON_CNT -- 부가서비스 
+		FROM TB_MON_INFO A, TB_USER_MON_LIST B, TB_SVR_GROUP C, TB_SVR_TYPE D
+		WHERE 
+			A.N_MON_ID = B.N_MON_ID AND B.S_USER_ID = #{SESSION_USER_ID}
+			AND A.N_GROUP_CODE = C.N_GROUP_CODE AND C.F_USE = 'Y' AND A.N_GROUP_CODE != 19000 AND A.N_GROUP_CODE = 17000 AND S_SERVICE_CODE IN ('CHA', 'FAX', 'STAT', 'BIL', 'VAR', 'MON', 'IP', 'VM')
+			AND A.N_TYPE_CODE = D.N_TYPE_CODE AND D.F_USE = 'Y'
+		GROUP BY A.N_GROUP_CODE, A.S_SERVICE_CODE
+		UNION ALL 
+		SELECT 17000, 'AP', 1 -- AP
+	</select>
+
+	<select id="SystemTypeAlmCntQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT /* dashboard_system.SystemTypeAlmQry */
+			C.N_GROUP_CODE, COUNT(A.S_ALM_KEY) CNT,
+			f_get_service_code(a.N_ALM_TYPE, a.N_ALM_CODE, a.S_MAP_KEY, a.N_MON_ID) AS S_SERVICE_CODE
+		FROM TB_ALM A
+			LEFT OUTER JOIN TB_ALM_CODE B 
+				ON B.N_ALM_TYPE = A.N_ALM_TYPE AND B.N_ALM_CODE = A.N_ALM_CODE
+			INNER JOIN TB_MON_INFO C ON C.N_MON_ID = A.N_MON_ID
+			INNER JOIN TB_USER_MON_LIST D ON C.N_MON_ID = D.N_MON_ID
+		WHERE
+			D.S_USER_ID = #{SESSION_USER_ID} AND A.N_ALM_STATUS > 1
+		GROUP BY C.N_GROUP_CODE, S_SERVICE_CODE
+	</select>	
+</mapper>

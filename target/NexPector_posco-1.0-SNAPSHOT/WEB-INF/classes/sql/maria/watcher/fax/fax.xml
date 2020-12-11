@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="fax">
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+	
+	<select id="faxChannelListQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* fax.faxChannelListQry */
+		SELECT @NUM AS TOTAL_COUNT, X.* FROM (
+    		SELECT
+    				@NUM := @NUM + 1 AS NUM, A.*
+    		FROM
+					(
+						SELECT MON_ID, CHANNEL_NO, STATUS, SPEED, SEND_FG, PAGE_NO, UPDATE_DATE 
+						FROM
+								tb_http_fax_channel_info A
+						WHERE
+								MON_ID = #{N_MON_ID}
+					) A, (SELECT @NUM := 0) R
+			ORDER BY
+			<if test="sort == null">CHANNEL_NO, STATUS</if>
+				<if test="sort != null">
+					<choose>
+						<when test="sort.size() == 0">
+							CHANNEL_NO, STATUS
+						</when>
+						<otherwise>
+							<include refid="SQL_OderBy"/>
+						</otherwise>
+					</choose>
+			</if>
+		) X
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+</mapper>

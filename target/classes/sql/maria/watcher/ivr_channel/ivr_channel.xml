@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ivr_channel">
+
+  <!-- Ivr 채널 상세 정보조회 -->
+    <select id="ivrChannelDetail" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+        /* ivr_channel.ivrChannelDetail */
+        SELECT @NUM AS TOTAL_COUNT, X.* 
+        FROM (
+            SELECT
+            	@NUM := @NUM + 1 AS NUM,
+                mon_info.S_MON_NAME, mon_info.S_MON_IP, sessions.S_SESSION_ID,
+                sessions.S_CALL_ID, sessions.S_STATE, sessions.S_ORIGIN,
+                sessions.S_APP_ID, sessions.S_APP_NAME, sessions.S_CCXML,
+                sessions.S_DIALOGS, sessions.S_CALLS
+            FROM
+                TB_CLI_IVR_LIST_SESSIONS sessions
+            INNER JOIN
+                TB_MON_INFO mon_info
+            ON sessions.MON_ID = mon_info.N_MON_ID,
+            (SELECT @NUM := 0) R
+            WHERE mon_info.N_MON_ID = #{N_MON_ID} 
+        ) X
+        ORDER BY S_SESSION_ID
+        LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+    </select>
+
+    <!-- Ivr 채널 통계 시나리오 목록 조회 -->
+    <select id="ivrChannelAppInfo" resultType="java.util.HashMap">
+        /* ivr_channel.ivrChannelAppInfo */
+        SELECT @NUM AS TOTAL_COUNT, X.* 
+        FROM (
+            SELECT
+              @NUM := @NUM + 1 AS NUM,
+              B.N_GROUP_CODE, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = B.N_GROUP_CODE AND F_USE = 'Y') S_GROUP_NAME,
+              COUNT(A.S_APP_ID) S_APP_ID_CNT, A.S_APP_ID, C.S_APP_NAME, C.S_APP_DESC
+            FROM
+              TB_CLI_IVR_LIST_SESSIONS A,
+              TB_MON_INFO B,
+              TB_CLI_IVR_APP_INFO C,
+              (SELECT @NUM := 0) R
+            WHERE
+              A.MON_ID = B.N_MON_ID
+            AND A.S_APP_ID = C.S_APP_ID
+            AND B.N_GROUP_CODE = C.N_GROUP_CODE
+            GROUP BY B.N_GROUP_CODE, A.S_APP_ID, C.S_APP_NAME, C.S_APP_DESC
+        ) X
+        ORDER BY X.S_APP_ID
+        LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+    </select>
+
+    <select id="ivrChannelDailyPeek" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+        SELECT /* ivr_channel.ivrChannelDailyPeek */
+                S_DAY
+                , TIME_00, TIME_01, TIME_02, TIME_03
+                , TIME_04, TIME_05, TIME_06, TIME_07
+                , TIME_08, TIME_09, TIME_10, TIME_11
+                , TIME_12, TIME_13, TIME_14, TIME_15
+                , TIME_16, TIME_17, TIME_18, TIME_19
+                , TIME_20, TIME_21, TIME_22, TIME_23
+          FROM
+                TB_IVR_STAT_APP
+         WHERE  N_GROUP_CODE = #{N_GROUP_CODE, jdbcType=INTEGER}
+           AND  S_APP_ID = #{S_APP_ID, jdbcType=VARCHAR}
+           AND 	S_DAY = #{S_DAY, jdbcType=VARCHAR}
+    </select>
+
+    <select id="ivrStatAppPeak" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* ivr_channel.ivrStatAppPeak */
+		SELECT A.MON_ID, S_DAY, S_TIME, N_COUNT, B.S_MON_NAME
+		FROM TB_IVR_STAT_APP_PEAK A, TB_MON_INFO B
+		WHERE  A.MON_ID = B.N_MON_ID AND MON_ID = #{N_MON_ID} AND S_DAY = #{S_DAY}
+    </select>
+
+	<select id="ivrStatAppPeakTotal" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		/* ivr_channel.ivrStatAppPeakTotal */
+		SELECT S_DAY, S_TIME, N_COUNT
+		FROM TB_IVR_STAT_APP_PEAK_TOTAL
+		WHERE S_DAY = #{S_DAY}
+    </select>
+</mapper>

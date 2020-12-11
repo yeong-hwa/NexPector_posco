@@ -1,0 +1,123 @@
+package com.nns.nexpector.dashboard.action;
+
+import com.nns.nexpector.common.service.CommonServices;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.View;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * DASHBOARD INTERVAL <br>
+ * Controller <br>
+ *
+ */
+@Controller
+@RequestMapping("/dashboard/*")
+public class DashBoardIntervalController {
+
+	/**
+	 * Logger
+	 */
+	private static Logger logger = LoggerFactory.getLogger(DashBoardIntervalController.class);
+
+	/**
+	 * Service CommonServices
+	 */
+	@Autowired
+	private CommonServices commonServices;
+	
+	/**
+	 * session HttpSession 
+	 */
+	@Autowired
+	private HttpSession sess;
+
+	/**
+	 * applicationContext bean
+	 */
+	@Autowired
+	private View jsonView;
+
+	/**
+	 * DASHBOARD INTERVAL 기본 정보 수정 및 생성.
+	 *
+	 * @param modelMap
+	 * @param originInterval
+	 * @param req
+	 * @param res
+	 * @return jsonView
+	 */
+	@SuppressWarnings({ "unchecked" })
+	@RequestMapping("/interval/change")
+	public View setDefaultInfo(ModelMap modelMap, @RequestParam Map<String, Object> originInterval, HttpServletRequest req) {
+		System.out.println("DashBoardIntervalController /interval/change");
+		
+		addParam(req, originInterval);
+		try {
+			List<Map<String, Object>> searchArr = defaultSearchParam(originInterval);
+
+			for (Map<String, Object> searchInfo : searchArr) {
+				if (((Number) commonServices.getObject("dashboard_interval.selectDashboardIntervalCountQry", searchInfo)).intValue() != 0) {
+					// update
+					commonServices.getUpdData("dashboard_interval.updateIntervalInfo", searchInfo);
+				} else {
+					// insert
+					commonServices.getInsData("dashboard_interval.insertIntervalInfo",searchInfo);
+				}
+			}
+
+			//해당 USER 의 데이터 확인 후 인서트 혹은 업데이트.
+			modelMap.put("RSLT", 999);
+
+		} catch(Exception e) {
+			modelMap.put("RSLT", -1);
+			logger.error(e.getMessage(), e);
+		}
+
+		return jsonView;
+
+	}
+
+	private void addParam(HttpServletRequest req, Map<String, Object> param)
+	{
+		param.put("SESSION_USER_ID", sess.getAttribute("S_USER_ID"));
+	}
+
+	private List<Map<String, Object>> defaultSearchParam(Map<String, Object> param) {
+		List<Map<String, Object>> searchArr = new ArrayList<Map<String, Object>>();
+		Map<String, Object> map = null;
+		
+		if (param.containsKey("PAGE_MOVE"))
+		{
+			map = new HashMap<String, Object>();
+			map.put("SESSION_USER_ID", param.get("SESSION_USER_ID"));
+			map.put("S_URL", param.get("URL"));
+			map.put("N_INTERVAL_TYPE", 1);
+			map.put("N_INTERVAL_TIME", param.get("PAGE_MOVE"));
+			searchArr.add(map);
+		}
+		
+		if (param.containsKey("RELOAD")) {
+			map = new HashMap<String, Object>();
+			map.put("SESSION_USER_ID", param.get("SESSION_USER_ID"));
+			map.put("S_URL", param.get("URL"));
+			map.put("N_INTERVAL_TYPE", 0);
+			map.put("N_INTERVAL_TIME", param.get("RELOAD"));
+			searchArr.add(map);
+		}
+
+		return searchArr;
+	}
+}

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="db_info">
+
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="select_list" resultType="hashmap" parameterType="hashmap">
+		/* db_info.select_list */
+		SELECT @ROWNUM AS TOTAL_COUNT, X.*  
+		FROM (
+			SELECT
+				@ROWNUM := @ROWNUM + 1 as rnum,
+				A.*,
+				CASE 
+					WHEN A.N_TYPE = 0 THEN 'Oracle'
+					WHEN A.N_TYPE = 1 THEN 'MS SQL' 
+					WHEN A.N_TYPE = 2 THEN 'Sybase' 
+					WHEN A.N_TYPE = 3 THEN 'Tibero'
+				END AS S_DB_TYPE,
+				(SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) AS S_MON_NAME,
+				B.N_CONNECTION, B.N_CONNECTION_PEEK, 
+				B.N_TABLESPACE, B.N_TABLESPACEMAX, B.N_TABLESPACECUR
+		  FROM 	TB_DB_INFO A 
+		  			LEFT OUTER JOIN 
+		  		TB_DB_STATE B
+		  ON A.N_DB_ID = B.N_DB_ID
+		  , (select @ROWNUM := 0) R
+		) X
+		WHERE 	1=1
+		<if test="N_DB_ID != null and N_DB_ID != ''">
+				AND N_DB_ID = #{N_DB_ID}
+		</if>
+		<if test="S_NAME != null and S_NAME != ''">
+				AND S_NAME LIKE CONCAT('%', #{S_NAME}, '%')
+		</if>
+		<if test="S_DBNAME != null and S_DBNAME != ''">
+				AND S_DBNAME LIKE CONCAT('%', #{S_DBNAME}, '%')
+		</if>    
+		<if test="N_TYPE != null and N_TYPE != ''">
+				AND N_TYPE = #{N_TYPE}
+		</if>  
+		<if test="SEARCH_KEYWORD != null and SEARCH_KEYWORD != ''">
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'ID'">
+			  	AND N_MON_ID LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+			</if>
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'NM'">
+			  	AND S_MON_NAME LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+			</if>
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'IP'">
+			  	AND S_IPADDRESS LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+			</if>
+		</if>
+		ORDER BY
+		<if test="sort == null">N_DB_ID, S_NAME, S_DBNAME</if>
+		<if test="sort != null">
+			<choose>
+				<when test="sort.size() == 0">
+					N_DB_ID, S_NAME, S_DBNAME
+				</when>
+				<otherwise>
+					<include refid="SQL_OderBy"/>
+				</otherwise>
+			</choose>
+		</if>		
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+
+	<select id="dul_id_chk" resultType="hashMap" parameterType="hashmap">
+		SELECT COUNT(*) CNT
+		  FROM TB_DB_INFO
+		 WHERE N_DB_ID = #{N_DB_ID}
+	</select>
+
+	<insert id="insert_data" parameterType="hashmap" statementType="PREPARED">
+		INSERT INTO TB_DB_INFO (
+			S_NAME, S_DBNAME
+			<if test="N_TYPE != null and N_TYPE != ''">, N_TYPE</if>
+			, S_USER, S_PWD, S_IPADDRESS
+			<if test="N_PORT != null and N_PORT != ''">, N_PORT</if>
+			<if test="N_MON_ID != null and N_MON_ID != ''">, N_MON_ID</if>
+			<if test="N_GUBUN != null and N_GUBUN != ''">, N_GUBUN</if>
+			<if test="N_SORT != null and N_SORT != ''">, N_SORT</if>
+			<if test="N_INTERVAL != null and N_INTERVAL != ''">, N_INTERVAL</if>
+			<if test="N_CON_LIMIT != null and N_CON_LIMIT != ''">, N_CON_LIMIT</if>
+			<if test="N_USE_LIMIT != null and N_USE_LIMIT != ''">, N_USE_LIMIT</if>
+			)
+		VALUES (
+			#{S_NAME}, #{S_DBNAME} 
+			<if test="N_TYPE != null and N_TYPE != ''">, #{N_TYPE} </if>
+			, #{S_USER}, #{S_PWD}, #{S_IPADDRESS}
+			<if test="N_PORT != null and N_PORT != ''">, #{N_PORT} </if>
+			<if test="N_MON_ID != null and N_MON_ID != ''">, #{N_MON_ID} </if>
+			<if test="N_GUBUN != null and N_GUBUN != ''">, #{N_GUBUN} </if>
+			<if test="N_SORT != null and N_SORT != ''">, #{N_SORT} </if>
+			<if test="N_INTERVAL != null and N_INTERVAL != ''">, #{N_INTERVAL} </if>
+			<if test="N_CON_LIMIT != null and N_CON_LIMIT != ''">, #{N_CON_LIMIT} </if>
+			<if test="N_USE_LIMIT != null and N_USE_LIMIT != ''">, #{N_USE_LIMIT} </if>
+		)
+	</insert>
+
+	<update id="update_data" parameterType="hashmap" statementType="PREPARED">
+		UPDATE TB_DB_INFO
+		SET
+			S_NAME = #{S_NAME}
+			, S_DBNAME = #{S_DBNAME}
+			<choose><when test="N_TYPE != null and N_TYPE != ''">, N_TYPE = #{N_TYPE}</when><otherwise>, N_TYPE = NULL</otherwise></choose>
+			, S_USER = #{S_USER}
+			<if test="S_PWD != null and S_PWD != ''">, S_PWD = #{S_PWD} </if>
+			, S_IPADDRESS = #{S_IPADDRESS}
+			<choose><when test="N_PORT != null and N_PORT != ''">, N_PORT = #{N_PORT}</when><otherwise>, N_PORT = NULL</otherwise></choose>
+			<choose><when test="N_MON_ID != null and N_MON_ID != ''">, N_MON_ID = #{N_MON_ID}</when><otherwise>, N_MON_ID = NULL</otherwise></choose>
+			<choose><when test="N_GUBUN != null and N_GUBUN != ''">, N_GUBUN = #{N_GUBUN}</when><otherwise>, N_GUBUN = NULL</otherwise></choose>
+			<choose><when test="N_SORT != null and N_SORT != ''">, N_SORT = #{N_SORT}</when><otherwise>, N_SORT = NULL</otherwise></choose>
+			<choose><when test="N_INTERVAL != null and N_INTERVAL != ''">, N_INTERVAL = #{N_INTERVAL}</when><otherwise>, N_INTERVAL = NULL</otherwise></choose>
+			<choose><when test="N_CON_LIMIT != null and N_CON_LIMIT != ''">, N_CON_LIMIT = #{N_CON_LIMIT}</when><otherwise>, N_CON_LIMIT = NULL</otherwise></choose>
+			<choose><when test="N_USE_LIMIT != null and N_USE_LIMIT != ''">, N_USE_LIMIT = #{N_USE_LIMIT}</when><otherwise>, N_USE_LIMIT = NULL</otherwise></choose>
+		WHERE N_DB_ID = #{N_DB_ID}
+	</update>
+	
+  <delete id="delete_data" parameterType="hashmap" statementType="PREPARED">
+  		DELETE FROM TB_DB_INFO
+		WHERE N_DB_ID = #{N_DB_ID}
+  </delete>
+	
+	<select id="detail_info" resultType="hashmap" parameterType="hashmap">
+		SELECT *
+		FROM TB_DB_INFO
+		WHERE N_DB_ID = #{N_DB_ID}
+	</select>
+</mapper>

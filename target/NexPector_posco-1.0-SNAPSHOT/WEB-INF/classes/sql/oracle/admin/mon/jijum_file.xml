@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="jijum_file">
+
+  <select id="jijum_file_export" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+    SELECT		N_GROUP_CODE, S_GROUP_NAME, S_GUBUN,  S_NAME,  S_RUNNING,  S_EXT_NUM, S_IP_ADDRESS, S_ADDRESS
+    , DATE_FORMAT(D_INS_DATE, '%Y-%m-%d %H:%i:%s') AS D_INS_DATE
+	FROM		TB_MON_IPPHONE_INFO
+    WHERE 1=1
+	<if test="S_EXT_NUM != '' and S_EXT_NUM != null">
+	    AND UPPER(S_EXT_NUM) LIKE CONCAT('%',#{S_EXT_NUM},'%')
+	</if>
+	<if test="S_IP_ADDRESS != '' and S_IP_ADDRESS != null">
+		AND UPPER(S_IP_ADDRESS) LIKE CONCAT('%',#{S_IP_ADDRESS},'%')
+	</if>
+	<if test="S_NAME != '' and S_NAME != null">
+	    AND UPPER(S_NAME) LIKE CONCAT('%',#{S_NAME},'%')
+	</if>
+    ORDER BY	D_INS_DATE ASC
+  </select>
+
+  <delete id="jijum_file_delete" >
+	DELETE FROM TB_MON_IPPHONE_INFO
+  </delete>
+
+  <insert id="jijum_file_import" parameterType="java.util.HashMap">
+    INSERT INTO TB_MON_IPPHONE_INFO (
+		N_GROUP_CODE, S_GROUP_NAME, S_GUBUN,  S_NAME,  S_RUNNING,  S_EXT_NUM, S_IP_ADDRESS, S_ADDRESS
+    ) 
+    SELECT (SELECT N_CODE FROM TB_NUM_CODE WHERE S_GROUP_CODE = 'IPPHONE_GROUP' AND S_VALUE = #{S_GROUP_NAME}) AS N_GROUP_CODE
+			, #{S_GROUP_NAME}
+			, #{S_GUBUN}, #{S_NAME}, #{S_RUNNING}
+			, #{S_EXT_NUM}, #{S_IP_ADDRESS}, #{S_ADDRESS}
+  </insert>
+
+	<select id="jijum_file_cm" resultType="java.util.HashMap">
+		SELECT N_CODE, S_VALUE FROM TB_NUM_CODE  WHERE S_GROUP_CODE = 'IPPHONE_GROUP'
+		UNION
+		SELECT N_CODE, S_NAME FROM TB_NUM_CODE WHERE S_GROUP_CODE = 'IPPHONE_GROUP'
+		UNION
+		SELECT N_CODE, S_DESC FROM TB_NUM_CODE WHERE S_GROUP_CODE = 'IPPHONE_GROUP'
+	</select>
+	
+	
+	<!-- 지점전화기 장애 현황 -->
+	<select id="dash_file_export" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT A.* FROM (
+			SELECT
+				M.N_GROUP_CODE, M.S_GROUP_NAME, M.S_GUBUN, M.S_NAME, M.S_RUNNING
+				, M.S_EXT_NUM, M.S_IP_ADDRESS, M.S_ADDRESS, M.D_INS_DATE
+				, P.D_UPDATE_TIME, IFNULL(P.N_ALM_STATUS, 0) AS N_ALM_STATUS 
+				, CASE WHEN IFNULL(P.N_ALM_STATUS, 0) = 0 THEN '정상' ELSE '장애' END AS S_STATUS 
+			FROM
+				TB_MON_IPPHONE_INFO M LEFT OUTER JOIN TB_ALM_PHONE P
+					ON M.S_IP_ADDRESS = P.S_IP_ADDRESS
+		) A
+		<where>
+			<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">
+				AND N_GROUP_CODE = #{N_GROUP_CODE}
+			</if>
+			<if test="N_ALM_STATUS != '' and N_ALM_STATUS != null">
+				AND N_ALM_STATUS = #{N_ALM_STATUS}
+			</if>
+			<if test="SEL_STATUS != '' and SEL_STATUS != null">
+				<if test="SEL_STATUS == 'S_ALARM'">
+					AND N_ALM_STATUS IN (1, 2, 3)
+				</if>
+				<if test="SEL_STATUS == 'S_NORMAL'">
+					AND N_ALM_STATUS = 0
+				</if>
+			</if>
+			<if test="S_EXT_NUM != '' and S_EXT_NUM != null">
+				AND S_EXT_NUM LIKE CONCAT('%', #{S_EXT_NUM}, '%')
+			</if>
+			<if test="S_IP_ADDRESS != '' and S_IP_ADDRESS != null">
+				AND S_IP_ADDRESS LIKE CONCAT('%', #{S_IP_ADDRESS}, '%')
+			</if>
+			<if test="S_ADDRESS != '' and S_ADDRESS != null">
+				AND S_ADDRESS LIKE CONCAT('%', #{S_ADDRESS}, '%')
+			</if>
+			<if test="SEARCH_KEYWORD != null and SEARCH_KEYWORD != ''">
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'S_GUBUN'">
+				  	AND S_GUBUN LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'S_NAME'">
+				  	AND S_NAME LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'S_RUNNING'">
+				  	AND S_RUNNING LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'S_EXT_NUM'">
+				  	AND S_EXT_NUM LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'S_IP_ADDRESS'">
+				  	AND S_IP_ADDRESS LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'S_ADDRESS'">
+				  	AND S_ADDRESS LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+			</if>
+		</where>
+	</select>
+	
+</mapper>
+

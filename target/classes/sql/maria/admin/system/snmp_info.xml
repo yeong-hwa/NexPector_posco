@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="snmp_info">
+  	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+  
+  <select id="select_list" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+	  SELECT /* snmp_info.select_list */ *, @NUM AS TOTAL_COUNT
+	  FROM (
+			SELECT
+	  			@NUM := @NUM + 1 NUM, A.*
+			FROM
+				(
+					SELECT
+							N_MON_ID KEY_COL, N_MON_ID, N_SNMP_MAN_CODE, S_SNMP_IP, N_MON_ID OLD_N_MON_ID, N_SNMP_MAN_CODE OLD_N_SNMP_MAN_CODE, S_SNMP_IP OLD_S_SNMP_IP, N_SNMP_PORT, S_SNMP_COMMUNITY, N_SNMP_VERSION
+							, (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME
+							, (SELECT S_DESC FROM TB_SNMP_MAN_CODE WHERE N_SNMP_MAN_CODE = A.N_SNMP_MAN_CODE) SNMP_MAN_NAME
+					FROM		
+							TB_SNMP_INFO A
+				) A, 
+				(SELECT @NUM := 0) R
+		<where>				
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'ID'">
+				AND N_MON_ID LIKE CONCAT('%', #{SEARCH_KEYWORD} ,'%')
+			</if>
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'NM'">
+				AND S_MON_NAME LIKE CONCAT('%', #{SEARCH_KEYWORD} ,'%')
+			</if>
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'SNMP_NM'">
+				AND SNMP_MAN_NAME LIKE CONCAT('%', #{SEARCH_KEYWORD} ,'%')
+			</if>
+			<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'SNMP_IP'">
+				AND S_SNMP_IP LIKE CONCAT('%', #{SEARCH_KEYWORD} ,'%')
+			</if>
+		</where>
+	  ) X
+	  ORDER BY
+		<if test="sort == null">N_MON_ID</if>
+		<if test="sort != null">
+			<choose>
+		 		<when test="sort.size() == 0">
+			  		N_MON_ID
+				</when>
+			<otherwise>
+				<include refid="SQL_OderBy"/>
+			</otherwise>
+			</choose>
+		</if>
+	  LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+  </select>
+  
+  <select id="detail_info" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+    	
+    		SELECT
+    				N_MON_ID, N_SNMP_MAN_CODE, S_SNMP_IP, N_SNMP_PORT, S_SNMP_COMMUNITY, N_SNMP_VERSION
+    		FROM 
+					TB_SNMP_INFO
+			WHERE
+					N_MON_ID = #{N_MON_ID} AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} AND S_SNMP_IP = #{S_SNMP_IP}
+			
+  </select>
+  
+  <insert id="insert_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  		INSERT INTO TB_SNMP_INFO(N_MON_ID, N_SNMP_MAN_CODE, S_SNMP_IP, N_SNMP_PORT, S_SNMP_COMMUNITY, N_SNMP_VERSION)
+  		VALUES (#{N_MON_ID}, #{N_SNMP_MAN_CODE}, #{S_SNMP_IP}, #{N_SNMP_PORT}, #{S_SNMP_COMMUNITY}, #{N_SNMP_VERSION})
+  </insert>
+  
+  <update id="update_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  		UPDATE TB_SNMP_INFO
+  		SET 
+  			  N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE}
+  			, S_SNMP_IP = #{S_SNMP_IP}
+  			, N_SNMP_PORT = #{N_SNMP_PORT}
+  			, S_SNMP_COMMUNITY = #{S_SNMP_COMMUNITY}
+  			, N_SNMP_VERSION = #{N_SNMP_VERSION}
+  		WHERE
+			N_MON_ID = #{N_MON_ID} AND N_SNMP_MAN_CODE = #{OLD_N_SNMP_MAN_CODE} AND S_SNMP_IP = #{OLD_S_SNMP_IP}
+  </update>
+  
+  <delete id="delete_date" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE FROM TB_SNMP_INFO  		
+  		WHERE N_MON_ID = #{N_MON_ID} AND N_SNMP_MAN_CODE = #{OLD_N_SNMP_MAN_CODE} AND S_SNMP_IP = #{OLD_S_SNMP_IP}
+  </delete>
+
+	<select id="dul_chk" resultType="java.lang.String" parameterType="java.util.HashMap">   	
+    		SELECT
+    				COUNT(*) CNT
+    		FROM 
+					TB_SNMP_INFO
+			WHERE
+					N_MON_ID = #{N_MON_ID} AND N_SNMP_MAN_CODE = #{N_SNMP_MAN_CODE} AND S_SNMP_IP = #{S_SNMP_IP}
+  </select>
+  
+  
+
+</mapper>

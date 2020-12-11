@@ -1,0 +1,98 @@
+@charset "utf-8";
+/* CSS Document */
+@import url("common.css");
+@import url("font.css");
+@import url("form.css");
+@import url("paginate.css");
+
+* {margin:0; padding:0;}
+
+body {margin:0;overflow-x:auto;overflow-y:auto; }
+select, table, form, textarea, div { font-family:굴림;font-size:12px;color:#575c5f; }
+input { font-family:굴림,dotum; font-size:12px; letter-spacing:0; border:1px solid #bebebe; }
+form { margin:0; }
+img,a { border:0;selector-dummy:expression(this.hideFocus=true); }
+a { font-size: 12px; text-decoration: none; }
+a:hover,active { font-size: 12px; color:#1874c7;  text-decoration: none; }
+a.menu { font-size:12px; color:#ffffff; font-weight:bold; text-decoration: none; }
+a.menu:hover,active { font-size:12px; color:#ffffff; font-weight:bold; text-decoration: underline; }
+ul{list-style-type: none; }
+/*text*/
+.blue { color:#035198 }
+.white { color:#FFFFFF }
+.red { color:#ef3435 }
+.gray {color:#6e7275 }
+.ggray {color:#575c5f }
+.gray_sub { color:#979797 }
+.org { color:#ff9005 }
+.cyan { color:#1874c7 }
+.b { font-weight:bold }
+.bblue { color:#276fe6 }
+.f14 { font-size:14px }
+.f34 { font-size:30px; font-family:나눔고딕, NanumGothicBold; color:#035198; line-height:1 }
+.f34_off { color:#cad3e2 }
+.data { color:#98a5b6 }
+.f24 { font-size:18px; font-family:나눔고딕, NanumGothicBold; color:#035198 }
+.f142 { font-size:30px }
+
+/*padding*/
+.pl120 { padding-left:120px }
+.pl54 { padding-left:54px }
+.pl30 { padding-left:30px }
+.pl21 { padding-left:21px }
+.pl10 { padding-left:10px }
+.pl3 {padding-left:3px }
+.pl13 {padding-left:13px }
+.pt47 {padding-top:47px }
+.pt40 {padding-top:40px }
+.pt34 {padding-top:34px }
+.pt15 {padding-top:15px }
+.pt2 {padding-top:2px}
+.pr5 {padding-right:6px }
+.pr15 {padding-right:15px }
+.text11 {font-size:11px }
+.text14 {font-size:14px }
+
+/*linebg*/
+.line_gray { border-bottom:1px solid #eeeeee; }
+.blue_bg { background-color:#045198 }
+
+/*table*/
+.box { border:1px solid #d3d3d3; background-color:#f5f5f5; }
+.table_title { border-bottom:1px solid #d2d1d1; border-top:1px solid #3b3b3b; background-color:#f5f5f5 ; }
+.line_bk_t {border-top:1px solid #3b3b3b; }
+.table_bg {background-color:#f5f5f5 ;}
+.input_white { border:1px solid #ffffff; padding-left:5px }
+.tbin { border-bottom:1px solid #a8b4c4; }
+.tbinrg { border-right:1px solid #a8b4c4; }
+
+/*20130101 추가분*/
+.view { border-top:1px solid #a8b4c4; border-bottom:1px solid #c5c5c5; background-color:#eeeeee; }
+.warning_td { border-bottom:1px solid #2a66a0; font-size:10px; }
+.green {color:#009933; }
+.blue2 {color:#b1d0ef;}
+.orange {color:#f2641a; }
+.gray2 {color:#96abbf; }
+.black {color:#000000;}
+.tem_view { border:2px solid #e9e9e9; }
+.p_tem {padding:3px;}
+.pb_warn {padding-bottom:10px;}
+.btn_search { cursor:hand; }
+
+/*20140327 추가분*/
+.boxbg01 {width:950px; height:73px; background: url('../../common/images/watcher/bg_box01_01.png') left top no-repeat;}
+.boxbg01_s {width:465px; height:73px; background: url('../../common/images/watcher/bg_box01_02.png') left top no-repeat;}
+.boxbg01_01_s {width:279px; height:113px; background: url('../../common/images/watcher/bg_box01_03.png') left top no-repeat;}
+.boxbg01_02_s {width:321px; height:188px; background: url('../../common/images/watcher/bg_box01_04.png') left top no-repeat;}
+.boxbg02_01_s {width:305px; height:139px; background: url('../../common/images/watcher/bg_box02_01.png') left top no-repeat;}
+.boxbg02_02_s {width:465px; height:197px; background: url('../../common/images/watcher/bg_box02_02.gif') left top no-repeat;}
+.boxbg04_01 {width:950px; height:102px; background: url('../../common/images/watcher/bg_box04_01.png') left top no-repeat;}
+.box_num01 {float:left; background:url('../../common/images/watcher/box_num01.png') left top no-repeat; width:98px; height:62px; margin:6px 0 0 10px}
+.box_num01_s{width:94px; height:33px; float:left; line-height:33px; margin-top:8px; font-family:NGB; font-size:22px;}
+.box_num01_title{font-size:12px; font-weight:bold; color:#666; width:94px; height:19px; text-align:center; line-height:19px;}
+.textbox1{width:120px; margin-left:15px; height:22px; vertical-align:middle; line-height:22px;}
+.servicebox_fax01{float:left; width:450px; height:57px; margin-top:10px;}
+.servicebox_fax01 ul{margin-left:0px;}
+.servicebox_fax01 li{float:left; width:135px; height:57px; margin-left:15px;}
+.boxbg03_02_s {width:950px; height:130px; background: url('../../common/images/watcher/bg_box03_02.png') left top no-repeat;}
+.boxbg03_01_s {width:465px; height:174px; background: url('../../common/images/watcher/bg_box03_01.png') left top no-repeat;}

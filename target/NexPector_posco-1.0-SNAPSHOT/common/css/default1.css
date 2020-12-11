@@ -1,0 +1,19 @@
+@charset "utf-8";
+
+/*20140327 추가분*/
+.boxbg01 {width:950px; height:73px; background: url('../../common/images/watcher/bg_box01_01.png') left top no-repeat;}
+.boxbg01_s {width:465px; height:73px; background: url('../../common/images/watcher/bg_box01_02.png') left top no-repeat;}
+.boxbg01_01_s {width:279px; height:113px; background: url('../../common/images/watcher/bg_box01_03.png') left top no-repeat;}
+.boxbg01_02_s {width:321px; height:188px; background: url('../../common/images/watcher/bg_box01_04.png') left top no-repeat;}
+.boxbg02_01_s {width:305px; height:139px; background: url('../../common/images/watcher/bg_box02_01.png') left top no-repeat;}
+.boxbg02_02_s {width:465px; height:197px; background: url('../../common/images/watcher/bg_box02_02.gif') left top no-repeat;}
+.boxbg04_01 {width:950px; height:102px; background: url('../../common/images/watcher/bg_box04_01.png') left top no-repeat;}
+.box_num01 {float:left; background:url('../../common/images/watcher/box_num01.png') left top no-repeat; width:98px; height:62px; margin:6px 0 0 10px}
+.box_num01_s{width:94px; height:33px; float:left; line-height:33px; margin-top:8px; font-family:NGB; font-size:22px;}
+.box_num01_title{font-size:12px; font-weight:bold; color:#666; width:94px; height:19px; text-align:center; line-height:19px;}
+.textbox1{width:120px; margin-left:15px; height:22px; vertical-align:middle; line-height:22px;}
+.servicebox_fax01{float:left; width:450px; height:57px; margin-top:10px;}
+.servicebox_fax01 ul{margin-left:0px;}
+.servicebox_fax01 li{float:left; width:135px; height:57px; margin-left:15px;}
+.boxbg03_02_s {width:950px; height:130px; background: url('../../common/images/watcher/bg_box03_02.png') left top no-repeat;}
+.boxbg03_01_s {width:465px; height:174px; background: url('../../common/images/watcher/bg_box03_01.png') left top no-repeat;}

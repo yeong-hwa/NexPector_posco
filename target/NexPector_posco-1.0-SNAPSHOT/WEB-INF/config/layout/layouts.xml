@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+		"-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN"
+		"http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+
+<tiles-definitions>
+
+	<definition name="admin" template="/WEB-INF/views/admin/layout/admin_template.jsp">
+		<put-attribute name="left" value="/WEB-INF/views/admin/prgm/left.jsp" />
+		<put-attribute name="body" value="" />
+	</definition>
+
+	<definition name="/admin/*/*/*/*" extends="admin">
+		<put-attribute name="body" value="" />
+	</definition>
+
+	<definition name="watcher" template="/WEB-INF/views/watcher/layout/watcher_template.jsp">
+		<put-attribute name="left" value="" />
+		<put-attribute name="body" value="" />
+	</definition>
+
+	<definition name="/watcher/realtime_stats/*/*" extends="watcher">
+		<put-attribute name="left" value="/WEB-INF/views/watcher/realtime_stats/left.jsp" />
+		<put-attribute name="body" value="" />
+	</definition>
+
+	<definition name="/watcher/server_detail/server_detail_info/server_detail_info" extends="watcher">
+		<put-attribute name="left" value="/WEB-INF/views/watcher/server_detail/left.jsp" />
+		<put-attribute name="body" value="" />
+	</definition>
+
+	<definition name="/watcher/history_stats/*/*" extends="watcher">
+		<put-attribute name="left" value="/WEB-INF/views/watcher/history_stats/left.jsp" />
+		<put-attribute name="body" value="" />
+	</definition>
+
+</tiles-definitions>

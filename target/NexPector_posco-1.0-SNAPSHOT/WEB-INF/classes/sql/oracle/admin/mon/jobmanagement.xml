@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="jobmanagement">
+  	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+	<select id="select_list" resultType="hashmap" parameterType="hashmap">
+		SELECT /* jobmanagement.select_list */ *, @NUM AS TOTAL_COUNT
+		FROM (
+			SELECT @NUM := @NUM + 1 NUM, A.*
+			FROM
+	       		(
+					SELECT
+						A.S_WORK_KEY
+						, A.S_NAME
+						, CASE 
+							WHEN N_REPEAT_TYPE = 0 THEN '반복안함' 
+							WHEN N_REPEAT_TYPE = 1 THEN '월'
+							WHEN N_REPEAT_TYPE = 2 THEN '일'
+							WHEN N_REPEAT_TYPE = 3 THEN '시간'
+							WHEN N_REPEAT_TYPE = 4 THEN '분'
+							WHEN N_REPEAT_TYPE = 4 THEN '요일'  
+						  END AS S_REPEAT_TYPE
+						, A.N_REPEAT_TYPE
+						, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = A.N_GROUP_CODE) S_GROUP_NAME
+						, (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = A.N_TYPE_CODE) S_TYPE_NAME
+						, CONCAT((SELECT Y.S_MON_NAME FROM TB_ALM_WORK_MON I, TB_MON_INFO Y WHERE I.N_MON_ID=Y.N_MON_ID AND S_WORK_KEY = A.S_WORK_KEY LIMIT 1) , (SELECT CASE WHEN COUNT(*) > 1 THEN CONCAT(' 외 ', CONVERT(COUNT(*)-1, char), '건') ELSE '' END FROM TB_ALM_WORK_MON WHERE S_WORK_KEY = A.S_WORK_KEY)) MON_CNT
+						, CASE 
+							WHEN N_REPEAT_TYPE = 0 THEN DATE_FORMAT(A.D_STIME, '%Y-%m-%d %H:%i:%s')
+								 ELSE 					DATE_FORMAT(A.D_STIME, '%H:%i')
+							END AS D_STIME
+						, CASE 
+							WHEN N_REPEAT_TYPE = 0 THEN DATE_FORMAT(A.D_ETIME, '%Y-%m-%d %H:%i:%s')
+								 ELSE 					DATE_FORMAT(A.D_ETIME, '%H:%i')
+							END AS D_ETIME
+						, DATE_FORMAT(A.D_UPDATE_TIME, '%Y-%m-%d') AS D_UPDATE_TIME
+					FROM (
+						SELECT
+							TAW.S_WORK_KEY, TAW.S_NAME, TAW.N_GROUP_CODE, TAW.N_TYPE_CODE, TAW.D_STIME, TAW.D_ETIME, TAW.D_UPDATE_TIME, TAW.N_REPEAT_TYPE
+						FROM 
+							TB_ALM_WORK TAW, TB_ALM_WORK_MON TAWM, TB_MON_INFO TMI
+						WHERE 
+							TMI.N_MON_ID = TAWM.N_MON_ID
+						AND 
+							TAWM.S_WORK_KEY = TAW.S_WORK_KEY
+						<if test="S_NAME != '' and S_NAME != null">
+							AND UPPER(S_NAME) LIKE CONCAT('%', UPPER(#{S_NAME}), '%')
+						</if>
+						<if test="SEARCH_KEYWORD != '' and SEARCH_KEYWORD != null">
+							<if test="SEARCH_TYPE == 'ID'">
+								AND TMI.N_MON_ID LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%') 
+							</if>
+							<if test="SEARCH_TYPE == 'NM'">
+								AND TMI.S_MON_NAME LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+							</if>
+							<if test="SEARCH_TYPE == 'IP'">
+								AND TMI.S_MON_IP LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+							</if>
+						</if>
+						<if test="S_MON_NAME != '' and S_MON_NAME != null">
+							AND UPPER(TMI.S_MON_NAME) LIKE CONCAT('%', #{S_MON_NAME}, '%')
+						</if>
+						<if test="S_MON_IP != '' and S_MON_IP != null">
+							AND TMI.S_MON_IP LIKE CONCAT('%', #{S_MON_IP}, '%')
+						</if>
+						<if test="D_STIME != '' and D_STIME != null">
+							AND (N_REPEAT_TYPE != 0 OR (N_REPEAT_TYPE = 0 AND DATE_FORMAT(D_STIME, '%Y%m%d') &gt;= #{D_STIME}))
+						</if>
+						<if test="D_ETIME != '' and D_ETIME != null">
+							AND (N_REPEAT_TYPE != 0 OR (N_REPEAT_TYPE = 0 AND DATE_FORMAT(D_ETIME, '%Y%m%d') &gt;= #{D_ETIME}))
+						</if>		
+						GROUP BY 
+							TAW.S_WORK_KEY, TAW.S_NAME, TAW.N_GROUP_CODE, TAW.N_TYPE_CODE, TAW.D_STIME, TAW.D_ETIME, TAW.D_UPDATE_TIME, TAW.N_REPEAT_TYPE
+					) A
+	       		) A,
+		  		(SELECT @NUM := 0) R
+		  ) X
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+	
+	<select id="detail_info" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT A.S_WORK_KEY, A.S_NAME, DATE_FORMAT(A.D_STIME, '%Y/%m/%d %H:%i') AS D_STIME, DATE_FORMAT(A.D_ETIME, '%Y/%m/%d %H:%i') AS D_ETIME, A.D_UPDATE_TIME, A.S_DESC, B.N_MON_ID
+		, (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = B.N_MON_ID) AS S_MON_NAME
+		, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = (SELECT N_GROUP_CODE FROM TB_MON_INFO WHERE N_MON_ID = B.N_MON_ID)) AS S_GROUP_NAME
+		, (SELECT S_TYPE_NAME FROM TB_SVR_TYPE WHERE N_TYPE_CODE = (SELECT N_TYPE_CODE FROM TB_MON_INFO WHERE N_MON_ID = B.N_MON_ID)) AS S_TYPE_NAME
+		, (SELECT S_MON_IP FROM TB_MON_INFO WHERE N_MON_ID = B.N_MON_ID) AS S_MON_IP
+		, A.N_GROUP_CODE
+		, A.N_TYPE_CODE
+		, A.N_REPEAT_TYPE
+		FROM TB_ALM_WORK A LEFT OUTER JOIN TB_ALM_WORK_MON B ON A.S_WORK_KEY = B.S_WORK_KEY
+		WHERE
+		A.S_WORK_KEY = #{S_WORK_KEY}
+	</select>
+	
+	<!-- insert_data -->
+	<insert id="insert_data" parameterType="java.util.HashMap" statementType="PREPARED">
+		INSERT INTO TB_ALM_WORK(
+		    S_WORK_KEY
+ 			<if test="S_NAME != '' and S_NAME != null">, S_NAME</if>
+			<if test="S_DESC != '' and S_DESC != null">, S_DESC</if>
+			<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">, N_GROUP_CODE</if>
+			<if test="N_TYPE_CODE != '' and N_TYPE_CODE != null">, N_TYPE_CODE</if>
+			<if test="N_REPEAT_TYPE != '' and N_REPEAT_TYPE != null">, N_REPEAT_TYPE</if>
+			, D_UPDATE_TIME
+			, D_STIME
+			, D_ETIME
+		)
+		VALUES
+		(
+			#{S_WORK_KEY}
+			<if test="S_NAME != '' and S_NAME != null">, #{S_NAME}</if>
+			<if test="S_DESC != '' and S_DESC != null">, #{S_DESC}</if>
+			<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">, #{N_GROUP_CODE}</if>
+			<if test="N_TYPE_CODE != '' and N_TYPE_CODE != null">, #{N_TYPE_CODE}</if>
+			<if test="N_REPEAT_TYPE != '' and N_REPEAT_TYPE != null">, #{N_REPEAT_TYPE}</if>
+			, NOW()
+	  		<choose>
+				<when test="N_REPEAT_TYPE == '0'.toString()">
+					, STR_TO_DATE(#{S_DATE_TIME},'%Y%m%d%H%i') 
+					, STR_TO_DATE(#{E_DATE_TIME},'%Y%m%d%H%i')
+				</when>
+				<otherwise>
+					, STR_TO_DATE(#{S_TIME},'%Y%m%d%H%i')  
+					, STR_TO_DATE(#{E_TIME},'%Y%m%d%H%i') 
+				</otherwise>
+			</choose>
+		)
+	</insert>
+	
+	<insert id="insert_data_mon" parameterType="java.util.HashMap" statementType="PREPARED">
+   		INSERT INTO TB_ALM_WORK_MON(S_WORK_KEY, N_MON_ID)
+   		SELECT * FROM (
+   			SELECT 'xx' s_work_key, 'yy' n_mon_id FROM dual WHERE 1 = 0
+	   		<if test="mon_id_list != '' and mon_id_list != null">
+	   			<foreach collection="mon_id_list" item="data">
+	   				UNION SELECT #{S_WORK_KEY} s_work_key, #{data.N_MON_ID} n_mon_id FROM dual
+	   			</foreach>
+	   		</if>
+   		) A
+	</insert>
+	
+  <!-- update_data -->
+  <update id="update_data" parameterType="hashmap" statementType="PREPARED">
+  	UPDATE TB_ALM_WORK
+  	SET
+  		S_NAME = #{S_NAME}
+  		, N_REPEAT_TYPE = #{N_REPEAT_TYPE}
+  		, D_UPDATE_TIME = NOW()
+  		, S_DESC = #{S_DESC}
+  		, N_GROUP_CODE = #{N_GROUP_CODE}
+  		<choose>
+			<when test="N_TYPE_CODE != '' and N_TYPE_CODE != null">
+				, N_TYPE_CODE = #{N_TYPE_CODE}
+			</when>
+			<otherwise>
+				, N_TYPE_CODE = null
+			</otherwise>
+		</choose>
+  		<choose>
+			<when test="N_REPEAT_TYPE == '0'.toString()">
+				, D_STIME = STR_TO_DATE(#{S_DATE_TIME},'%Y%m%d%H%i') 
+				, D_ETIME = STR_TO_DATE(#{E_DATE_TIME},'%Y%m%d%H%i')
+			</when>
+			<otherwise>
+				, D_STIME = STR_TO_DATE(#{S_TIME},'%Y%m%d%H%i') 
+				, D_ETIME = STR_TO_DATE(#{E_TIME},'%Y%m%d%H%i') 
+			</otherwise>
+		</choose>
+	WHERE
+		S_WORK_KEY = #{S_WORK_KEY}
+  </update>
+  
+  
+  <delete id="delete_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE	FROM TB_ALM_WORK
+  		WHERE
+  				S_WORK_KEY = #{S_WORK_KEY}
+  </delete>
+  
+  <delete id="delete_data_mon" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE	FROM TB_ALM_WORK_MON
+  		WHERE
+  				S_WORK_KEY = #{S_WORK_KEY}
+  </delete>
+
+</mapper>

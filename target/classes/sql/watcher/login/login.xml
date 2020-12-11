@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="watcher_login">
+
+
+  <select id="loginQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+  	<![CDATA[
+    SELECT	
+		S_USER_ID, S_USER_NAME, N_PER_CODE, N_GROUP_CODE, DATE_FORMAT(now(), '%Y%m%d%H%i%s') LOGIN_DT, LOGIN_CNT, S_ID_LOCK, S_ACCESS_IP,
+		CASE
+			WHEN (SELECT S_VALUE FROM TB_USER_PW_RULE_DEFAULT WHERE N_IDX = 101) < DATEDIFF(NOW(), COALESCE(D_PASSWORD_CHANGE, D_IN_DATE)) THEN 'Y'
+	    	WHEN (SELECT S_VALUE FROM TB_USER_PW_RULE_DEFAULT WHERE N_IDX = 101) < ((SELECT S_VALUE FROM TB_USER_PW_RULE_DEFAULT WHERE N_IDX = 104) + DATEDIFF(NOW(), COALESCE(D_PASSWORD_CHANGE, D_IN_DATE))) THEN 'C'
+	   		ELSE 'N'
+	   	END AS PWD_CHG,    		
+	   	CASE
+	      	WHEN (SELECT S_VALUE FROM TB_USER_PW_RULE_DEFAULT WHERE N_IDX = 102) <= N_LOGIN_FAIL_CNT THEN 'Y'
+	      	ELSE 'N'
+	   	END AS SET_PWD_FAIL_LOCK,
+	   	CASE
+	      	WHEN (SELECT D_UPDATE_TIME FROM TB_USER_LOGIN WHERE S_USER_ID = #{S_USER_ID}) < (DATE_ADD(NOW(), INTERVAL - (SELECT S_VALUE FROM TB_USER_PW_RULE_DEFAULT WHERE N_IDX = 105) DAY)) THEN 'Y'
+	      	ELSE 'N'
+	   	END AS SET_LOGNTIME_LOGIN,
+	   	CASE 
+	    	WHEN DATE_ADD(LOGIN_FAIL_DATE, INTERVAL 10 MINUTE) >= now() THEN 'Y' 
+			ELSE 'N' 
+		END AS LOCK_DATE,
+		CASE 
+	    	WHEN (SELECT S_VALUE FROM TB_USER_PW_RULE_DEFAULT WHERE N_IDX = 106) = 1 THEN 'Y'
+			ELSE 'N' 
+		END AS IP_CHECK
+    FROM
+		TB_USER_INFO
+    WHERE
+    	S_USER_ID = #{S_USER_ID}
+    	AND	S_USER_PWD = #{S_USER_PWD}
+    	AND	N_PER_CODE < 999
+    ]]>
+  </select>
+
+	<update id="changePwd" parameterType="java.util.HashMap" statementType="PREPARED">
+  		UPDATE
+  				TB_USER_INFO
+  		SET
+  				S_USER_PWD = #{change_pwd}
+  				, D_PASSWORD_CHANGE = NOW()
+  		WHERE
+  				S_USER_ID = #{S_USER_ID}
+  		AND		S_USER_PWD = #{S_USER_PWD}
+  		AND		N_PER_CODE &lt; 999
+  </update>
+
+  <select id="usr_component" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+  	<![CDATA[
+    SELECT
+    		S_USER_ID, S_COMPO_ID, N_SORT_NUM
+    FROM
+			TB_USER_COMPONENT
+    WHERE
+    		S_USER_ID = #{S_USER_ID}
+    ORDER BY
+    		N_SORT_NUM ASC
+    ]]>
+  </select>
+
+  <select id="usr_monlist" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+  	<![CDATA[
+    SELECT
+    		N_MON_ID
+    FROM
+			TB_USER_MON_LIST
+    WHERE
+    		S_USER_ID = #{S_USER_ID}
+    ORDER BY
+    		1
+    ]]>
+  </select>
+
+  <update id="loginFail" parameterType="java.util.HashMap" statementType="PREPARED">
+  		UPDATE
+  				TB_USER_INFO
+  		SET
+  				N_LOGIN_FAIL_CNT = COALESCE(N_LOGIN_FAIL_CNT, 0) + 1
+  				/* 20160713 huni1067 추가 시작*/
+  				, LOGIN_FAIL_DATE = now()
+  				/* 20160713 huni1067 추가 종료*/
+  		WHERE
+  				S_USER_ID = #{S_USER_ID}
+  </update>
+
+  <update id="loginSucc" parameterType="java.util.HashMap" statementType="PREPARED">
+  		UPDATE
+  				TB_USER_INFO
+  		SET
+  				N_LOGIN_FAIL_CNT = 0
+  				/* 20160713 huni1067 추가 시작*/
+  				, LOGIN_CNT = COALESCE(LOGIN_CNT,0) + 1
+  				/* 20160713 huni1067 추가 종료*/
+  		WHERE
+  				S_USER_ID = #{S_USER_ID}
+  </update>
+
+	<select id="passwd_min_len" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+  	<![CDATA[
+    	SELECT S_VALUE FROM tb_user_pw_rule_default WHERE N_IDX = '2'
+    ]]>
+  </select>
+
+  <insert id="changePasswordHistory" parameterType="java.util.HashMap" statementType="PREPARED">
+  		INSERT INTO TB_USER_PWD_LIST(S_USER_ID, S_USER_PWD, D_REG_DATE)
+  		VALUES (#{S_USER_ID}, #{change_pwd}, NOW())
+  </insert>
+
+  <select id="password_his_chk" resultType="java.lang.Integer" parameterType="java.util.HashMap">
+    	SELECT /* watcher_login.password_his_chk */ COUNT(*) CNT FROM
+		(
+		    SELECT @NUM := @NUM + 1 AS NUM, S_USER_PWD 
+		    FROM TB_USER_PWD_LIST
+		    	 ,(SELECT @NUM := 0) R
+		    WHERE	S_USER_ID = #{S_USER_ID}
+		) A
+		WHERE
+			NUM &gt;= (SELECT S_VALUE FROM tb_user_pw_rule_default WHERE N_IDX = 1)
+			AND     S_USER_PWD = #{change_pwd}
+  </select>
+
+  <select id="pwd_fail_info" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+  	<![CDATA[
+    	SELECT CASE
+	          	WHEN (SELECT S_VALUE FROM TB_USER_PW_RULE_DEFAULT WHERE N_IDX = 102) <= N_LOGIN_FAIL_CNT THEN 'Y'
+	          	ELSE 'N'
+	      	   END AS SET_PWD_FAIL_LOCK
+    	FROM TB_USER_INFO
+		WHERE S_USER_ID = #{S_USER_ID}
+    ]]>
+  </select>
+  
+  <update id="user_lock" parameterType="java.util.HashMap" statementType="PREPARED">
+  		UPDATE TB_USER_INFO
+  		SET S_ID_LOCK = #{S_ID_LOCK}
+  		WHERE S_USER_ID = #{S_USER_ID}
+  </update>
+  
+</mapper>

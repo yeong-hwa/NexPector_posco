@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="svr_group_img">
+  
+  <select id="select_list" resultType="hashmap" parameterType="hashmap">
+		WITH /* svr_group_img.select_list */ TREE_DATA AS
+		(
+			SELECT
+        			A.N_GROUP_CODE, A.S_GROUP_NAME, N_UP_CODE, F_USE, LEVEL DEPTH
+					, SUBSTR(SYS_CONNECT_BY_PATH(N_GROUP_CODE, '/'),2) PARENT_CODE
+			FROM
+					TB_SVR_GROUP A
+			START WITH N_UP_CODE IS NULL
+			CONNECT BY PRIOR N_GROUP_CODE = N_UP_CODE
+		)
+		SELECT 
+				-1 N_GROUP_CODE, '전체' S_GROUP_NAME, NULL N_UP_CODE, 'Y' F_USE, 0 DEPTH, '' PARENT_CODE
+				,(SELECT S_IMAGE_NAME FROM TB_SVR_GROUP_IMG WHERE N_GROUP_CODE = '-1') S_IMAGE_NAME
+				,(SELECT S_IMAGE_URL FROM TB_SVR_GROUP_IMG WHERE N_GROUP_CODE = '-1') S_IMAGE_URL 
+		FROM dual
+		UNION
+		SELECT 
+				A.* 
+				,(SELECT S_IMAGE_NAME FROM TB_SVR_GROUP_IMG WHERE N_GROUP_CODE = A.N_GROUP_CODE) S_IMAGE_NAME
+				,(SELECT S_IMAGE_URL FROM TB_SVR_GROUP_IMG WHERE N_GROUP_CODE = A.N_GROUP_CODE) S_IMAGE_URL 
+		FROM TREE_DATA A
+		ORDER BY PARENT_CODE NULLS FIRST
+  </select>
+  
+  <insert id="insert_data" parameterType="hashmap" statementType="PREPARED">
+  		INSERT INTO TB_SVR_GROUP_IMG(N_GROUP_CODE, S_IMAGE_NAME, S_IMAGE_URL)
+  		VALUES (#{N_GROUP_CODE}, #{S_IMAGE_NAME}, #{S_IMAGE_URL})
+  </insert>
+  
+  <delete id="delete_data" parameterType="hashmap" statementType="PREPARED">
+  		DELETE FROM TB_SVR_GROUP_IMG
+  		WHERE	N_GROUP_CODE = #{N_GROUP_CODE}
+  </delete>
+
+</mapper>

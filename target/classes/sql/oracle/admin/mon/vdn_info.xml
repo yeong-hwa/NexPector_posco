@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="vdn_info">
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="select_list" resultType="hashmap" parameterType="hashmap">
+		SELECT /* vdn_info.select_list */ X.*, @NUM AS TOTAL_COUNT 
+		FROM (
+			SELECT @NUM := @NUM + 1 NUM, AA.*
+			FROM (		
+				SELECT 
+					A.VDN_ID, A.VDN, A.VDN VDN_TEMP, B.VDN_NAME
+				FROM
+					TB_DASH_VDNLIST A, TB_DASH_VDN B
+				WHERE A.VDN_ID = B.VDN_ID
+			) AA, (SELECT @NUM := 0) R
+			<where>
+				<if test="VDN_ID != null and VDN_ID != ''">
+				AND VDN_ID = #{VDN_ID}
+				</if>
+				<if test="VDN != null and VDN != ''">
+				AND VDN LIKE CONCAT('%', #{VDN}, '%')
+				</if>
+			</where>
+			ORDER BY VDN_ID, VDN, VDN_NAME
+		) X
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+	
+	<select id="select_vdn_group_info" resultType="hashmap" parameterType="hashmap">
+		SELECT	/* vdn_info.select_vdn_group_info */
+       		VDN_ID AS CODE, VDN_NAME AS VAL
+		FROM TB_DASH_VDN
+ 	    <where>
+ 	    </where>
+	</select>
+
+	<insert id="insert_data" parameterType="hashmap" statementType="PREPARED">
+		INSERT INTO TB_DASH_VDNLIST 
+			(VDN_ID, VDN)
+		VALUES 
+			(#{VDN_ID}, #{VDN})  		
+	</insert>
+  
+	<update id="update_data" parameterType="hashmap" statementType="PREPARED">
+  		UPDATE TB_DASH_VDNLIST SET  				
+  			VDN_ID = #{VDN_ID}
+  			, VDN = #{VDN}
+  		WHERE
+  			VDN_ID = #{VDN_ID}
+		    AND VDN = #{VDN_TEMP}
+	</update>
+  
+	<delete id="delete_data" parameterType="hashmap" statementType="PREPARED">
+  		DELETE FROM TB_DASH_VDNLIST
+  		WHERE 
+  			VDN_ID = #{VDN_ID} 
+  			AND VDN = #{VDN_TEMP}
+	</delete>
+
+</mapper>

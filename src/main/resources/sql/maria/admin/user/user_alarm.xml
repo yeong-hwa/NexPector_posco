@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="user_alarm">
+
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+  
+  <select id="select_list" resultType="hashmap" parameterType="hashmap">
+		SELECT
+  				@NUM AS TOTAL_COUNT, X.*
+  		FROM (
+  			SELECT
+  					@NUM := @NUM + 1 NUM,
+					A.N_ALM_TYPE, A.N_ALM_CODE, A.N_ALM_RATING, A.N_ST_TIME, N_ED_TIME,
+                    A.F_SEND_MONDAY, A.F_SEND_TUESDAY, A.F_SEND_WEDNESDAY, A.F_SEND_THURSDAY, A.F_SEND_FRIDAY,
+                    A.F_SEND_SATURDAY, A.F_SEND_SUNDAY, A.F_SEND_FREE_DAY, A.S_USER_ID, A.N_USER_GROUP_CODE,
+                    A.N_SEND_CODE, A.N_MON_ID, DATE_FORMAT(A.D_IN_DATE, '%Y%m%d%h%i%s') D_IN_DATE, DATE_FORMAT(A.D_UP_DATE, '%Y%m%d%h%i%s') D_UP_DATE,
+                    (SELECT S_ALM_RATING_NAME FROM TB_ALM_RATING_CODE WHERE N_ALM_RATING = A.N_ALM_RATING) S_ALM_RATING_NAME,
+                    (SELECT S_ALM_NAME FROM TB_ALM_CODE WHERE N_ALM_TYPE = A.N_ALM_TYPE AND N_ALM_CODE = A.N_ALM_CODE) S_ALM_NAME,
+                    (SELECT S_ALM_MSG FROM TB_ALM_CODE WHERE N_ALM_TYPE = A.N_ALM_TYPE AND N_ALM_CODE = A.N_ALM_CODE) S_ALM_MSG,
+                    (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME,
+                    (SELECT S_MON_IP FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_IP,
+                    (SELECT S_USER_NAME FROM TB_USER_INFO WHERE S_USER_ID = A.S_USER_ID) S_USER_NAME,
+                    CONCAT(LPAD(N_ST_TIME, 4, 0), '~', LPAD(N_ED_TIME, 4, 0)) ALM_TIME 
+			FROM
+					TB_ALM_SEND_INFO A
+					, TB_USER_INFO B
+					, (SELECT @NUM := 0) R
+			WHERE
+					A.S_USER_ID = B.S_USER_ID
+			AND A.S_USER_ID IN (
+				SELECT S_USER_ID
+	            FROM TB_USER_INFO
+	            WHERE N_PER_CODE &lt; 999
+				    <if test="S_USER_ID != '' and S_USER_ID != null">
+					    AND	 A.S_USER_ID = #{S_USER_ID}
+			        </if>
+				    <if test="S_USER_NAME != '' and S_USER_NAME != null">
+					    AND B.S_USER_NAME LIKE  CONCAT('%', #{S_USER_NAME}, '%')
+				    </if>)
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'ID'">
+					AND N_MON_ID LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'NM'">
+					AND S_MON_NAME LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>
+				<if test="SEARCH_TYPE != null and SEARCH_TYPE != '' and SEARCH_TYPE == 'IP'">
+					AND S_MON_IP LIKE CONCAT('%', #{SEARCH_KEYWORD}, '%')
+				</if>			    
+							    
+        ) X
+        ORDER BY
+	  <if test="sort == null">S_USER_NAME, N_MON_ID, N_ALM_RATING, S_ALM_NAME, S_ALM_MSG</if>
+	  <if test="sort != null">
+		  <choose>
+			  <when test="sort.size() == 0">
+				  S_USER_NAME, N_MON_ID, N_ALM_RATING, S_ALM_NAME, S_ALM_MSG
+			  </when>
+			  <otherwise>
+				  <include refid="SQL_OderBy"/>
+			  </otherwise>
+		  </choose>
+	  </if>
+	  LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+  </select>
+  
+  <select id="DetailRetrieveAlarmQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+        SELECT
+                N_ALM_TYPE, N_ALM_CODE, N_ALM_RATING, N_ST_TIME, N_ED_TIME
+                , F_SEND_MONDAY, F_SEND_TUESDAY, F_SEND_WEDNESDAY, F_SEND_THURSDAY, F_SEND_FRIDAY
+                , F_SEND_SATURDAY, F_SEND_SUNDAY, F_SEND_FREE_DAY, S_USER_ID, N_USER_GROUP_CODE
+                , N_SEND_CODE, N_MON_ID, D_IN_DATE, D_UP_DATE
+                , (SELECT S_ALM_RATING_NAME FROM TB_ALM_RATING_CODE WHERE N_ALM_RATING = A.N_ALM_RATING) S_ALM_RATING_NAME
+                , (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME
+                , (SELECT S_USER_NAME FROM TB_USER_INFO WHERE S_USER_ID = A.S_USER_ID) S_USER_NAME
+                , (SELECT S_ALM_MSG FROM TB_ALM_CODE WHERE N_ALM_TYPE = A.N_ALM_TYPE AND N_ALM_CODE = A.N_ALM_CODE) S_ALM_MSG
+         FROM
+                TB_ALM_SEND_INFO A
+		 WHERE
+		        S_USER_ID  			= #{S_USER_ID}
+		 AND 	N_MON_ID			= #{N_MON_ID}
+		 AND 	N_ALM_TYPE          = #{N_ALM_TYPE}
+		 AND 	N_ALM_CODE          = #{N_ALM_CODE}
+		 AND 	N_ALM_RATING        = #{N_ALM_RATING}
+		 AND 	N_ST_TIME           = #{N_ST_TIME}
+		 AND 	N_ED_TIME           = #{N_ED_TIME}
+		 AND 	F_SEND_MONDAY       = #{F_SEND_MONDAY}
+		 AND 	F_SEND_TUESDAY      = #{F_SEND_TUESDAY}
+		 AND 	F_SEND_WEDNESDAY    = #{F_SEND_WEDNESDAY}
+		 AND 	F_SEND_THURSDAY     = #{F_SEND_THURSDAY}
+		 AND 	F_SEND_FRIDAY       = #{F_SEND_FRIDAY}
+		 AND 	F_SEND_SATURDAY     = #{F_SEND_SATURDAY}
+		 AND 	F_SEND_SUNDAY       = #{F_SEND_SUNDAY}
+  </select>
+ 	
+	
+	<insert id="insAlarm" parameterType="java.util.HashMap" statementType="PREPARED">
+			INSERT INTO TB_ALM_SEND_INFO
+					(
+						N_MON_ID, N_ALM_TYPE, N_ALM_CODE, N_ALM_RATING, N_ST_TIME, N_ED_TIME, 
+              			F_SEND_MONDAY, F_SEND_TUESDAY, F_SEND_WEDNESDAY, F_SEND_THURSDAY, F_SEND_FRIDAY, 
+               			F_SEND_SATURDAY, F_SEND_SUNDAY, F_SEND_FREE_DAY, S_USER_ID, N_USER_GROUP_CODE, 
+               			N_SEND_CODE, D_IN_DATE, D_UP_DATE
+					)
+			SELECT 
+					N_MON_ID, N_ALM_TYPE, N_ALM_CODE, N_ALM_RATING, N_ST_TIME, N_ED_TIME, 
+               		F_SEND_MONDAY, F_SEND_TUESDAY, F_SEND_WEDNESDAY, F_SEND_THURSDAY, F_SEND_FRIDAY, 
+               		F_SEND_SATURDAY, F_SEND_SUNDAY, F_SEND_FREE_DAY, S_USER_ID, N_USER_GROUP_CODE, 
+               		N_SEND_CODE, D_IN_DATE, D_UP_DATE
+			FROM
+				(
+					SELECT 
+							#{N_ST_TIME,jdbcType=DATE} N_ST_TIME, #{N_ED_TIME,jdbcType=DATE} N_ED_TIME
+							, COALESCE(#{F_SEND_MONDAY,jdbcType=VARCHAR},0) F_SEND_MONDAY, COALESCE(#{F_SEND_TUESDAY,jdbcType=VARCHAR},0) F_SEND_TUESDAY, COALESCE(#{F_SEND_WEDNESDAY,jdbcType=VARCHAR},0) F_SEND_WEDNESDAY
+							, COALESCE(#{F_SEND_THURSDAY,jdbcType=VARCHAR},0) F_SEND_THURSDAY, COALESCE(#{F_SEND_FRIDAY,jdbcType=VARCHAR},0) F_SEND_FRIDAY, COALESCE(#{F_SEND_SATURDAY,jdbcType=VARCHAR},0) F_SEND_SATURDAY
+							, COALESCE(#{F_SEND_SUNDAY,jdbcType=VARCHAR},0) F_SEND_SUNDAY, COALESCE(#{F_SEND_FREE_DAY,jdbcType=VARCHAR},0) F_SEND_FREE_DAY, NOW() D_IN_DATE, NOW() D_UP_DATE
+					FROM 
+							dual
+				) A, 
+				(
+					<foreach item="item" collection="user_lst" separator="UNION">
+						SELECT #{item} S_USER_ID, (SELECT N_GROUP_CODE FROM TB_USER_INFO WHERE S_USER_ID = #{item}) N_USER_GROUP_CODE FROM dual
+					</foreach>
+				) B,
+				(
+					<foreach item="item" collection="svr_lst" separator="UNION">
+						SELECT #{item} N_MON_ID FROM dual
+					</foreach>
+				) C,
+				(
+					<foreach item="item" collection="alm_type_lst" separator="UNION">
+						SELECT #{item.N_ALM_CODE} N_ALM_CODE, #{item.N_ALM_TYPE} N_ALM_TYPE  FROM dual
+					</foreach>
+				) D,
+				(
+					<foreach item="item" collection="alm_rating_lst" separator="UNION">
+						SELECT #{item} N_ALM_RATING FROM dual
+					</foreach>
+				) E
+				,
+				(
+					<foreach item="item" collection="alm_send_lst" separator="UNION">
+						SELECT #{item} N_SEND_CODE FROM dual
+					</foreach>
+				) F
+	</insert>
+  
+  <update id="updAlarm" parameterType="java.util.HashMap" statementType="PREPARED">
+  		UPDATE
+  				TB_ALM_SEND_INFO
+  		SET   	
+  				N_ALM_RATING        = #{N_ALM_RATING}
+			 , 	N_ST_TIME           = #{N_ST_TIME}
+			 , 	N_ED_TIME           = #{N_ED_TIME}
+			 , 	F_SEND_MONDAY       = COALESCE(#{F_SEND_MONDAY,jdbcType=VARCHAR}, '0')
+			 , 	F_SEND_TUESDAY      = COALESCE(#{F_SEND_TUESDAY,jdbcType=VARCHAR}, '0')
+			 , 	F_SEND_WEDNESDAY    = COALESCE(#{F_SEND_WEDNESDAY,jdbcType=VARCHAR}, '0')
+			 , 	F_SEND_THURSDAY     = COALESCE(#{F_SEND_THURSDAY,jdbcType=VARCHAR}, '0')
+			 , 	F_SEND_FRIDAY       = COALESCE(#{F_SEND_FRIDAY,jdbcType=VARCHAR}, '0')
+			 , 	F_SEND_SATURDAY     = COALESCE(#{F_SEND_SATURDAY,jdbcType=VARCHAR}, '0')
+			 , 	F_SEND_SUNDAY       = COALESCE(#{F_SEND_SUNDAY,jdbcType=VARCHAR}, '0')
+			 , 	F_SEND_FREE_DAY     = COALESCE(#{F_SEND_FREE_DAY,jdbcType=VARCHAR}, '0')
+			 , 	N_SEND_CODE         = COALESCE(#{N_SEND_CODE,jdbcType=VARCHAR}, '0')
+			 ,	D_UP_DATE 			= NOW()
+  		WHERE
+			 		N_MON_ID			= #{N_MON_ID}
+			 AND 	N_ALM_TYPE          = #{N_ALM_TYPE}
+			 AND 	N_ALM_CODE          = #{N_ALM_CODE}
+			 AND 	N_ALM_RATING        = #{OLD_N_ALM_RATING}
+			 AND 	N_ST_TIME           = #{OLD_N_ST_TIME}
+			 AND 	N_ED_TIME           = #{OLD_N_ED_TIME}
+			 AND 	F_SEND_MONDAY       = COALESCE(#{OLD_F_SEND_MONDAY,jdbcType=VARCHAR}, '0')
+			 AND 	F_SEND_TUESDAY      = COALESCE(#{OLD_F_SEND_TUESDAY,jdbcType=VARCHAR}, '0')
+			 AND 	F_SEND_WEDNESDAY    = COALESCE(#{OLD_F_SEND_WEDNESDAY,jdbcType=VARCHAR}, '0')
+			 AND 	F_SEND_THURSDAY     = COALESCE(#{OLD_F_SEND_THURSDAY,jdbcType=VARCHAR}, '0')
+			 AND 	F_SEND_FRIDAY       = COALESCE(#{OLD_F_SEND_FRIDAY,jdbcType=VARCHAR}, '0')
+			 AND 	F_SEND_SATURDAY     = COALESCE(#{OLD_F_SEND_SATURDAY,jdbcType=VARCHAR}, '0')
+			 AND 	F_SEND_SUNDAY       = COALESCE(#{OLD_F_SEND_SUNDAY,jdbcType=VARCHAR}, '0')
+			 AND 	F_SEND_FREE_DAY     = COALESCE(#{OLD_F_SEND_FREE_DAY,jdbcType=VARCHAR}, '0')
+			 AND 	S_USER_ID           = #{S_USER_ID}
+			 AND 	N_SEND_CODE         = #{OLD_N_SEND_CODE}
+  </update>
+  
+  <delete id="delAlarm" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE	FROM TB_ALM_SEND_INFO
+  		WHERE
+			 		N_MON_ID			= #{N_MON_ID}
+			 AND 	N_ALM_TYPE          = #{N_ALM_TYPE}
+			 AND 	N_ALM_CODE          = #{N_ALM_CODE}
+			 AND 	N_ALM_RATING        = #{OLD_N_ALM_RATING}
+			 AND 	N_ST_TIME           = #{OLD_N_ST_TIME}
+			 AND 	N_ED_TIME           = #{OLD_N_ED_TIME}
+			 AND 	F_SEND_MONDAY       = #{OLD_F_SEND_MONDAY}
+			 AND 	F_SEND_TUESDAY      = #{OLD_F_SEND_TUESDAY}
+			 AND 	F_SEND_WEDNESDAY    = #{OLD_F_SEND_WEDNESDAY}
+			 AND 	F_SEND_THURSDAY     = #{OLD_F_SEND_THURSDAY}
+			 AND 	F_SEND_FRIDAY       = #{OLD_F_SEND_FRIDAY}
+			 AND 	F_SEND_SATURDAY     = #{OLD_F_SEND_SATURDAY}
+			 AND 	F_SEND_SUNDAY       = #{OLD_F_SEND_SUNDAY}
+			 AND 	S_USER_ID           = #{S_USER_ID}
+			 AND 	N_SEND_CODE         = #{OLD_N_SEND_CODE}
+  </delete>
+  
+  <select id="alm_send_info_check" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+    	SELECT 
+  				COUNT(*) CNT
+  		FROM 
+  				TB_ALM_SEND_INFO
+		WHERE
+					S_USER_ID           = #{S_USER_ID}
+			 AND	N_MON_ID			= #{N_MON_ID}
+			 AND 	N_ALM_TYPE          = #{N_ALM_TYPE}
+			 AND 	N_ALM_CODE          = #{N_ALM_CODE}
+			 AND 	N_ALM_RATING        = #{N_ALM_RATING}
+			 AND 	N_ST_TIME           = #{N_ST_TIME}
+			 AND 	N_ED_TIME           = #{N_ED_TIME}
+			 AND 	F_SEND_MONDAY       = #{F_SEND_MONDAY}
+			 AND 	F_SEND_TUESDAY      = #{F_SEND_TUESDAY}
+			 AND 	F_SEND_WEDNESDAY    = #{F_SEND_WEDNESDAY}
+			 AND 	F_SEND_THURSDAY     = #{F_SEND_THURSDAY}
+			 AND 	F_SEND_FRIDAY       = #{F_SEND_FRIDAY}
+			 AND 	F_SEND_SATURDAY     = #{F_SEND_SATURDAY}
+			 AND 	F_SEND_SUNDAY       = #{F_SEND_SUNDAY}
+			 AND 	N_SEND_CODE         = #{N_SEND_CODE}
+  </select>
+
+	<select id="regAlarmUserLstQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+				FOUND_ROWS() AS TOTAL_COUNT, S_USER_ID, S_USER_NAME
+		FROM
+				TB_USER_INFO
+		WHERE
+				F_USE = 'Y'
+		AND		N_PER_CODE &lt; 999
+		ORDER BY
+				<if test="sort == null">S_USER_ID</if>
+				<if test="sort != null">
+					<choose>
+						<when test="sort.size() == 0">
+							S_USER_ID
+						</when>
+						<otherwise>
+							<include refid="SQL_OderBy"/>
+						</otherwise>
+					</choose>
+				</if>
+	</select>
+
+</mapper>

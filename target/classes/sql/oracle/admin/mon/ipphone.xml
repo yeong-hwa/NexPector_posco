@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ipphone">
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+  
+	<select id="selPhoneList" resultType="java.util.HashMap" parameterType="java.util.HashMap" statementType="PREPARED">
+  	  SELECT * FROM (
+		SELECT
+					ROW_NUMBER() OVER (ORDER BY
+							  <if test="sort == null">A.N_MON_ID</if>
+							  <if test="sort != null">
+								  <choose>
+									  <when test="sort.size() == 0">
+										  A.N_MON_ID
+									  </when>
+									  <otherwise>
+										  <include refid="SQL_OderBy"/>
+									  </otherwise>
+								  </choose>
+							  </if>) NUM
+			, FOUND_ROWS() AS TOTAL_COUNT
+			, A.N_MON_ID KEY_COL, A.N_MON_ID, A.N_MON_ID AS OLD_N_MON_ID, (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME,
+			A.S_NAME, A.S_IPADDRESS, A.S_TYPE,
+    		(SELECT S_GROUP_NAME FROM TB_SVR_GROUP B WHERE B.N_GROUP_CODE = A.N_GROUP AND B.F_USE = 'Y') N_GROUP_NAME,
+    		N_GROUP, S_EXT_NUM
+		FROM
+			TB_SNMP_REAL_M01_IPPHONE A
+		WHERE
+			1 = 1
+			<if test="N_MON_ID != '' and N_MON_ID != null">
+			    AND A.N_MON_ID = #{N_MON_ID}
+			</if>
+			<if test="N_GROUP != '' and N_GROUP != null and N_GROUP != 0">
+			    AND A.N_GROUP = #{N_GROUP}
+			</if>
+			<if test="S_IPADDRESS != '' and S_IPADDRESS != null">
+			    AND A.S_IPADDRESS LIKE '%' || #{S_IPADDRESS} || '%'
+			</if>
+			<if test="S_TYPE != '' and S_TYPE != null">
+			    AND A.S_TYPE LIKE '%' || #{S_TYPE} || '%'
+			</if>
+	  ) X
+	  WHERE num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
+	</select>
+	
+	<select id="detail_info" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+		    A.N_MON_ID, A.S_NAME, A.S_IPADDRESS, A.S_TYPE, S_COMMUNITY, N_SNMP_VER, N_PORT, S_EXT_NUM,
+		    (SELECT S_GROUP_NAME FROM TB_SVR_GROUP B WHERE B.N_GROUP_CODE = A.N_GROUP AND B.F_USE = 'Y') N_GROUP_NAME,
+		    N_GROUP,
+		    (SELECT C.S_MON_NAME FROM  TB_MON_INFO C LEFT OUTER JOIN TB_SNMP_INFO D ON C.N_MON_ID = D.N_MON_ID WHERE C.N_TYPE_CODE = 1000 AND C.N_MON_ID = A.N_MON_ID) AS N_MON_NAME
+		FROM
+		    TB_SNMP_REAL_M01_IPPHONE A
+        WHERE
+            A.N_MON_ID = #{N_MON_ID}
+            AND A.S_IPADDRESS = #{S_IPADDRESS}
+            AND A.N_GROUP = #{N_GROUP}
+	</select>
+	
+	<!-- insert_data -->
+	<insert id="insert_data" parameterType="java.util.HashMap" statementType="PREPARED">
+		INSERT INTO TB_SNMP_REAL_M01_IPPHONE(
+			N_MON_ID, S_IPADDRESS, S_EXT_NUM, S_NAME, S_COMMUNITY, N_SNMP_VER, N_PORT, S_TYPE, N_GROUP, D_INS_DATE
+		)
+		VALUES
+		(
+			#{N_MON_ID}, #{S_IPADDRESS}, #{S_EXT_NUM}, #{S_NAME}, #{S_COMMUNITY}, #{N_SNMP_VER}, #{N_PORT}, #{S_TYPE}, #{N_GROUP}, TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI:SS')
+		)
+	</insert>
+  
+  
+  <!-- update_data -->
+  <update id="update_data" parameterType="hashmap" statementType="PREPARED">
+  	UPDATE TB_SNMP_REAL_M01_IPPHONE
+  	SET
+  		S_NAME = #{S_NAME}
+  		, S_COMMUNITY = #{S_COMMUNITY}
+  		, N_SNMP_VER = #{N_SNMP_VER}
+  		, N_PORT = #{N_PORT}
+  		, S_TYPE = #{S_TYPE}
+  		, N_GROUP = #{N_GROUP}
+	WHERE
+		N_MON_ID = #{N_MON_ID}
+		AND S_IPADDRESS = #{S_IPADDRESS}
+  </update>
+  
+  
+  <delete id="delete_data" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE	FROM TB_SNMP_REAL_M01_IPPHONE
+  		WHERE
+  				N_MON_ID = #{N_MON_ID}
+  				AND S_IPADDRESS = #{S_IPADDRESS}
+  				AND N_GROUP = #{N_GROUP}
+  </delete>
+  
+  <!-- 엑셀  -->
+	<select id="ipPhoneExcelQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+            A.N_MON_ID,
+            (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) AS N_MON_NAME,
+            A.S_IPADDRESS,
+            A.S_EXT_NUM,
+            A.S_NAME,
+            A.S_COMMUNITY,
+            A.N_SNMP_VER,
+            A.N_PORT,
+            A.D_INS_DATE,
+            A.S_TYPE,
+            (SELECT S_GROUP_NAME FROM TB_SVR_GROUP B WHERE B.N_GROUP_CODE = A.N_GROUP AND B.F_USE = 'Y') N_GROUP_NAME,
+            A.N_GROUP
+        FROM
+            TB_SNMP_REAL_M01_IPPHONE A
+		WHERE
+			1 = 1
+			<if test="N_MON_ID != '' and N_MON_ID != null">
+			    AND A.N_MON_ID = #{N_MON_ID}
+			</if>
+			<if test="N_GROUP != '' and N_GROUP != null and N_GROUP != 0">
+			    AND A.N_GROUP = #{N_GROUP}
+			</if>
+			<if test="S_IPADDRESS != '' and S_IPADDRESS != null">
+			    AND A.S_IPADDRESS LIKE '%' || #{S_IPADDRESS} || '%'
+			</if>
+			<if test="S_TYPE != '' and S_TYPE != null">
+			    AND A.S_TYPE LIKE '%' || #{S_TYPE} || '%'
+			</if>
+			ORDER BY A.N_GROUP
+	</select>
+	
+	<!-- 엑셀 DB 저장 -->
+	<insert id="insipphoneExcel" parameterType="java.util.HashMap" statementType="PREPARED">
+		INSERT INTO TB_SNMP_REAL_M01_IPPHONE(
+			N_MON_ID, S_IPADDRESS, S_EXT_NUM, S_NAME, S_COMMUNITY, N_SNMP_VER, N_PORT, S_TYPE, N_GROUP, D_INS_DATE
+		)
+		VALUES
+		(
+			#{N_MON_ID}, #{S_IPADDRESS}, REPLACE(TO_CHAR(ROUND(#{S_EXT_NUM}, 0),'99999999'), ' ', ''), #{S_NAME}, #{S_COMMUNITY}, ROUND(#{N_SNMP_VER}, 0), ROUND(#{N_PORT}, 0), ROUND(#{S_TYPE},0), ROUND(#{N_GROUP}, 0), TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI:SS')
+		)
+	</insert>
+
+</mapper>

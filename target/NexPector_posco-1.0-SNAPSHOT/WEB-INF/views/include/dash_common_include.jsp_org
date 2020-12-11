@@ -1,0 +1,213 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+
+<script type="text/javascript">
+	var c = createConstants('${ctx}');
+	c.countPerPage(10); // Paging 한페이지 표시 개수
+	c.pageSize(10); // Paging 하단 부분 몇개 나눌지 여부
+	
+    kendo.culture("ko-KR");
+	
+	String.prototype.string = function(len){var s = '', i = 0; while (i++ < len) { s += this; } return s;};
+	String.prototype.zf = function(len){return "0".string(len - this.length) + this;};
+	Number.prototype.zf = function(len){return this.toString().zf(len);};
+	
+	Date.prototype.format = function(format) {
+	    if (!this.valueOf()) return " ";
+	 
+	    var weekName = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+	    var d = this;
+	     
+	    return format.replace(/(yyyy|yy|MM|dd|E|e|hh|mm|ss|a\/p|A\/P)/gi, function($1) {
+	        switch ($1) {
+	            case "yyyy": return d.getFullYear();
+	            case "yy": return (d.getFullYear() % 1000).zf(2);
+	            case "MM": return (d.getMonth() + 1).zf(2);
+	            case "dd": return d.getDate().zf(2);
+	            case "E": return weekName[d.getDay()];
+	            case "e": return weekName[d.getDay()].substring(0, 1);
+	            case "HH": return d.getHours().zf(2);
+	            case "hh": return ((h = d.getHours() % 12) ? h : 12).zf(2);
+	            case "mm": return d.getMinutes().zf(2);
+	            case "ss": return d.getSeconds().zf(2);
+	            case "a/p": return d.getHours() < 12 ? "오전" : "오후";
+	            case "A/P": return d.getHours() < 12 ? "AM" : "PM";
+	            default: return $1;
+	        }
+	    });
+	};
+	function comma(num){
+	    var len, point, str; 
+	       
+	    num = num + ""; 
+	    point = num.length % 3 ;
+	    len = num.length; 
+	   
+	    str = num.substring(0, point); 
+	    while (point < len) { 
+	        if (str != "") str += ","; 
+	        str += num.substring(point, point + 3); 
+	        point += 3; 
+	    } 
+	     
+	    return str;
+	 
+	}
+
+	function currentDateTimer() {
+		var date = new Date();
+		$("#dday").text(date.format("yyyy.MM.dd (e)"));
+		$("#dtime").text(date.format("hh:mm"));
+		$("#ampm").text(date.format("A/P"));
+	}
+	function cmLog(s) {
+		console.log(s);
+	}
+
+var s_intervalInfo = {
+	RELOAD: 50,
+	URL: ''
+};
+var	s_func_reload = null;
+var s_defaultInterval = 1000;
+var s_reloadTimerId = null;
+var	s_tick_count = 0;
+var	s_playing = true;
+
+function onCallback_Timer() {
+	s_tick_count ++;
+	
+	if (s_tick_count > s_intervalInfo.RELOAD) {
+		if (s_func_reload != null && s_playing == true) {
+			try {
+				s_func_reload(s_tick_count);
+			} catch(e) {
+				cmLog(e);
+			}
+			s_tick_count = 0;
+		}
+	}
+	//console.log("tick_count: " + s_tick_count);
+}
+
+function init_intervalTime(url, cb_func) {
+	s_intervalInfo.URL	= url;
+	
+	$('#spopup_close').click(function(e) {
+		closePopup_Setting()
+	});
+	$('#btn_user_info_modify').click(function(e) {
+		setIntervalModifyBtn();
+	});
+
+	setReloadStart();
+	s_func_reload = cb_func;
+	s_tick_count = 0;
+	s_reloadTimerId = setInterval("onCallback_Timer()", s_defaultInterval);
+}
+function disp_intervalTime(data) {
+	s_intervalInfo.RELOAD 	= data.N_INTERVAL_TIME;
+}
+function openPopup_Setting() {
+	$("#reload_interval").val(s_intervalInfo.RELOAD);
+
+	$('#myModal_small').dialog({
+		  width : 500 // dialog 넓이 지정
+		, height : 380 // dialog 높이 지정
+		, modal : true // dialog를 modal 창으로 띄울것인지 결정
+		, resizeable : false // 사이즈 조절가능 여부
+		, open: function(event, ui) { 
+			$(this).parent().children('.ui-dialog-titlebar').hide();
+		}
+	});
+}
+function closePopup_Setting() {
+	$('#myModal_small').dialog("close");
+}
+
+function setReloadStart() {
+	s_playing = true;
+	$('#reload_play').hide();
+	$('#reload_stop').show();
+}
+function setReloadStop() {
+	s_playing = false;
+	$('#reload_play').show();
+	$('#reload_stop').hide();
+}
+function startInterval() {
+	s_playing = true;
+}
+function stopInterval() {
+	s_playing = false;
+}
+function stopReloadInterval() {
+	if (s_reloadTimerId != null) {
+		clearInterval(s_reloadTimerId);
+		s_reloadTimerId = null;
+	}
+}
+
+function setIntervalModifyBtn() {
+	var reload_interval = $('#reload_interval').val();
+
+	if (reload_interval < 5) {
+		alert('5~600(초) 사이의 값을 넣어주세요');
+		return false;
+	}
+	var intervalInfo = {
+		RELOAD: reload_interval,
+		URL: s_intervalInfo.URL
+	};
+
+	$.post('/dashboard/interval/change.htm', intervalInfo).done(function(data) {
+		s_intervalInfo.RELOAD = reload_interval;
+		closePopup_Setting();
+	});
+}
+
+</script>
+
+  <!-- 모달팝업 small-->
+  <div id="myModal_small" class="popup_wrap_small small" style="display: none">
+    <!-- Top -->
+    <div class="top">
+      <a href="javascript:closePopup_Setting();" class="close close-reveal-modal"><img src="/common/dashboard/images/btn_close.png" alt="닫기" style="float:right;"></a>
+    </div>
+    <!-- //Top -->
+    <!-- Content -->
+    <div class="content">
+      <!-- table -->
+      <div class="pop_tbl_wrap_1" style="margin-top: 30px;">
+        <table class="errorDetail" cellspacing="0" cellpadding="0" summary="">
+          <!-- <caption>Interval 수정</caption> -->
+          <colgroup>
+            <col width="156px" />
+            <col width="" />
+          </colgroup>
+          <thead>
+            <tr class="pop_sm">
+              <th colspan="2">Interval 수정</th>
+            </tr>
+          </thead>
+          <tbody>
+<tr>
+              <th class="pdl10" scope="row">새로고침</th>
+              <td class="pdl5"><input id="reload_interval" type="number" min="0" max="6000"></td>
+            </tr>
+            <!-- <tr>
+              <th class="pdl10" scope="row">Page 전환</th>
+              <td class="pdl5"><input type="text" name="text" placeholder="30" disabled></td>
+            </tr> -->
+          </tbody>
+        </table>
+      </div>
+      <!-- //table -->
+    </div>
+    <!-- //Content -->
+    <!-- bottom  -->
+    <div class="btn_wrap">
+      <a id="btn_user_info_modify" class="btn_default" href="javascript:;">변경</a>
+    </div>
+    <!-- //bottom  -->
+  </div>
+  <!-- //모달팝업 small-->   

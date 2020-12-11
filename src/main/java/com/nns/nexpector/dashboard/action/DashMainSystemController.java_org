@@ -1,0 +1,135 @@
+package com.nns.nexpector.dashboard.action;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.View;
+
+import com.nns.nexpector.common.service.CommonServices;
+import com.nns.util.ComStr;
+
+/**
+ * DASHBOARD() SYSTEM 정보 조회 <br>
+ * Controller <br>
+ *
+ */
+@Controller
+@RequestMapping("/dashboard/*")
+public class DashMainSystemController {
+
+	/**
+	 * Logger
+	 */
+	private static Logger logger = LoggerFactory.getLogger(DashMainSystemController.class);
+
+	/**
+	 * Service CommonServices
+	 */
+	@Autowired
+	private CommonServices commonServices;
+	
+	/**
+	 * session HttpSession 
+	 */
+	@Autowired
+	private HttpSession sess;
+
+	/**
+	 * applicationContext bean
+	 */
+	@Autowired
+	private View jsonView;
+
+	@RequestMapping("/dash_system_info")
+	public String getLoginPage(){
+		return "/dash/dash_system_info";
+	}
+	
+	private void addParam(Map<String, Object> param)
+	{
+		param.put("SESSION_USER_ID", sess.getAttribute("S_USER_ID"));
+        // param.put("ERR_SEARCH_TYPE", param.get("errSearchType"));
+	}
+
+	/**
+	 * DASHBOARD SYSTEM 기본 정보 조회.
+	 *
+	 * @param modelMap
+	 * @param param
+	 * @param res
+	 * @return jsonView
+	 */
+	@SuppressWarnings({ "unchecked" })
+	@RequestMapping("/ajax_system_info")
+	public View getDefaultInfo(ModelMap modelMap, @RequestParam Map<String, Object> param, HttpServletRequest req, HttpServletResponse res) {
+		addParam(param);
+		try {
+			Map<String, Object>		qry_params = new HashMap<String, Object>();
+			
+			/* 전국 전화기 현황 */
+			List<Map<String, Object>>	almTotalList	= commonServices.getList("jijum.phone_alm_total_list_qry", param);
+			modelMap.addAttribute("ALM_TOTAL_LIST", almTotalList);
+			
+			/* 전화기 장애 현황 */
+			List<Map<String, Object>>	callStatusList = commonServices.getList("dash_system.select_system_mid_info", qry_params);
+			modelMap.addAttribute("NATIONAL_CALL_STATUS", callStatusList);
+			
+			/* 시스템 장애 현황 */
+			List<Map<String, Object>>	systemErrStatus = commonServices.getList("dash_system.select_system_err_status", qry_params);
+			modelMap.addAttribute("SYSTEM_ERR_STATUS", systemErrStatus);
+			
+			/* 시스템 장애 현황 상세 */
+			List<Map<String, Object>>	systemErrList = commonServices.getList("dash_system.select_system_err_list", qry_params);
+			modelMap.addAttribute("SYSTEM_ERR_LIST", systemErrList);
+			
+			/* 주의, 경고, 장애 */
+			List<Map<String, Object>>	almErrCountList	= commonServices.getList("dash_system.select_alm_err_count", qry_params);
+			modelMap.addAttribute("ALM_ERR_LIST", almErrCountList);
+			
+			/* 장비 건수 */
+			Map<String, Object>	monTotCountMap		= commonServices.getMap("dash_system.select_mon_tot_count", qry_params);
+			int nTotCount	= 0;
+			if (monTotCountMap != null) {
+				nTotCount	= ComStr.toInt(monTotCountMap.get("N_MON_TOT_COUNT"));
+			}
+			modelMap.addAttribute("MON_TOT_COUNT",	nTotCount);
+			
+			/* 장비 장애 건수 */
+			Map<String, Object>	monErrCountMap		= commonServices.getMap("dash_system.select_mon_err_count", qry_params);
+			int nErrCount	= 0;
+			if (monErrCountMap != null) {
+				nErrCount	= ComStr.toInt(monErrCountMap.get("N_MON_ERR_COUNT"));
+			}
+			modelMap.addAttribute("MON_ERR_COUNT",	nErrCount);
+
+			/* refresh 주기 */
+			param.put("N_INTERVAL_TYPE", 0);
+			Map<String, Object>			intervalInfo = commonServices.getMap("selectDashboardIntervalData", param);
+			if (intervalInfo == null) {
+				intervalInfo = new HashMap<String, Object>();
+				intervalInfo.put("N_INTERVAL_TIME", 5);
+			}
+			modelMap.addAttribute("INTERVAL_INFO", intervalInfo);
+
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+
+		return jsonView;
+
+	}
+
+}

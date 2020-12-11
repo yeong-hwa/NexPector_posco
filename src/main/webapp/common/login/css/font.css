@@ -1,0 +1,31 @@
+/* UI Object */
+
+/* 나눔고딕 Light */
+@font-face{font-family:NGL;src:url(../font/NanumGothicLight.eot);src:local(※),url(../font/NanumGothicLight.woff) format('woff')}
+.NGL{font-family:'나눔고딕 Light', NGL, sans-serif}
+/* 나눔고딕 */
+@font-face{font-family:NG;src:url(../font/NanumGothic.eot);src:local(※),url(../font/NanumGothic.woff) format('woff')}
+.NG{font-family:나눔고딕, NG, sans-serif}
+/* 나눔고딕 Bold */
+@font-face{font-family:NGB;src:url(../font/NanumGothicBold.eot);src:local(※),url(../font/NanumGothicBold.woff) format('woff')}
+.NGB{font-family:'나눔고딕 Bold', NGB, sans-serif}
+/* 나눔고딕 ExtraBold */
+@font-face{font-family:NGEB;src:url(../font/NanumGothicExtraBold.eot);src:local(※),url(../font/NanumGothicExtraBold.woff) format('woff')}
+.NGEB{font-family:'나눔고딕 ExtraBold', NGEB, sans-serif}
+/* 나눔명조 */
+@font-face{font-family:NM;src:url(../font/NanumMyeongjo.eot);src:local(※),url(../font/NanumMyeongjo.woff) format('woff')}
+.NM{font-family:'나눔명조', NM, serif}
+/* 나눔명조 Bold */
+@font-face{font-family:NMB;src:url(../font/NanumMyeongjoBold.eot);src:local(※),url(../font/NanumMyeongjoBold.woff) format('woff')}
+.NMB{font-family:'나눔명조 Bold', NMB, serif}
+/* 나눔명조 ExtraBold */
+@font-face{font-family:NMEB;src:url(../font/NanumMyeongjoExtraBold.eot);src:local(※),url(../font/NanumMyeongjoExtraBold.woff) format('woff')}
+.NMEB{font-family:'나눔명조 ExtraBold', NMEB, serif}
+/* 나눔고딕코딩 */
+@font-face{font-family:NGC;src:url(../font/NanumGothicCoding.eot);src:local(※),url(../font/NanumGothicCoding.woff) format('woff')}
+.NGC{font-family:'나눔고딕코딩', NGC, Monospace}
+/* 나눔고딕코딩-Bold */
+@font-face{font-family:NGCB;src:url(../font/NanumGothicCodingBold.eot);src:local(※),url(../font/NanumGothicCodingBold.woff) format('woff')}
+.NGCB{font-family:'나눔고딕코딩-Bold', NGCB, Monospace}
+
+/* //UI Object */

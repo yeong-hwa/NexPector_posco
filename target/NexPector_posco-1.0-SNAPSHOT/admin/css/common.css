@@ -1,0 +1,53 @@
+@charset "utf-8";
+/*=========================================================
+»çÀÌÆ® °øÅë cssÁ¤ÀÇ / kipilco 
+===========================================================*/
+@import url(nv.css); 
+@import url(main.css); 
+@import url(dtree.css); 
+@import url(contents.css);
+@import url(table.css);
+
+/* ³ª´®°íµñ Light */
+@font-face{font-family:NGL;src:url(NanumGothicLight.eot);src:local(¡Ø),url(NanumGothicLight.woff) format('woff')}
+.NGL{font-family:'³ª´®°íµñ Light', NGL, sans-serif}
+/* ³ª´®°íµñ */
+@font-face{font-family:NG;src:url(NanumGothic.eot);src:local(¡Ø),url(NanumGothic.woff) format('woff')}
+.NG{font-family:'³ª´®°íµñ', NG, sans-serif}
+/* ³ª´®°íµñ Bold */
+@font-face{font-family:NGB;src:url(NanumGothicBold.eot);src:local(¡Ø),url(NanumGothicBold.woff) format('woff')}
+.NGB{font-family:'³ª´®°íµñ Bold', NGB, sans-serif}
+/* ³ª´®°íµñ ExtraBold */
+@font-face{font-family:NGEB;src:url(NanumGothicExtraBold.eot);src:local(¡Ø),url(NanumGothicExtraBold.woff) format('woff')}
+.NGEB{font-family:'³ª´®°íµñ ExtraBold', NGEB, sans-serif}
+/* ³ª´®¸íÁ¶ */
+@font-face{font-family:NM;src:url(NanumMyeongjo.eot);src:local(¡Ø),url(NanumMyeongjo.woff) format('woff')}
+.NM{font-family:'³ª´®¸íÁ¶', NM, serif}
+/* ³ª´®¸íÁ¶ Bold */
+@font-face{font-family:NMB;src:url(NanumMyeongjoBold.eot);src:local(¡Ø),url(NanumMyeongjoBold.woff) format('woff')}
+.NMB{font-family:'³ª´®¸íÁ¶ Bold', NMB, serif}
+/* ³ª´®¸íÁ¶ ExtraBold */
+@font-face{font-family:NMEB;src:url(NanumMyeongjoExtraBold.eot);src:local(¡Ø),url(NanumMyeongjoExtraBold.woff) format('woff')}
+.NMEB{font-family:'³ª´®¸íÁ¶ ExtraBold', NMEB, serif}
+/* ³ª´®°íµñÄÚµù */
+@font-face{font-family:NGC;src:url(NanumGothicCoding.eot);src:local(¡Ø),url(NanumGothicCoding.woff) format('woff')}
+.NGC{font-family:'³ª´®°íµñÄÚµù', NGC, Monospace}
+/* ³ª´®°íµñÄÚµù-Bold */
+@font-face{font-family:NGCB;src:url(NanumGothicCodingBold.eot);src:local(¡Ø),url(NanumGothicCodingBold.woff) format('woff')}
+.NGCB{font-family:'³ª´®°íµñÄÚµù-Bold', NGCB, Monospace}
+
+/*css¼±¾ð-s*/
+html, body, div, dl, dt, dd, ul, ol, li, p {margin:0px; padding:0px; list-style:none;}
+
+body{color:#757575; font-size:12px; font-family:'dotum';} 
+img {border:0px; vertical-align:top;} 
+img, select, input{ vertical-align:middle; font-size:inherit; font-family:inherit; line-height:inherit; }
+input.img, input.radio, input.checkbox{padding:0px; margin:0px; height:auto; border:none; background:none; vertical-align:middle;}
+em, i, address{font-style:normal; font-weight:normal;}
+textarea{resize:none; border:1px solid #d0d0d0; background:#fff;}
+a {text-decoration:none; color:inherit; font-family:'NBG'; background:none; padding:0px; margin:0px;}
+
+
+/*hidden¼³Á¤-s*/
+.hid{ position:absolute; visibility:hidden; width:0px; height:0px; top:0px; left:0px; overflow:hidden; font-size:0px; float:left; clear:both;} 
+.hid_Btn{display:none;} 

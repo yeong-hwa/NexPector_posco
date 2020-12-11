@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="admin_dashboard_network">
+  	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+		${s.field} ${s.dir}
+		</foreach>
+	</sql>
+  <select id="select_list" resultType="hashmap" parameterType="hashmap">
+  SELECT * FROM (
+    SELECT
+			ROW_NUMBER() OVER (ORDER BY
+				  <if test="sort == null">NI.N_NE_ID || NI.N_NE_SUB_ID</if>
+				  <if test="sort != null">
+					  <choose>
+						  <when test="sort.size() == 0">
+							  NI.N_NE_ID || NI.N_NE_SUB_ID
+						  </when>
+						  <otherwise>
+							  <include refid="SQL_OderBy"/>
+						  </otherwise>
+					  </choose>
+				  </if>) NUM, FOUND_ROWS() AS TOTAL_COUNT,
+      NI.N_NE_ID || NI.N_NE_SUB_ID AS KEY_COL,
+      NI.N_NE_ID,
+      NI.N_NE_SUB_ID,
+      NI.S_NE_NAME,
+      NI.S_DESC,
+      MI.N_MON_ID,
+      MI.S_MON_NAME,
+      MI.S_MON_IP
+    FROM TB_NET_NODE_INFO NI
+    LEFT OUTER JOIN TB_NET_MAPPING MP
+       ON NI.N_NE_ID = MP.N_NE_ID AND NI.N_NE_SUB_ID = MP.N_NE_SUB_ID
+    LEFT OUTER JOIN TB_MON_INFO MI
+       ON MP.N_MON_ID = MI.N_MON_ID
+    <where>
+    	<if test="N_NE_ID != '' and N_NE_ID != null">
+    		AND NI.N_NE_ID LIKE '%' || #{N_NE_ID} || '%'
+    	</if>
+    	<if test="S_NE_NAME != '' and S_NE_NAME != null">
+    		AND NI.S_NE_NAME LIKE '%' || #{S_NE_NAME} || '%'
+    	</if>
+    	<if test="N_MON_ID != '' and N_MON_ID != null">
+    		AND MI.N_MON_ID LIKE '%' || #{N_MON_ID} || '%'
+    	</if>
+    	<if test="S_MON_NAME != '' and S_MON_NAME != null">
+    		AND MI.S_MON_NAME LIKE '%' || #{S_MON_NAME} || '%'
+    	</if>
+    </where>
+	) X
+	WHERE num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
+  </select>
+
+  <select id="detail_info" resultType="hashmap" parameterType="hashmap">
+    SELECT
+      NI.N_NE_ID,
+      NI.N_NE_SUB_ID,
+      NI.S_NE_NAME,
+      NI.S_DESC,
+      MI.N_MON_ID
+    FROM TB_NET_NODE_INFO NI
+    LEFT OUTER JOIN TB_NET_MAPPING MP
+       ON NI.N_NE_ID = MP.N_NE_ID AND NI.N_NE_SUB_ID = MP.N_NE_SUB_ID
+    LEFT OUTER JOIN TB_MON_INFO MI
+       ON MP.N_MON_ID = MI.N_MON_ID
+    WHERE NI.N_NE_ID = #{N_NE_ID}
+       AND NI.N_NE_SUB_ID = #{N_NE_SUB_ID}
+  </select>
+
+  <select id="dul_chk" resultType="hashMap" parameterType="hashmap">
+    SELECT COUNT(*) CNT
+    FROM TB_NET_NODE_INFO
+    WHERE N_NE_ID = #{N_NE_ID} AND N_NE_SUB_ID = #{N_NE_SUB_ID}
+  </select>
+
+  <insert id="insert_data" parameterType="hashmap" statementType="PREPARED">
+      INSERT INTO TB_NET_NODE_INFO(N_NE_ID,N_NE_SUB_ID,N_STATUS,S_NE_NAME,S_NE_MODEL,S_NE_MANUFACTURER,S_DESC,N_NE_TYPE,N_MON_ID)
+      VALUES (#{N_NE_ID},#{N_NE_SUB_ID},#{N_STATUS},#{S_NE_NAME},#{S_NE_MODEL},#{S_NE_MANUFACTURER},#{S_DESC},#{N_NE_TYPE},#{N_MON_ID})
+  </insert>
+
+  <delete id="delete_data" parameterType="hashmap" statementType="PREPARED">
+      DELETE FROM TB_NET_NODE_INFO WHERE N_NE_ID = #{N_NE_ID} AND N_NE_SUB_ID = #{N_NE_SUB_ID}
+  </delete>
+
+  <update id="update_data" parameterType="hashmap" statementType="PREPARED">
+    UPDATE TB_NET_NODE_INFO
+    SET
+      S_NE_NAME = #{S_NE_NAME}
+      , S_NE_MODEL = #{S_NE_MODEL}
+      , S_NE_MANUFACTURER = #{S_NE_MANUFACTURER}
+      , S_DESC = #{S_DESC}
+      , N_NE_TYPE = #{N_NE_TYPE}
+    WHERE N_NE_ID = #{N_NE_ID} AND N_NE_SUB_ID = #{N_NE_SUB_ID}
+  </update>
+
+  <update id="merge_data" parameterType="hashmap" statementType="PREPARED">
+    MERGE INTO TB_NET_MAPPING NET
+    USING DUAL
+    ON ( N_NE_ID = #{N_NE_ID} AND N_NE_SUB_ID = #{N_NE_SUB_ID} )
+    WHEN MATCHED THEN
+      UPDATE SET N_MON_ID = #{N_MON_ID}
+    WHEN NOT MATCHED THEN
+      INSERT (N_NE_ID, N_NE_SUB_ID, N_MON_ID) VALUES (#{N_NE_ID}, #{N_NE_SUB_ID}, #{N_MON_ID})
+  </update>
+
+  <delete id="delete_mapping" parameterType="java.util.HashMap" statementType="PREPARED">
+      DELETE FROM TB_NET_MAPPING WHERE N_NE_ID = #{N_NE_ID} AND N_NE_SUB_ID = #{N_NE_SUB_ID}
+  </delete>
+
+  <select id="count_mapping" resultType="hashMap" parameterType="hashmap">
+    SELECT COUNT(*) CNT
+    FROM (
+        SELECT N_NE_ID, N_NE_SUB_ID, N_MON_ID
+        FROM TB_NET_MAPPING WHERE N_NE_ID || N_NE_SUB_ID != #{N_NE_ID} || #{N_NE_SUB_ID}
+    ) A
+    WHERE A.N_MON_ID = #{N_MON_ID}
+  </select>
+
+</mapper>

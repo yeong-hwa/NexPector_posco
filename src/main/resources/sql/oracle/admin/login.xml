@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="admin_login">
+
+  
+  <select id="adminLoginQry" resultType="hashmap" parameterType="hashmap">
+  	<![CDATA[
+	    SELECT
+	    		S_USER_ID, S_USER_NAME, S_USER_PWD
+	    		, N_PER_CODE, N_GROUP_CODE, D_PASSWORD_CHANGE
+	    FROM 
+				TB_USER_INFO
+	    WHERE 
+	    		S_USER_ID = #{S_USER_ID}
+	    AND		S_USER_PWD = #{S_USER_PWD}
+	    AND		N_PER_CODE <= 100
+	    AND		F_USE = 'Y'
+    ]]>
+  </select>
+
+	<update id="changeUserPassword" parameterType="hashmap" statementType="PREPARED">
+  		UPDATE
+  				TB_USER_INFO
+  		SET
+  				S_USER_PWD = #{change_pwd},
+  				D_UP_DATE = NOW(),
+  				D_PASSWORD_CHANGE = NOW(),
+  				S_ID_LOCK = #{S_ID_LOCK}
+  		WHERE
+  				S_USER_ID = #{S_USER_ID}
+  		AND		S_USER_PWD = #{S_USER_PWD}
+  		AND		N_PER_CODE &lt; 999
+  </update>
+  
+  <select id="UserMenu" resultType="hashmap" parameterType="hashmap">
+  	<![CDATA[
+	    SELECT
+	    		A.S_USER_ID, A.N_MENU_CODE
+	    		, A.F_INSERT, A.F_UPDATE, A.F_DELETE
+	    		, B.S_MENU_NAME, B.S_MENU_URL
+	    		, CASE WHEN MOD(A.N_MENU_CODE, 1000000) = 0 THEN 0 ELSE A.N_MENU_CODE - MOD(A.N_MENU_CODE, 1000000) END PARENT_MENU
+	    FROM 
+				TB_WEB_ADM_MENU_MAP A INNER JOIN TB_WEB_ADM_MENU_INFO B
+		ON
+				A.N_MENU_CODE = B.N_MENU_CODE
+	    WHERE 
+	    		A.S_USER_ID = #{S_USER_ID}    
+	    AND		B.F_USE = 'Y'    
+	    ORDER BY
+	    		SUBSTR(CONVERT(A.N_MENU_CODE, CHAR), 1, 1), B.ORDER_NUM
+    ]]>
+  </select>
+
+</mapper>

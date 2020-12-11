@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="call_quality">
+
+	<select id="selectList" resultType="java.util.HashMap">
+		SELECT /* call_quality.selectList */
+				S_INFO_TYPE, S_INFO_DESC, S_CRITICAL_CODE, S_CRITICAL_DESC, N_START_VAL, N_END_VAL
+		FROM TB_CRITICAL_INFO
+		ORDER BY S_INFO_TYPE ASC, S_CRITICAL_CODE ASC
+	</select>
+
+	<update id="updateCallQuality" parameterType="java.util.HashMap">
+		UPDATE /* call_quality.updateCallQuality */
+				TB_CRITICAL_INFO
+		SET N_START_VAL = #{N_START_VAL},
+			N_END_VAL = #{N_END_VAL}
+		WHERE S_INFO_TYPE = #{S_INFO_TYPE}
+		AND S_CRITICAL_CODE = #{S_CRITICAL_CODE}
+	</update>
+</mapper>

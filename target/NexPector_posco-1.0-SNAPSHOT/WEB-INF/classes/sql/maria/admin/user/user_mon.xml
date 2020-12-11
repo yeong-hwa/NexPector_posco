@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="user_mon">
+
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="user_list_qry" resultType="hashmap" parameterType="hashmap">
+		SELECT /* user_mon.user_list_qry */ @NUM AS TOTAL_COUNT, X.*
+		FROM (
+			SELECT
+					@NUM := @NUM + 1 NUM
+					, S_USER_ID, S_USER_NAME, N_GROUP_CODE, N_PER_CODE
+					, (SELECT S_GROUP_NAME FROM TB_USER_GROUP_INFO WHERE N_GROUP_CODE = A.N_GROUP_CODE) S_GROUP_NAME
+			FROM
+					TB_USER_INFO A, (SELECT @NUM := 0) R
+			WHERE
+					F_USE = 'Y'
+			AND     N_PER_CODE &lt; 999
+			ORDER BY
+			<if test="sort == null">S_USER_NAME</if>
+			<if test="sort != null">
+			 <choose>
+			  <when test="sort.size() == 0">
+				  S_USER_NAME
+			  </when>
+			  <otherwise>
+				  <include refid="SQL_OderBy"/>
+			  </otherwise>
+			 </choose>
+			</if>
+		) X
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+	
+	<select id="RetrieveUserMonQry2" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT /* user_mon.RetrieveUserMonQry2 */@NUM AS TOTAL_COUNT, X.*
+		FROM (
+			SELECT
+					@NUM := @NUM + 1 NUM
+	        		, N_MON_ID, S_MON_NAME 
+	        		, (SELECT S_DESC FROM TB_SVR_STYLE WHERE N_STYLE_CODE = A.N_STYLE_CODE) AS S_STYLE_NAME
+	        		, (SELECT S_GROUP_NAME FROM TB_SVR_GROUP WHERE N_GROUP_CODE = A.N_GROUP_CODE AND F_USE = 'Y') S_GROUP_NAME
+	        		, #{S_USER_ID} S_USER_ID
+	        		, IFNULL((SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID = #{S_USER_ID} AND N_MON_ID = A.N_MON_ID), -1) CHK_MON_ID
+			FROM
+			        TB_MON_INFO A,
+			        (SELECT @NUM := 0) R
+			<where>
+				<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">
+					AND N_GROUP_CODE = #{N_GROUP_CODE}
+				</if>
+				<if test="N_TYPE_CODE != '' and N_TYPE_CODE != null">
+					AND N_TYPE_CODE = #{N_TYPE_CODE}
+				</if>
+				<if test="N_STYLE_CODE != '' and N_STYLE_CODE != null">
+					AND N_STYLE_CODE = #{N_STYLE_CODE}
+				</if>
+			</where>
+			ORDER BY
+				<if test="S_ORDER_STR != '' and S_ORDER_STR != null">
+					${S_ORDER_STR},
+				</if>
+					N_MON_ID
+		) X
+	</select>
+	
+	<select id="RetrieveUserMonCntQry" resultType="java.lang.String" parameterType="java.util.HashMap">   	
+    		SELECT /* user_mon.RetrieveUserMonCntQry */
+    				COUNT(*) CNT
+    		FROM
+					TB_USER_MON_LIST
+			WHERE
+					S_USER_ID = #{S_USER_ID}
+	</select>
+	
+	<insert id="insUserMon" parameterType="java.util.HashMap">
+		INSERT INTO TB_USER_MON_LIST(S_USER_ID, N_MON_ID)
+		SELECT #{S_USER_ID} S_USER_ID, N_MON_ID
+		  FROM TB_MON_INFO
+		 WHERE N_MON_ID IN
+		<foreach collection="N_MON_ID" item="item" index="index" separator="," open="(" close=")">
+			#{item}
+		</foreach>
+	</insert>
+	
+	<delete id="delUserMon" parameterType="java.util.HashMap">
+		DELETE FROM TB_USER_MON_LIST
+		WHERE S_USER_ID = #{S_USER_ID}
+	</delete>
+	
+	<insert id="insUserMon_all" parameterType="java.util.HashMap">
+		INSERT INTO TB_USER_MON_LIST(S_USER_ID, N_MON_ID)
+		SELECT * FROM 
+				(SELECT #{S_USER_ID} S_USER_ID, N_MON_ID
+				   FROM TB_MON_INFO
+				   <where>
+					   <if test="N_GROUP_CODE != null and N_GROUP_CODE != ''">
+						   AND N_GROUP_CODE = #{N_GROUP_CODE}
+					   </if>
+					   <if test="N_TYPE_CODE != null and N_TYPE_CODE != ''">
+						   AND N_TYPE_CODE = #{N_TYPE_CODE}
+					   </if>
+					   <if test="N_STYLE_CODE != null and N_STYLE_CODE != ''">
+						   AND N_STYLE_CODE = #{N_STYLE_CODE}
+					   </if>
+				   </where>
+		) A
+		WHERE 
+		    NOT EXISTS (
+		        SELECT
+		                1
+		        FROM
+		                TB_USER_MON_LIST
+		        WHERE
+		                S_USER_ID = A.S_USER_ID
+		        AND     N_MON_ID = A.N_MON_ID
+		    )
+		
+	</insert>
+</mapper>

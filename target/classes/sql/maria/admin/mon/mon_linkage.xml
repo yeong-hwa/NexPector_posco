@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mon_linkage">
+
+	<sql id="SQL_OderBy">
+		<foreach collection="sort" item="s" separator=",">
+			${s.field} ${s.dir}
+		</foreach>
+	</sql>
+
+	<select id="select_list" resultType="hashmap" parameterType="hashmap">
+		SELECT /* mon_linkage.select_list */ X.*, @NUM AS TOTAL_COUNT
+		FROM (
+			SELECT @NUM := @NUM + 1 NUM, A.*
+			FROM (
+				SELECT 
+					A.S_ALM_KEY
+					, A.N_ALM_TYPE
+					, CONCAT((SELECT S_ALM_NAME FROM  tb_alm_code WHERE N_ALM_TYPE = A.N_ALM_TYPE AND N_ALM_CODE = A.N_ALM_CODE), '(', N_ALM_TYPE, ')') S_ALM_TYPE
+					, CONCAT((SELECT S_ALM_MSG FROM  tb_alm_code WHERE N_ALM_TYPE = A.N_ALM_TYPE AND N_ALM_CODE = A.N_ALM_CODE), '(', N_ALM_CODE, ')') S_ALM_CODE
+					, A.N_ALM_CODE, A.S_MAP_KEY, A.S_SUBJECT, A.S_MSG
+					, (SELECT S_ALM_NAME FROM  tb_alm_code WHERE N_ALM_TYPE = A.N_ALM_TYPE AND N_ALM_CODE = A.N_ALM_CODE) S_ALM_NAME
+				FROM TB_NMS_SEND_MAP A, (SELECT @NUM := 0) R
+			) A
+			<where>
+				1=1
+				<if test="N_ALM_TYPE != '' and N_ALM_TYPE != null">
+					AND A.N_ALM_TYPE LIKE CONCAT('%', #{N_ALM_TYPE}, '%')
+				</if>
+				<if test="N_ALM_CODE != '' and N_ALM_CODE != null">
+					AND A.N_ALM_CODE LIKE CONCAT('%', #{N_ALM_CODE}, '%')
+				</if>
+				<if test="S_ALM_NAME != '' and S_ALM_NAME != null">
+					AND A.S_ALM_NAME LIKE CONCAT('%', #{S_ALM_NAME}, '%')
+				</if>
+			</where>
+			ORDER BY
+			<if test="sort == null">N_ALM_TYPE, N_ALM_CODE</if>
+			<if test="sort != null">
+				<choose>
+					<when test="sort.size() == 0">
+						N_ALM_TYPE, N_ALM_CODE
+					</when>
+					<otherwise>
+						<include refid="SQL_OderBy"/>
+					</otherwise>
+				</choose>
+			</if>
+		) X
+		LIMIT #{firstRecordIndex}, #{lastRecordIndex}
+	</select>
+	
+	<select id="select_mon_map_list" resultType="hashmap" parameterType="hashmap">
+		SELECT /* mon_linkage.select_mon_map_list */ A.S_ALM_KEY, A.N_MON_ID, B.N_TYPE_CODE
+		FROM tb_nms_mon_map A, tb_mon_info B
+		WHERE S_ALM_KEY = #{S_ALM_KEY} AND A.N_MON_ID = B.N_MON_ID 
+	</select>
+	
+	<select id="detail_info" resultType="hashmap" parameterType="hashmap">
+		SELECT /* mon_linkage.detail_info */
+			A.S_ALM_KEY, A.N_ALM_TYPE, A.N_ALM_CODE, A.S_MAP_KEY, A.S_SUBJECT, A.S_MSG
+		FROM tb_nms_send_map A
+		WHERE A.S_ALM_KEY = #{S_ALM_KEY}
+	</select>
+	
+	<!-- 알람 코드 등록 -->
+	<insert id="insert_alm_code_data" parameterType="hashmap" statementType="PREPARED">
+ 		INSERT INTO /* mon_linkage.insert_alm_code_data */ tb_nms_send_map 
+ 			(S_ALM_KEY, N_ALM_TYPE, N_ALM_CODE, S_MAP_KEY, S_SUBJECT, S_MSG)
+ 		VALUES 
+ 			(#{S_ALM_KEY}, #{N_ALM_TYPE}, #{N_ALM_CODE}, #{S_MAP_KEY}, #{S_SUBJECT}, #{S_MSG})
+	</insert>
+
+	<!-- 알람 맵 등록 -->
+	<insert id="insert_mon_map_data" parameterType="hashmap" statementType="PREPARED">
+ 		INSERT INTO /* mon_linkage.insert_mon_map_data */ tb_nms_mon_map 
+ 			(S_ALM_KEY, N_MON_ID)
+ 		VALUES 
+ 			(#{S_ALM_KEY}, #{N_MON_ID})
+	</insert>
+
+	<!-- 알람 코드 삭제 -->
+	<delete id="delete_alm_code_data" parameterType="hashmap" statementType="PREPARED">
+ 		DELETE FROM /* mon_linkage.delete_alm_code_data */ tb_nms_send_map
+		WHERE S_ALM_KEY = #{S_ALM_KEY}
+	</delete>
+
+	<!-- 알람 맵 삭제 -->
+	<delete id="delete_mon_map_data" parameterType="hashmap" statementType="PREPARED">
+ 		DELETE FROM /* mon_linkage.delete_mon_map_data */ tb_nms_mon_map
+		WHERE S_ALM_KEY = #{S_ALM_KEY}
+	</delete>
+	
+	<!-- 알람 코드 수정 -->
+	<update id="update_alm_code_data" parameterType="java.util.HashMap">
+		UPDATE /* mon_linkage.update_alm_code_data */ tb_nms_send_map
+		SET    
+			N_ALM_TYPE = #{N_ALM_TYPE}
+			, N_ALM_CODE = #{N_ALM_CODE}
+			, S_MAP_KEY = #{S_MAP_KEY}
+			, S_SUBJECT = #{S_SUBJECT}
+			, S_MSG = #{S_MSG}
+		WHERE  S_ALM_KEY = #{S_ALM_KEY}
+	</update>
+</mapper>

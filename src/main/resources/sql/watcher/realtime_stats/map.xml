@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="map_svr_status">
+
+  
+  <delete id="regMapPosQry1" parameterType="java.util.HashMap" statementType="PREPARED">
+  		DELETE FROM TB_SVR_GROUP_POSITION
+  		WHERE	N_GROUP_CODE = #{N_GROUP_CODE}
+  		AND		S_GROUP_FULL_CODE IN
+  							(
+								SELECT B FROM (
+  									<foreach item="item" index="idx" collection="lst" separator="UNION">
+  										SELECT ${item} FROM dual
+  									</foreach>
+  								)
+  							)
+  </delete>
+  <insert id="regMapPosQry2" parameterType="java.util.HashMap" statementType="PREPARED">
+  		INSERT INTO TB_SVR_GROUP_POSITION(N_GROUP_CODE, S_GROUP_FULL_CODE, N_POS_LEFT, N_POS_TOP)  		
+  		<foreach item="item" index="idx" collection="lst" separator="UNION">
+  			SELECT ${item} FROM dual
+  		</foreach>
+  </insert>
+  
+</mapper>
