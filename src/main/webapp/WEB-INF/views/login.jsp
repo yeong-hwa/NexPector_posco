@@ -183,7 +183,7 @@
 						아이디<input id="login_user_id" name="S_USER_ID" class="i_text input_search" title="레이블 텍스트" type="text" style="width:145px; height:24px; margin-left:17px;" />
 	                </div>
 		            <div class="item" style="margin-top:5px;">
-						비밀번호<input id="login_user_password" name="S_USER_PWD" type="password" class="i_text input_search" title="레이블 텍스트" style="width:145px; height:24px;margin-left:5px;" />
+						비밀번호<input id="login_user_password" name="S_USER_PWD" class="i_text input_search" title="레이블 텍스트"  type="password"  style="width:145px; height:24px;margin-left:5px;" />
 		            </div>
 		            <div class="item" style="margin-top:12px; padding-left:57px;">
 						<input id="idSaveCheck" class="i_check" type="checkbox" />

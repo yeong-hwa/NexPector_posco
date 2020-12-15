@@ -106,8 +106,7 @@ function rsaEncryptPassword(rsa, $obj) {
 
 // 비밀번호 유효성 확인
 function isValidFormPassword(pw) {
-    //var check = /^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,20}$/;
-	var check = /^(?=.*[a-zA-Z])(?=.*[0-9]).{6,20}$/;
+    var check = /^(?=.*[a-zA-Z])(?=.*[0-9]).{6,20}$/;
 
     if (pw.length < 6 || pw.length > 20) {
         alert("비밀번호는 6 ~ 20 자리로 입력해주세요.");

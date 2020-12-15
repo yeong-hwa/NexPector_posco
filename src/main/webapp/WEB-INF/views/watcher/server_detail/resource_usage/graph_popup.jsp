@@ -23,7 +23,7 @@
 			$('#txt_date_hour').html(formatDateHour(nDateHour));
 		}); 
 		// 차트 그리기
-		printChartPop();
+		printChart();
 	}
 
 	function formatDateHour(dateHour) {
@@ -36,7 +36,7 @@
 		return str;
 	}	
 	
-	function printChartPop() {
+	function printChart() {
 		// 자원 Chart 영역 그리기기
 		$.getJSON('/watcher/server_detail/resourceUsingHistory.htm', { 'N_MON_ID' : nMonId, 'S_MAP_KEY' : sMapKey, 'N_DATE_HOUR' : nDateHour })
 		.done(function(data) {
@@ -61,11 +61,11 @@
 				param : nDateHour
 			}); 
 			
-			createChartPop($('#popup_grp_area'), series, categories, true, true, {seriesClick: onSeriesClickPop});
+			createChart($('#popup_grp_area'), series, categories, true, true, {seriesClick: onSeriesClick});
 		});
 	}
 
-	function createChartPop($chartArea, series, categories, opts) {
+	function createChart($chartArea, series, categories, opts) {
 
 		var options = {
 			autoBind: true,
@@ -115,7 +115,7 @@
 				template: "#=category #분: #= value #%",
 				color: "white"
 			},
-			seriesClick: onSeriesClickPop
+			seriesClick: onSeriesClick
 		}
 
 		opts && $.extend(options, opts)
@@ -123,7 +123,7 @@
 		return $chartArea.kendoChart(options).data('kendoChart');
 	}
 
-	function onSeriesClickPop(e) {
+	function onSeriesClick(e) {
         var minute = e.category;
         var dateTime = "" + e.series.param + pad(minute, 2);
         

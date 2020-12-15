@@ -8,11 +8,6 @@
 
 	var listTableTempHtml = '';
 
-	var g_aryReportType = [
-		{ VAL: '일일보고서', 	CODE: '0'},
-		{ VAL: '주간보고서', 	CODE: '1'},
-		{ VAL: '월간보고서', 	CODE: '2'}
-	];	
 	// Document Ready
 	$(function() {
 		initialize();
@@ -35,14 +30,9 @@
 	// 초기화
 	function initialize() {
 		var start = createStartKendoDatepicker('start_date');
-		
-		// 기간 구분 DropDownList
-		var dataSource1 = new kendo.data.DataSource({ 
-			data : g_aryReportType
-		});
-		createDropDownList('period_type', dataSource1);
-		//-- 기간 타입 DropDownList
-		
+		var end = createEndKendoDatepicker('end_date');
+		start.max(end.value());
+		end.min(start.value());
 
 		fn_retrieve();
 	}
@@ -51,12 +41,14 @@
 	function fn_retrieve() {
 		$('#contents_server_tr').empty();
 		$('#contents_error_tr').empty();
-
+		$('#contents_call_tr').empty();
 		$('input[name="CHK_REPORT_RES"]:checked').each(function(idx){
 			if($(this).val() == 0){
 				fn_server_list();
 			}else if($(this).val() == 1){
 				fn_error_list();
+			}else if($(this).val() == 2){
+				fn_call_list();
 			}
 
 		});
@@ -65,14 +57,9 @@
 	// 서버정보 목록 조회
 	function fn_server_list() {
 		var $contentsServerTr = $('#contents_server_tr');
-		var periodType  = $('#period_type').data('kendoDropDownList').value();
-		//var resourceTr = 'TB_MON_HISTORY_RESOURCE_' + $('#start_date').val().substring(5,7);
-		var resourceTr = 'TB_MON_HISTORY_RESOURCE_';		
 		var param = {
-				'R_TYPE' : periodType,
-				'S_ST_DT' 	: $('#start_date').val(), 
-				'S_TABLE' 	: resourceTr,
-				'excelYn' : 'no'
+				'S_ST_DT'		: $('#start_date').val().replace(/-/gi, ''),
+				'S_ED_DT'		: $('#end_date').val().replace(/-/gi, ''),
 			};
 
 		$contentsServerTr
@@ -84,9 +71,7 @@
 									.css('float', 'none')
 									.append( $('<div/>')
 												.addClass('st_under')
-												.append( $('<h4/>').attr('id','searchdate').text('서버정보'))
-												//.append( $('<h4/>').attr('id','searchdate'))
-												))
+												.append( $('<h4/>').text('서버정보'))))
 						.append( $('<div/>').attr('id', 'serverGrid') ))
 			.append( $('<td/>').addClass('bgmr1') );
 
@@ -97,27 +82,20 @@
 					dataType	: 'json',
 					contentType	: 'application/json;charset=UTF-8',
 					url 		: cst.contextPath() + "/watcher/kendoPagination_DayReportServerRetrieveListQry.htm",
-					data 		: param
+					data 		: function(data) {
+						return fn_get_search_param();
+					}
 				},
 				parameterMap: function (data, opperation) {
 					return JSON.stringify(data);
 				}
 			},
-			schema : {
+			schema			: {
 				data	: function(data) {
-					var searchdatetext = "서버정보 ";
-					if(data.params.R_TYPE ==1){
-						searchdatetext+="("+data.params.T_ST_DT+"~"+data.params.T_ED_DT+")";
-					}else if(data.params.R_TYPE ==2){
-						searchdatetext+="("+data.params.S_ST_DT.substring(0,7)+")";
-					}else{
-						searchdatetext+="("+data.params.S_ST_DT+")";
-					}
-					$("#searchdate").text(searchdatetext);
-					return data.list;
+					return data;
 				},
 				total 	: function(response) {
-					return response.list.length > 0 ? response.list[0].TOTAL_COUNT : 0;
+					return response.length > 0 ? response[0].TOTAL_COUNT : 0;
 				}
 			},
 			pageSize		: cst.countPerPage(),
@@ -132,18 +110,14 @@
 				dataSource	: dataSource,
 				columns		: columns.dayReportServer()
 			}));
-		
 	}
 
 	// 장애이력 목록 조회
 	function fn_error_list() {
 		var $contentsErrorTr = $('#contents_error_tr');
-		var periodType  = $('#period_type').data('kendoDropDownList').value();
-		var errhistoryTr = 'TB_ALM_HISTORY';	
 		var param = {
-				'R_TYPE' : periodType,				
-				'S_ST_DT' 		: $("#start_date").val(),
-				'S_TABLE' 	: errhistoryTr
+				'S_ST_DT' 		: $("#start_date").val().replace(/-/gi, ""),
+				'S_ED_DT' 		: $("#end_date").val().replace(/-/gi, "")
 			};
 
 		$contentsErrorTr
@@ -174,6 +148,7 @@
 			},
 			schema			: {
 				data	: function(data) {
+					console.log(data);
 					return data;
 				},
 				total 	: function(response) {
@@ -197,9 +172,9 @@
 	// 콜통계 목록 조회
 	function fn_call_list() {
 		var $contentsCallTr = $('#contents_call_tr');
-		
 		var param = {
-				'S_ST_DT' 	: $('#start_date').val()
+				'S_ST_DT' 	: $('#start_date').val().replace(/-/gi, ''),
+				'S_ED_DT' 	: $('#end_date').val().replace(/-/gi, ''),
 			};
 
 		$contentsCallTr
@@ -279,38 +254,39 @@
 
 	// 엑셀 Download
 	function fn_excel_download() {
-		var url = cst.contextPath() + '/watcher/go_history_stats.day_report.excel.day_report_excel.htm';
 
 		var tempReportRes = "";
 		$('input[name="CHK_REPORT_RES"]:checked').each(function() {
 			tempReportRes += $(this).val()+";";
 		});
 		
-		//var param = "?req_data=";
-		var req_data="";
+		var param = "?req_data=";
+
 		$('input[name="CHK_REPORT_RES"]:checked').each(function(idx){
 			if($(this).val() == 0){
-				req_data += "serverInfo;DayReportServerRetrieveListQry|";
+				param += "serverInfo;DayReportHistoryServerQry|";
 			}else if($(this).val() == 1){
-				req_data += "errorInfo;DayReportHistoryErrorQry|";
+				param += "errorInfo;DayReportHistoryErrorQry|";
+			}else if($(this).val() == 2){
+				param += "callInfo;DayReportHistoryCallQry|";
 			}
 		});
-		$("#excel_req_data").val(req_data.substring(0,req_data.lastIndexOf("|")));
+		param = param.substring(0,param.lastIndexOf("|"));
 
-		$('#excel_start_date').val($("#start_date").val());
-		$("#excel_r_type").val($('#period_type').data('kendoDropDownList').value());
+		var url = cst.contextPath() + '/watcher/go_history_stats.day_report.excel.day_report_excel.htm'+param;
+
+		$('#excel_start_date').val($("#start_date").val().replace(/-/gi, ""));
+		$('#excel_end_date').val($("#end_date").val().replace(/-/gi, ""));
 		$('#excel_chk_report_res').val(tempReportRes);
-		
+
 		$('#excel_down_form').attr({ method : 'post', 'action' : url }).submit();
 	}
 
 	// 검색 시 필요한 Parameter Data Plain Object 형식으로 반환
 	function fn_get_search_param() {
-		var resourceTr = 'TB_MON_HISTORY_RESOURCE_' + $('#start_date').val().substring(5,7);
-		
 		return {
-			'S_ST_DT' 	: $('#start_date').val(), 
-			'S_TABLE' 	: resourceTr
+			'S_ST_DT' 	: $('#start_date').val().replace(/-/gi, ''),
+			'S_ED_DT' 	: $('#end_date').val().replace(/-/gi, ''),
 		};
 	}
 
@@ -332,12 +308,10 @@
 </script>
 
 <!-- excel download form -->
-<form id="excel_down_form" name="excelDownFrm">
-	<input type="hidden" id="excel_req_data" name="req_data" value=""/>
+<form id="excel_down_form" name="excelDownFrm" style="display:none;">
 	<input type="hidden" id="excel_start_date" name="S_ST_DT" value=""/>
+	<input type="hidden" id="excel_end_date" name="S_ED_DT" value=""/>
 	<input type="hidden" id="excel_chk_report_res" name="EXCEL_CHK_REPORT_RES" value=""/>
-	<input type="hidden" id="excel_r_type" name="R_TYPE">
-	<input type="hidden" id="excel_s_table" name="S_TABLE" value="TB_MON_HISTORY_RESOURCE_">
 </form>
 
 <!-- location -->
@@ -353,20 +327,15 @@
 			<dl>
 				<dd>
 					<strong>검색날짜</strong>
-					<input type="text" name="S_ST_DT" id="start_date" class="input_search" value="" />
+					<input type="text" name="S_ST_DT" id="start_date" class="input_search" value="" /> ~ <input type="text" name="S_ED_DT" id="end_date" class="input_search" value=""/>
 				</dd>
 			</dl>
-			<dl>
-				<dd>
-					<strong>보고서구분</strong>
-					<input id="period_type" name="period_type" class="input_search" style="width: 120px" />
-				</dd>
-			</dl>			
 			<dl>
 				<dd>
 					<input type="hidden" name="N_MON_TYPE" id="mon_type" value="">
 					<input type="checkbox" name="CHK_REPORT_RES" id="chk_report_res_server" value="0" checked/><label for="chk_report_res_server">서버정보</label>
 					<input type="checkbox" name="CHK_REPORT_RES" id="chk_report_res_error" value="1" checked/><label for="chk_report_res_error">장애이력</label>
+					<input type="checkbox" name="CHK_REPORT_RES" id="chk_report_res_call" value="2" checked/><label for="chk_report_res_call">콜통계</label>
 				</dd>
 			</dl>
 			<!-- 검색항목 // -->
@@ -399,9 +368,13 @@
 			<!-- 장애이력 동적생성 -->
 		</tr>
 		
+		<tr id="contents_call_tr">
+			<!-- 콜통계 동적생성 -->
+		</tr>
 		<tr>
 			<td class="bgbl1"></td>
 			<td class="bgbc1"></td>
+			<td class="bgbr1"></td>
 		</tr>
 	</table>
 </div>

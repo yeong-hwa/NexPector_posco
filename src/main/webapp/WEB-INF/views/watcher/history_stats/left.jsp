@@ -45,8 +45,10 @@
             	url = cst.contextPath() + '/watcher/go_history_stats.rec_variation_history.rec_variation_history.htm?menu=mnavi01_03&subMenu=4800';
             } else if (this.id === 'menu_phone_error_history') {
                 url = cst.contextPath() + '/watcher/go_history_stats.phone_error_history.phone_error_history.htm?menu=mnavi01_03&subMenu=4900';
-            } else if (this.id === 'ipphone_status') {
-                url = cst.contextPath() + '/watcher/go_history_stats.ipphone_status.ipphone_status.htm?menu=mnavi01_03&subMenu=5000';
+            } else if (this.id === 'menu_vg_e1_peak_history') {
+                url = cst.contextPath() + '/watcher/go_history_stats.vg_e1_peak_history.vg_e1_peak_history.htm?menu=mnavi01_03&subMenu=5000';
+            } else if (this.id === 'menu_vg_e1_peak_history_group') {
+                url = cst.contextPath() + '/watcher/go_history_stats.vg_e1_peak_history.vg_e1_peak_group_history.htm?menu=mnavi01_03&subMenu=5100';
             }
            	else {
                 return;
@@ -77,7 +79,7 @@
     <%--<li><a id="service_call_statistics" href="#" <c:if test="${param.subMenu eq '3500'}">class="selected"</c:if>>부서별 콜 통계</a></li> --%>
     <%--<li><a id="phone_call_statistics" href="#" <c:if test="${param.subMenu eq '3600'}">class="selected"</c:if>>내선별 콜 통계</a></li> --%>
     <%--<li><a id="phone_use_state" href="#" <c:if test="${param.subMenu eq '3700'}">class="selected"</c:if>>전화기 사용현황</a></li>--%>
-    <li><a id="day_report" href="#" <c:if test="${param.subMenu eq '3800'}">class="selected"</c:if>>일일보고서</a></li> 
+    <%--<li><a id="day_report" href="#" <c:if test="${param.subMenu eq '3800'}">class="selected"</c:if>>일일보고서</a></li> --%>
     <%--<li><a id="phone_etc_statistics" href="#" <c:if test="${param.subMenu eq '3900'}">class="selected"</c:if>>내선별 기타 콜 통계</a></li> --%>
     <%--<li><a id="dept_increase_history" href="#" <c:if test="${param.subMenu eq '4000'}">class="selected"</c:if>>부서별 콜 증감추이 통계</a></li> --%>
     <%--<li><a id="login_status" href="#" <c:if test="${param.subMenu eq '4100'}">class="selected"</c:if>>로그인 현황정보</a></li> --%>
@@ -89,5 +91,6 @@
     <%--<li><a id="menu_call_history" href="#" <c:if test="${param.subMenu eq '4700'}">class="selected"</c:if>>콜 이력</a></li>--%>
     <%--<li><a id="rec_variation_history" href="#" <c:if test="${param.subMenu eq '4800'}">class="selected"</c:if>>녹취현황 이력</a></li> --%>
     <%--<li><a id="menu_phone_error_history" href="#" <c:if test="${param.subMenu eq '4900'}">class="selected"</c:if>>전화기 장애 이력</a></li>--%>
-	<li><a id="ipphone_status" href="#" <c:if test="${param.subMenu eq '5000'}">class="selected"</c:if>>IP-Phone 현황</a></li>
+    <li><a id="menu_vg_e1_peak_history" href="#" <c:if test="${param.subMenu eq '5000'}">class="selected"</c:if>>VG E1 Peak 이력</a></li>
+	<li><a id="menu_vg_e1_peak_history_group" href="#" <c:if test="${param.subMenu eq '5100'}">class="selected"</c:if>>VG E1 Peak 그룹이력</a></li>
 </ul>

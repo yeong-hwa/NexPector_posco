@@ -230,6 +230,7 @@
 				
 				if (data.isError == 'Y') {
 					g_last_error_alarm_dt = data.errorData[0].D_UPDATE_TIME == null ? "" : data.errorData[0].D_UPDATE_TIME;
+					
 					if (data.errorData[0].NEW_ALARM == '1') { // 새로운 알람이 있으면 무조건 팝업창 open.
 						newErrorAlarmFlag = true;
 						
@@ -297,8 +298,8 @@
 				if (g_cb_funcTimer != null) {
 					g_cb_funcTimer();
 				}
-				setTimeout(fn_chk_alarm_popup_status, 10000);
-				//timeout.push(setTimeout(fn_chk_alarm_popup_status, 10000));
+				
+				timeout.push(setTimeout(fn_chk_alarm_popup_status, 10000));
 			}); 
 		}
 		
@@ -354,7 +355,6 @@
 		
 		function setEventAlarmData(obj) {
 			if (obj) {
-				
 				$('.go_event_history').attr('href', '<c:url value="/admin/go_prgm.user.change_history.retrieve.htm"/>');
 				$('#ntop_notice').removeClass('notice2');
 				$('#ntop_notice').addClass('notice1');
@@ -378,7 +378,6 @@
 
 
 		function fn_alarm_popup_open() {
-			
 			$('[id^=ntopPop0]').css("visibility", "visible");
 			$('[id^=ntopPop0]').delay(200).slideDown(function() {
 				isPopupOpen = true;

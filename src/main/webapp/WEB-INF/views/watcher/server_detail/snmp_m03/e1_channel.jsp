@@ -98,7 +98,7 @@
             		alert("Interface를 선택해 주세요.");
             		return;
             	} */
-            	//drawChart();
+            	drawChart();
             }
         });
     	calendar = $("#calendar").data("kendoCalendar");
@@ -139,7 +139,7 @@
                 dataBound   : gridDataBound,
                 change		: function(e) {
                 	if (this.select().length >= 1) {
-	                	//drawChart();
+	                	drawChart();
                 	}
                 },
                 sortable	: {
@@ -177,8 +177,6 @@
         
         $('#single_grp').kendoChart(); // empty chart create
         $('#day_title').text(kendo.toString(calendar.value(), 'd') + ' E1 채널 peak 현황');
-        
-        refreshGrid();
     });
 
     function drawChart() {
@@ -235,13 +233,12 @@
     }
     
     function refreshGrid() {
-   	
         var data = {
             'N_MON_ID' : pMonId,
             // 'S_NAME'   : $('#search_group_name').val()
         };
     	grid.dataSource.read(data);
-    	setTimeout("refreshGrid()", 5000);
+    	// setTimeout("refreshGrid()", 7000);
     }
    
 	function createChart($chartArea, series, categories, opts) {

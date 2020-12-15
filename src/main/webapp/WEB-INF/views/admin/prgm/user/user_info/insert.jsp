@@ -30,7 +30,7 @@
 				<tr>
 					<td class="filed_A left">비밀번호</td>
 					<td class="filed_B left" colspan="3">
-						<input type="password" name="S_USER_PWD" id="txt_user_pwd" value="" class="manaint_f" pattern="^(?=.*[a-zA-Z])(?=.*[0-9]).{6,20}$" required validationMessage="비밀번호는 형식이 잘못입력되었습니다."/>
+						<input type="password" name="S_USER_PWD" id="txt_user_pwd" value="" class="manaint_f" pattern="^(?=.*[a-zA-Z])(?=.*[0-9]).{4,20}$" required validationMessage="비밀번호는 형식이 잘못입력되었습니다."/>
 					</td>
 					<!-- 
 					<td class="filed_A left">비밀번호</td>

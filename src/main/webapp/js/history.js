@@ -100,17 +100,11 @@ var _inCallUseStateColumns = [
 ];
 
 var _dayReportServerColumns = [
-	{field:'S_GROUP_NAME', title:'그룹', width:'10%', attributes:_txtCenter, headerAttributes:_txtCenter},
-	{field:'S_TYPE_NAME', title:'구분', width:'10%', attributes:_txtCenter, headerAttributes:_txtCenter},
-    {field:'S_MON_NAME', title:'장비명', width:'15%', attributes:_txtCenter, headerAttributes:_txtCenter},
-    {field:'S_MON_IP', title:'IP Address', width:'15%', attributes:_txtCenter, headerAttributes:_txtCenter},
-    {field:'S_MAP_NAME', title:'자원', width:'10%', attributes:_txtCenter, headerAttributes:_txtCenter},
-    {field:'N_CUR_USE', title:'현재값(%)', width:'5%', attributes:_txtCenter, headerAttributes:_txtCenter},
-    {field:'N_AVG_USE', title:'평균값(%)', width:'5%', attributes:_txtCenter, headerAttributes:_txtCenter},
-	{field:'N_MAX_USE', title:'피크(%)', width:'5%', attributes:_txtCenter, headerAttributes:_txtCenter},
-	{field:'D_MAX_DATE', title:'피크 일시', width:'15%', attributes:_txtCenter, headerAttributes:_txtCenter},
-	{field:'PRE_AVG_USE', title:'전 (일/주/월) 평균', width:'5%', attributes:_txtCenter, headerAttributes:_txtCenter},
-	{field:'INCREASE', title:'증감', width:'5%', attributes:_txtCenter, headerAttributes:_txtCenter}
+    {field:'S_MON_NAME', title:'서버명', width:'20%', attributes:_txtCenter, headerAttributes:_txtCenter},
+    {field:'S_MON_IP', title:'IP Address', width:'20%', attributes:_txtCenter, headerAttributes:_txtCenter},
+    {field:'CPU', title:'CPU(평균/최대)', width:'20%', attributes:_txtCenter, headerAttributes:_txtCenter},
+    {field:'MEM', title:'Memory(평균/최대)', width:'20%', attributes:_txtCenter, headerAttributes:_txtCenter},
+    {field:'DISK', title:'Disk(평균/최대)', width:'20%', attributes:_txtCenter, headerAttributes:_txtCenter}
 ];
 
 var _dayReportCallColumns = [
@@ -128,15 +122,6 @@ var _iptHistoryColumns = [
     {field:'N_TYPE_NM', title:'상태', width:'8%', attributes:_txtCenter, headerAttributes:_txtCenter},
     {field:'D_ACTIVE_TIME', title:'마지막 동작 일시', width:'13%', attributes:_txtCenter, headerAttributes:_txtCenter},
     {field:'D_UPDATE_TIME', title:'변경일시', width:'13%', attributes:_txtCenter, headerAttributes:_txtCenter}
-];
-
-var _ipphoneStatusColumns = [
-	{field:'NAME', title:'전화기명', width:'20%', attributes:_txtCenter, headerAttributes:_txtCenter},
-	{field:'DIRECTNUM1', title:'내선번호', width:'10%', attributes:_txtCenter, headerAttributes:_txtCenter},
-    {field:'IPADDRESS1', title:'IP Address', width:'20%', attributes:_txtCenter, headerAttributes:_txtCenter},
-    {field:'STATUS', title:'전화기 상태', width:'10%', attributes:_txtCenter, headerAttributes:_txtCenter},
-    {field:'STATUSREASON', title:'Reason Code', width:'10%', attributes:_txtCenter, headerAttributes:_txtCenter},
-    {field:'DESCRIPTION', title:'Description', width:'20%', attributes:_txtCenter, headerAttributes:_txtCenter}
 ];
 
 var kendoGridColumns = function() {
@@ -173,10 +158,6 @@ var kendoGridColumns = function() {
         },
         dayReportCall : function() {
             return _dayReportCallColumns;
-        },
-        ipPhoneStatus : function() {
-            return _ipphoneStatusColumns;
         }
-        
     }
 }
