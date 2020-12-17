@@ -381,6 +381,7 @@
 		<where>
 			A.N_MON_ID = B.N_MON_ID
 			AND A.S_MAP_KEY = B.S_MAP_KEY
+			AND B.S_MON_NAME not like '%media%'
 			<if test="N_MON_ID != '' and N_MON_ID != null">
 				AND A.N_MON_ID = #{N_MON_ID}
 			</if>
@@ -609,6 +610,7 @@
 		AND		A.N_MON_ID = #{N_MON_ID}
 		AND		A.N_MON_TYPE IN (0, 1, 2)
 		AND		A.F_USE = 'Y'
+		AND     A.S_MON_NAME not like '%media%'
 		ORDER BY
 				A.S_MAP_KEY, A.N_MON_TYPE
 	</select>
@@ -2175,7 +2177,6 @@
 								N_MON_ID = #{N_MON_ID}
 								AND N_TYPE IN (6, 24)
 								AND N_SPEED > 0
-								AND N_INDEX IN (SELECT MIN(N_INDEX) FROM TB_SNMP_REAL_M03_IF WHERE N_MON_ID = #{N_MON_ID} GROUP BY S_PHYTS_ADDR)
 					) A, (SELECT @NUM := 0) R
 			ORDER BY
 			<if test="sort == null">N_INDEX, D_INS_DATE DESC</if>
@@ -2255,7 +2256,6 @@
 		WHERE
 				N_MON_ID = #{N_MON_ID}
 		AND		N_TYPE IN (6, 24)
-		AND N_INDEX IN (SELECT MIN(N_INDEX) FROM TB_SNMP_REAL_M03_IF WHERE N_MON_ID = #{N_MON_ID} GROUP BY S_PHYTS_ADDR)
 	</select>
 	<select id="M03IfInfoPRILstCntQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
 		/* server_detail.M03IfInfoPRILstCntQry */
@@ -2952,9 +2952,8 @@
 					TB_SNMP_REAL_M12_IF A, (SELECT @ROWNUM := 0) R
 			WHERE
 					N_MON_ID = #{N_MON_ID}
-					AND N_TYPE IN (6)
+					AND N_TYPE IN (6, 24)
 					AND N_SPEED > 0
-					AND N_INDEX IN (SELECT MIN(N_INDEX) FROM TB_SNMP_REAL_M12_IF WHERE N_MON_ID = #{N_MON_ID} GROUP BY S_PHYTS_ADDR)
 		) A
 		ORDER BY
 		<if test="sort == null">N_INDEX</if>
@@ -2981,7 +2980,6 @@
 				N_MON_ID = #{N_MON_ID}
 				AND N_TYPE IN (6, 24)
 				AND N_SPEED > 0
-				AND N_INDEX IN (SELECT MIN(N_INDEX) FROM TB_SNMP_REAL_M12_IF WHERE N_MON_ID = #{N_MON_ID} GROUP BY S_PHYTS_ADDR)
 	</select>
 
 	<select id="M12TrafficUsageQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">

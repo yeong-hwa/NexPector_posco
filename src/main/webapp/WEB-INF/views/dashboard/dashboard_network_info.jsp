@@ -44,14 +44,13 @@
 	<!--Content-->
 	<div id="content_op_wrap">
 		<div class="leftWrap fl">
-			<!-- 목동 IDC -->
-			<div class="mokdong fl">
-
-			</div>
+			<div class="mokdong fl"></div>
+<%--			서울--%>
 			<div class="seoul fl">
 				<div class="error_lamps11" style="display:none;">
 					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
 				</div>
+				<%--	UCS01--%>
 				<div class="error_lamps21" style="display:none;">
 					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
 				</div>
@@ -70,6 +69,7 @@
 				<div class="error_lamps26" style="display:none;">
 					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
 				</div>
+				<%--	UCS02--%>
 				<div class="error_lamps31" style="display:none;">
 					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
 				</div>
@@ -85,25 +85,9 @@
 				<div class="error_lamps35" style="display:none;">
 					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
 				</div>
+			</div>
 
-			</div>
-			<div class="pohang fl">
-				<div class="error_lampp11" style="display:none;">
-					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
-				</div>
-				<div class="error_lampp21" style="display:none;">
-					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
-				</div>
-				<div class="error_lampp22" style="display:none;">
-					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
-				</div>
-				<div class="error_lampp31" style="display:none;">
-					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
-				</div>
-				<div class="error_lampp32" style="display:none;">
-					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
-				</div>
-			</div>
+			<%--충주--%>
 			<div class="chungjoo fl">
 				<div class="error_lampch11" style="display:none;">
 					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
@@ -124,6 +108,26 @@
 					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
 				</div>
 				<div class="error_lampch24" style="display:none;">
+					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
+				</div>
+			</div>
+
+			<div class="pohang fl">
+				<div class="error_lampp11" style="display:none;">
+					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
+				</div>
+				<%--	UCS03--%>
+				<div class="error_lampp21" style="display:none;">
+					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
+				</div>
+				<div class="error_lampp22" style="display:none;">
+					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
+				</div>
+				<%--	UCS04--%>
+				<div class="error_lampp31" style="display:none;">
+					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
+				</div>
+				<div class="error_lampp32" style="display:none;">
 					<a href="#"><img src="${img3}/lamp_error.png" alt="장애알림"></a>
 				</div>
 			</div>
@@ -357,7 +361,9 @@
 
 		//fn_chk_alarm_status();
 
-		dashtimeout = setTimeout("fn_search()", 10000);
+
+		//TODO 로컬 테스트를 위해 주석
+		// dashtimeout = setTimeout("fn_search()", 10000);
 
 
 		// 자원 사용 현황 차트

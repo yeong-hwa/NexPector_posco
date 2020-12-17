@@ -65,6 +65,7 @@
 		WHERE A.N_MON_ID = B.N_MON_ID AND A.N_MON_ID = C.N_MON_ID
 		    AND C.N_DAY BETWEEN #{S_ST_DT} AND #{S_ED_DT}
 			AND B.S_MAP_KEY = C.S_MAP_KEY
+			AND B.S_MON_NAME not like '%media%'
 		    AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID =  #{SESSION_USER_ID})
 			<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">AND A.N_GROUP_CODE = (SELECT N_GROUP_CODE FROM TB_SVR_GROUP WHERE IFNULL(N_UP_CODE, N_GROUP_CODE) = #{N_GROUP_CODE} AND F_USE = 'Y')</if>
 		    <if test="N_TYPE_CODE != '' and N_TYPE_CODE != null"> AND A.N_TYPE_CODE = #{N_TYPE_CODE}</if>
@@ -159,6 +160,7 @@
 		WHERE A.N_MON_ID = B.N_MON_ID AND A.N_MON_ID = C.N_MON_ID
 		    AND C.N_DAY BETWEEN #{S_ST_DT} AND #{S_ED_DT}
 			AND B.S_MAP_KEY = C.S_MAP_KEY
+			AND B.S_MON_NAME not like '%media%'
 		    AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID =  #{SESSION_USER_ID})
 			<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">AND A.N_GROUP_CODE = (SELECT N_GROUP_CODE FROM TB_SVR_GROUP WHERE IFNULL(N_UP_CODE, N_GROUP_CODE) = #{N_GROUP_CODE} AND F_USE = 'Y')</if>
 		    <if test="N_TYPE_CODE != '' and N_TYPE_CODE != null"> AND A.N_TYPE_CODE = #{N_TYPE_CODE}</if>
@@ -224,7 +226,8 @@
 			            AVG(CAST(TIME_08 AS SIGNED))+AVG(CAST(TIME_09 AS SIGNED))+AVG(CAST(TIME_10 AS SIGNED))+AVG(CAST(TIME_11 AS SIGNED))+AVG(CAST(TIME_12 AS SIGNED))+AVG(CAST(TIME_13 AS SIGNED))+AVG(CAST(TIME_14 AS SIGNED))+AVG(CAST(TIME_15 AS SIGNED))+
                         AVG(CAST(TIME_16 AS SIGNED))+AVG(CAST(TIME_17 AS SIGNED))+AVG(CAST(TIME_18 AS SIGNED))+AVG(CAST(TIME_19 AS SIGNED))+AVG(CAST(TIME_20 AS SIGNED))+AVG(CAST(TIME_21 AS SIGNED))+AVG(CAST(TIME_22 AS SIGNED))+AVG(CAST(TIME_23 AS SIGNED)) AS AVG_HAP
 			          FROM TB_MON_MAP A, TB_MON_ACCRUE_RESOURCE B
-			          WHERE A.N_MON_ID = B.N_MON_ID AND A.S_MAP_KEY = B.S_MAP_KEY AND B.N_DAY BETWEEN #{S_ST_DT} AND #{S_ED_DT} AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID =  #{SESSION_USER_ID})
+			          WHERE A.N_MON_ID = B.N_MON_ID AND A.S_MAP_KEY = B.S_MAP_KEY AND B.S_MON_NAME not like '%media%' 
+							AND B.N_DAY BETWEEN #{S_ST_DT} AND #{S_ED_DT} AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID =  #{SESSION_USER_ID})
 			          		<if test="N_MON_TYPE != '' and N_MON_TYPE != null"> AND	A.N_MON_TYPE IN (${N_MON_TYPE}) </if>
 							<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">AND A.N_GROUP_CODE = (SELECT N_GROUP_CODE FROM TB_SVR_GROUP WHERE IFNULL(N_UP_CODE, N_GROUP_CODE) = #{N_GROUP_CODE} AND F_USE = 'Y')</if>
 							<if test="N_TYPE_CODE != '' and N_TYPE_CODE != null"> AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_MON_INFO WHERE N_TYPE_CODE = #{N_TYPE_CODE})</if>   
@@ -237,7 +240,8 @@
 			            AVG(CAST(TIME_08 AS SIGNED))+AVG(CAST(TIME_09 AS SIGNED))+AVG(CAST(TIME_10 AS SIGNED))+AVG(CAST(TIME_11 AS SIGNED))+AVG(CAST(TIME_12 AS SIGNED))+AVG(CAST(TIME_13 AS SIGNED))+AVG(CAST(TIME_14 AS SIGNED))+AVG(CAST(TIME_15 AS SIGNED))+
                         AVG(CAST(TIME_16 AS SIGNED))+AVG(CAST(TIME_17 AS SIGNED))+AVG(CAST(TIME_18 AS SIGNED))+AVG(CAST(TIME_19 AS SIGNED))+AVG(CAST(TIME_20 AS SIGNED))+AVG(CAST(TIME_21 AS SIGNED))+AVG(CAST(TIME_22 AS SIGNED))+AVG(CAST(TIME_23 AS SIGNED)) AS AVG_HAP
 			          FROM TB_MON_MAP A, TB_MON_ACCRUE_RESOURCE B
-			          WHERE A.N_MON_ID = B.N_MON_ID AND A.S_MAP_KEY = B.S_MAP_KEY AND B.N_DAY BETWEEN #{S_ST_DT} AND #{S_ED_DT} AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID =  #{SESSION_USER_ID})
+			          WHERE A.N_MON_ID = B.N_MON_ID AND A.S_MAP_KEY = B.S_MAP_KEY AND B.S_MON_NAME not like '%media%'
+					    AND B.N_DAY BETWEEN #{S_ST_DT} AND #{S_ED_DT} AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID =  #{SESSION_USER_ID})
 	          			<if test="N_MON_TYPE != '' and N_MON_TYPE != null"> AND	A.N_MON_TYPE IN (${N_MON_TYPE}) </if>
 						<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">AND A.N_GROUP_CODE = (SELECT N_GROUP_CODE FROM TB_SVR_GROUP WHERE IFNULL(N_UP_CODE, N_GROUP_CODE) = #{N_GROUP_CODE} AND F_USE = 'Y')</if>
 						<if test="N_TYPE_CODE != '' and N_TYPE_CODE != null"> AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_MON_INFO WHERE N_TYPE_CODE = #{N_TYPE_CODE})</if>   
@@ -261,7 +265,8 @@
 			     , ROUND(AVG(CAST(TIME_16 AS SIGNED)),0) TIME_16, ROUND(AVG(CAST(TIME_17 AS SIGNED)),0) TIME_17, ROUND(AVG(CAST(TIME_18 AS SIGNED)),0) TIME_18, ROUND(AVG(CAST(TIME_19 AS SIGNED)),0) TIME_19
 			     , ROUND(AVG(CAST(TIME_20 AS SIGNED)),0) TIME_20, ROUND(AVG(CAST(TIME_21 AS SIGNED)),0) TIME_21, ROUND(AVG(CAST(TIME_22 AS SIGNED)),0) TIME_22, ROUND(AVG(CAST(TIME_23 AS SIGNED)),0) TIME_23
 			FROM TB_MON_MAP A, TB_MON_ACCRUE_RESOURCE B
-			WHERE A.N_MON_ID = B.N_MON_ID AND A.S_MAP_KEY = B.S_MAP_KEY AND B.N_DAY BETWEEN #{S_ST_DT} AND #{S_ED_DT} AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID =  #{SESSION_USER_ID})
+			WHERE A.N_MON_ID = B.N_MON_ID AND A.S_MAP_KEY = B.S_MAP_KEY AND B.S_MON_NAME not like '%media%'
+			    AND B.N_DAY BETWEEN #{S_ST_DT} AND #{S_ED_DT} AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID =  #{SESSION_USER_ID})
 				<if test="N_MON_TYPE != '' and N_MON_TYPE != null"> AND	A.N_MON_TYPE IN (${N_MON_TYPE}) </if>
 				<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">AND A.N_GROUP_CODE = (SELECT N_GROUP_CODE FROM TB_SVR_GROUP WHERE IFNULL(N_UP_CODE, N_GROUP_CODE) = #{N_GROUP_CODE} AND F_USE = 'Y')</if>
 				<if test="N_TYPE_CODE != '' and N_TYPE_CODE != null"> AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_MON_INFO WHERE N_TYPE_CODE = #{N_TYPE_CODE})</if>   
@@ -305,6 +310,7 @@
 			AND C.N_DAY &gt;= CAST(DATE_FORMAT(STR_TO_DATE(CONCAT(SUBSTR(#{S_ST_DT}, 1, 6), '01'), '%Y%m%d'), '%Y%m%d') AS SIGNED)  
 			AND C.N_DAY &lt; CAST(DATE_FORMAT(ADDDATE(STR_TO_DATE(CONCAT(SUBSTR(#{S_ED_DT}, 1, 6), '01'), '%Y%m%d'), INTERVAL 1 MONTH), '%Y%m%d') AS SIGNED) 
 			AND B.S_MAP_KEY = C.S_MAP_KEY
+			AND B.S_MON_NAME not like '%media%'
 		    AND A.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID =  #{SESSION_USER_ID})
 			<if test="N_GROUP_CODE != '' and N_GROUP_CODE != null">AND A.N_GROUP_CODE = (SELECT N_GROUP_CODE FROM TB_SVR_GROUP WHERE IFNULL(N_UP_CODE, N_GROUP_CODE) = #{N_GROUP_CODE} AND F_USE = 'Y')</if>
 		    <if test="N_TYPE_CODE != '' and N_TYPE_CODE != null"> AND A.N_TYPE_CODE = #{N_TYPE_CODE}</if>
@@ -988,6 +994,55 @@
 		ORDER BY S_COLLECT_DATE DESC
 	</select>
 	
+	
+	<select id="vgE1PeakHistoryQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT A.N_DAY, A.N_TIME, A.N_ACTIVE AS VG01_E1, B.N_ACTIVE AS VG02_E1, C.N_ACTIVE AS VGSUM_E1 
+		FROM (
+			SELECT 
+				N_DAY, N_TIME, N_ACTIVE 
+ 			FROM 
+ 				TB_SNMP_REAL_M03_E1_PEAK A 
+ 			WHERE 
+ 				N_DAY = #{N_DAY} AND N_MON_ID = 8001 ) 
+ 			A LEFT OUTER JOIN (		
+			SELECT 
+				N_DAY, N_TIME, N_ACTIVE 
+ 			FROM 
+ 				TB_SNMP_REAL_M03_E1_PEAK A 
+ 			WHERE 
+ 				N_DAY = #{N_DAY} AND N_MON_ID = 8002
+		) B
+		ON A.N_DAY = B.N_DAY AND A.N_TIME = B.N_TIME
+ 		LEFT OUTER JOIN (		
+			SELECT 
+				N_DAY, N_TIME, SUM(N_ACTIVE) AS N_ACTIVE
+ 			FROM 
+ 				TB_SNMP_REAL_M03_E1_PEAK A 
+ 			WHERE 
+ 				N_DAY = #{N_DAY} 
+ 				AND N_MON_ID in (8001, 8002)
+ 			GROUP BY N_DAY, N_TIME
+		) C
+		ON A.N_DAY = C.N_DAY AND A.N_TIME = C.N_TIME		
+		ORDER BY N_TIME
+	</select>
+
+	<select id="vgE1PeakHistoryQryGroup" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			A.N_DAY, 
+			A.N_TIME,
+			(SELECT N_ACTIVE FROM TB_SNMP_REAL_M03_E1_PEAK_GROUP WHERE N_DAY = A.N_DAY AND N_TIME = A.N_TIME AND N_MON_ID = 8001 AND N_GRP_INDEX = 9) AS VG01_E1_9,
+			(SELECT N_ACTIVE FROM TB_SNMP_REAL_M03_E1_PEAK_GROUP WHERE N_DAY = A.N_DAY AND N_TIME = A.N_TIME AND N_MON_ID = 8001 AND N_GRP_INDEX = 10) AS VG01_E1_10,
+			(SELECT N_ACTIVE FROM TB_SNMP_REAL_M03_E1_PEAK_GROUP WHERE N_DAY = A.N_DAY AND N_TIME = A.N_TIME AND N_MON_ID = 8001 AND N_GRP_INDEX = 11) AS VG01_E1_11,
+			(SELECT N_ACTIVE FROM TB_SNMP_REAL_M03_E1_PEAK_GROUP WHERE N_DAY = A.N_DAY AND N_TIME = A.N_TIME AND N_MON_ID = 8002 AND N_GRP_INDEX = 8) AS VG02_E1_8,
+			(SELECT N_ACTIVE FROM TB_SNMP_REAL_M03_E1_PEAK_GROUP WHERE N_DAY = A.N_DAY AND N_TIME = A.N_TIME AND N_MON_ID = 8002 AND N_GRP_INDEX = 9) AS VG02_E1_9
+		FROM 
+			TB_SNMP_REAL_M03_E1_PEAK_GROUP A
+		WHERE 
+			N_DAY = #{N_DAY}
+		GROUP BY N_DAY, N_TIME
+	</select>
+	
 	<select id="serviceVariationAllHistoryQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
 		SELECT A.S_COLLECT_DATE
 			, MAX(CALL_TOTAL) CALL_TOTAL
@@ -1158,313 +1213,4 @@
 		) TT
 	</select>
 	
-	
-	<!-- 일일보고서 서버정보 -->
-	<select id="DayReportServerRetrieveListQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
-		/* history_stats.DayReportServerRetrieveListQry */
-		WITH A AS (
-		SELECT * 
- 		FROM (
-                    <foreach collection="tableList" item="table" separator="UNION ALL">
-                      SELECT * FROM ${table} A
-                    </foreach>
-                ) C
-		<where>
-			<choose>
-				<when test="R_TYPE == 1 ">
-				   date_format(D_INS_DATE, '%Y%m%d') BETWEEN date_format(STR_TO_DATE(#{T_ST_DT}, '%Y-%m-%d'), '%Y%m%d') AND date_format(STR_TO_DATE(#{T_ED_DT}, '%Y-%m-%d'), '%Y%m%d')
-				</when>
-<!-- 			<when test="R_TYPE == '2' ">
-				   AND date_format(D_INS_DATE, '%Y%m%d') = date_format(D_INS_DATE, '%Y%m%d') 
-				</when> -->
-				<otherwise>
-				 	date_format(D_INS_DATE, '%Y%m%d') = date_format(STR_TO_DATE(#{S_ST_DT}, '%Y-%m-%d'), '%Y%m%d')
-				</otherwise>
-			</choose>
-		</where>
-		)
-		, P AS (
-			SELECT S_MAP_KEY
-		            , N_MON_ID
-		            , AVG(N_PER_USE) AS AVG_USE 
-	 		FROM (
-	                    <foreach collection="preTableList" item="table" separator="UNION ALL">
-	                      SELECT * FROM ${table} A
-	                    </foreach>
-	                ) C
-			<where>
-				<choose>
-					<when test="R_TYPE == 1 ">
-					  AND date_format(D_INS_DATE, '%Y%m%d') BETWEEN date_format(STR_TO_DATE(#{P_ST_DT}, '%Y-%m-%d'), '%Y%m%d') AND date_format(STR_TO_DATE(#{P_ED_DT}, '%Y-%m-%d'), '%Y%m%d')
-					</when>
-<!-- 				<when test="R_TYPE == 2 ">
-					 AND date_format(D_INS_DATE, '%Y%m%d') = date_format(D_INS_DATE, '%Y%m%d')
-					</when> -->
-					<otherwise>
-						AND date_format(D_INS_DATE, '%Y%m%d') = date_format(STR_TO_DATE(#{PRE_DT}, '%Y-%m-%d'), '%Y%m%d')
-					</otherwise>
-				</choose>
-			</where>
-			GROUP BY S_MAP_KEY, N_MON_ID
-		)
-		,Q AS (SELECT S_MAP_KEY
-		            , N_MON_ID
-		            , AVG(N_PER_USE) AS AVG_USE
-		            , MAX(N_PER_USE) AS MAX_USE
-		            , D_INS_DATE 
-		            FROM A
-		            GROUP BY S_MAP_KEY, N_MON_ID )
-		            
-		SELECT Z.*
-		        , (Z.N_AVG_USE - Z.PRE_AVG_USE) AS INCREASE
-		FROM (        
-		SELECT ROW_NUMBER() OVER (ORDER BY N_MON_ID, S_MAP_KEY) NUM
-				, B.S_MON_NAME -- 장비명
-				, B.S_MON_IP -- 장비 IP 
-				, CASE IFNULL(C.S_MON_NAME, 'CPU') when '' THEN 'CPU' ELSE IFNULL(C.S_MON_NAME, 'CPU') END AS  S_MAP_NAME -- 자원명 
-				, D.S_GROUP_NAME -- 그룹 명  
-				, E.S_TYPE_NAME -- 구분 명 
-				, IFNULL( (SELECT N_PER_USE FROM A z WHERE z.S_MAP_KEY=Q.S_MAP_KEY AND z.N_MON_ID = Q.N_MON_ID ORDER BY Q.D_INS_DATE DESC LIMIT 1),0) AS N_CUR_USE -- 현재 
-				, ROUND(IFNULL(Q.AVG_USE,0), 2) AS N_AVG_USE -- 평균 		 
-				, IFNULL(Q.MAX_USE,0) AS N_MAX_USE -- 피크
-				, date_format(Q.D_INS_DATE, '%Y-%m-%d %H:%i:%s') AS D_MAX_DATE -- 피크데이
-				, Q.S_MAP_KEY
-				, Q.N_MON_ID
-				, ROUND(IFNULL(P.AVG_USE,0), 2) AS PRE_AVG_USE -- 전평균
-				, COUNT(*) OVER () AS TOTAL_COUNT
-		FROM Q
-		LEFT JOIN TB_MON_INFO B ON Q.N_MON_ID = B.N_MON_ID
-		LEFT JOIN TB_MON_MAP C ON Q.S_MAP_KEY = C.S_MAP_KEY AND Q.N_MON_ID = C.N_MON_ID
-		LEFT JOIN TB_SVR_GROUP D ON B.N_GROUP_CODE = D.N_GROUP_CODE
-		LEFT JOIN TB_SVR_TYPE E ON B.N_TYPE_CODE = E.N_TYPE_CODE
-		LEFT JOIN P ON Q.S_MAP_KEY = P.S_MAP_KEY AND Q.N_MON_ID = P.N_MON_ID
-		) Z
-		
-		<if test="excelYn != null and excelYn != '' and excelYn == 'no'">
-			LIMIT #{firstRecordIndex}, #{lastRecordIndex}
-		</if>
-		<!--  SELECT /* history_stats.statsErrorHistoryRetrieveQry */ * FROM (
-			SELECT ROW_NUMBER() OVER (ORDER BY N_MON_ID, S_MAP_KEY) NUM,
-				COUNT(*) OVER () AS TOTAL_COUNT,
-				S_MON_NAME, S_MON_IP, S_MAP_NAME, N_CUR_USE, N_AVG_USE, N_MAX_USE, D_MAX_DATE 
-			FROM (
-					SELECT 
-						A.N_MON_ID, A.S_MAP_KEY, C.S_MON_NAME, C.S_MON_IP, B.S_MON_NAME AS S_MAP_NAME,
-					(SELECT N_PER_USE FROM ${S_TABLE} WHERE N_MON_ID = A.N_MON_ID AND S_MAP_KEY = A.S_MAP_KEY AND DATEDIFF(D_INS_DATE, STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')) = 0 ORDER BY D_INS_DATE DESC LIMIT 1) AS N_CUR_USE,	
-						ROUND(AVG(N_PER_USE), 2) AS N_AVG_USE, 
-						MAX(N_PER_USE) AS N_MAX_USE, 
-						(SELECT DATE_FORMAT(D_INS_DATE, '%Y-%m-%d %H:%i:%s') AS D_INS_DATE FROM ${S_TABLE} WHERE N_MON_ID = A.N_MON_ID AND S_MAP_KEY = A.S_MAP_KEY AND DATEDIFF(D_INS_DATE, STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')) = 0 ORDER BY N_PER_USE DESC LIMIT 1) AS D_MAX_DATE
-					FROM 
-					(SELECT * FROM ${S_TABLE} WHERE DATEDIFF(D_INS_DATE, STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')) = 0) A
-					, (SELECT N_MON_ID, S_MAP_KEY, CASE S_MON_NAME WHEN LENGTH(S_MON_NAME) > 0 THEN 'CPU' ELSE S_MON_NAME END AS S_MON_NAME FROM TB_MON_MAP) B
-					, TB_MON_INFO C
-					WHERE B.N_MON_ID = A.N_MON_ID AND B.S_MAP_KEY = A.S_MAP_KEY AND C.N_MON_ID = A.N_MON_ID
-					GROUP BY A.N_MON_ID, A.S_MAP_KEY, B.S_MON_NAME, C.S_MON_NAME, C.S_MON_IP
-				)	 T
-			ORDER BY NUM 
-			) X 
-		WHERE
-			num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}  -->
-			
-	</select>
-
-	<!-- 일일보고서 서버정보 -->
-	<select id="DayReportHistoryServerQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
-		SELECT /* history_stats.statsErrorHistoryRetrieveQry */ * FROM (
-			SELECT ROW_NUMBER() OVER (ORDER BY N_MON_ID, S_MAP_KEY) NUM,
-				COUNT(*) OVER () AS TOTAL_COUNT,
-				S_MON_NAME, S_MON_IP, S_MAP_NAME, N_CUR_USE, N_AVG_USE, N_MAX_USE, D_MAX_DATE 
-				FROM (
-				SELECT 
-     				A.N_MON_ID, A.S_MAP_KEY, C.S_MON_NAME, C.S_MON_IP, B.S_MON_NAME AS S_MAP_NAME,
-					(SELECT N_PER_USE FROM ${S_TABLE} WHERE N_MON_ID = A.N_MON_ID AND S_MAP_KEY = A.S_MAP_KEY AND DATEDIFF(D_INS_DATE, STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')) = 0 ORDER BY D_INS_DATE DESC LIMIT 1) AS N_CUR_USE,	
-					ROUND(AVG(N_PER_USE), 2) AS N_AVG_USE, 
-					MAX(N_PER_USE) AS N_MAX_USE, 
-					(SELECT DATE_FORMAT(D_INS_DATE, '%Y-%m-%d %H:%i:%s') AS D_INS_DATE FROM ${S_TABLE} WHERE N_MON_ID = A.N_MON_ID AND S_MAP_KEY = A.S_MAP_KEY AND DATEDIFF(D_INS_DATE, STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')) = 0 ORDER BY N_PER_USE DESC LIMIT 1) AS D_MAX_DATE
-				FROM 
-				(SELECT * FROM ${S_TABLE} WHERE DATEDIFF(D_INS_DATE, STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')) = 0) A
-				, (SELECT N_MON_ID, S_MAP_KEY, CASE S_MON_NAME WHEN LENGTH(S_MON_NAME) > 0 THEN 'CPU' ELSE S_MON_NAME END AS S_MON_NAME FROM TB_MON_MAP) B
-				, TB_MON_INFO C
-				WHERE B.N_MON_ID = A.N_MON_ID AND B.S_MAP_KEY = A.S_MAP_KEY AND C.N_MON_ID = A.N_MON_ID
-				GROUP BY A.N_MON_ID, A.S_MAP_KEY, B.S_MON_NAME, C.S_MON_NAME, C.S_MON_IP
-			) T
-			ORDER BY NUM 
-		) X
-	</select>
-	
-	<!-- 일일보고서 장애이력 -->
-	<select id="DayReportErrorRetrieveListQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
-		SELECT /* history_stats.statsErrorHistoryRetrieveQry */ * FROM (
-    		SELECT
-    				ROW_NUMBER() OVER (ORDER BY D_UPDATE_TIME DESC) NUM,
-					COUNT(*) OVER () AS TOTAL_COUNT
-    				, S_ALM_KEY, D_UPDATE_TIME, N_ALM_STATUS, N_ALM_RATING, S_USER_ID, S_PROCESS, S_MSG
-					, N_ALM_STATUS_NAME, S_MON_NAME, S_USER_NAME, S_ALM_RATING_NAME, S_MON_IP
-    		FROM
-					(
-						SELECT
-								S_ALM_KEY, DATE_FORMAT(D_UPDATE_TIME, '%Y-%m-%d %H:%i-%s') D_UPDATE_TIME, N_ALM_STATUS, N_ALM_RATING, S_USER_ID, S_PROCESS
-								, (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME
-								, (SELECT S_MON_IP FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_IP
-								, (SELECT S_ALM_STATUS_NAME FROM TB_ALM_STATUS_CODE WHERE N_ALM_STATUS = A.N_ALM_STATUS) N_ALM_STATUS_NAME
-								, (SELECT S_USER_NAME FROM TB_USER_INFO WHERE S_USER_ID = A.S_USER_ID) S_USER_NAME
-								, (SELECT S_ALM_RATING_NAME FROM TB_ALM_RATING_CODE WHERE N_ALM_RATING = A.N_ALM_RATING) S_ALM_RATING_NAME
-								, CONCAT((SELECT S_ALM_MSG FROM TB_ALM_CODE WHERE N_ALM_TYPE = A.N_ALM_TYPE AND N_ALM_CODE = A.N_ALM_CODE) ,F_ALM_SUB_MSG(A.N_MON_ID, A.N_ALM_TYPE, A.N_ALM_CODE, A.N_ALM_STATUS, S_MSG)) AS S_MSG
-						FROM
-								(SELECT AL.N_MON_ID, AL.S_ALM_KEY, HIS.N_ALM_STATUS, AL.N_ALM_TYPE, AL.N_ALM_CODE, HIS.S_USER_ID, HIS.N_ALM_RATING, HIS.D_UPDATE_TIME, HIS.S_PROCESS, HIS.S_MSG FROM TB_ALM AL, TB_ALM_HISTORY HIS WHERE AL.N_MON_ID = HIS.N_MON_ID AND  AL.N_MON_ID IN (SELECT N_MON_ID FROM TB_USER_MON_LIST WHERE S_USER_ID = #{SESSION_USER_ID})) A
-						<!--
-						WHERE D_UPDATE_TIME BETWEEN STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s') AND STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 23:59:59'), '%Y-%m-%d %H:%i:%s')
-						-->
-				<where>
-					<choose>
-						<when test="R_TYPE == 1 ">
-						  date_format(D_UPDATE_TIME, '%Y%m%d') BETWEEN date_format(STR_TO_DATE(#{T_ST_DT}, '%Y-%m-%d'), '%Y%m%d') AND date_format(STR_TO_DATE(#{T_ED_DT}, '%Y-%m-%d'), '%Y%m%d')
-						</when>
-	<!-- 				<when test="R_TYPE == 2 ">
-						 AND date_format(D_INS_DATE, '%Y%m%d') = date_format(D_INS_DATE, '%Y%m%d')
-						</when> -->
-						<otherwise>
-						  date_format(D_UPDATE_TIME, '%Y%m%d') = date_format(STR_TO_DATE(#{S_ST_DT}, '%Y-%m-%d'), '%Y%m%d')
-						</otherwise>
-					</choose>
-				</where>
-					) A
-		) X
-		WHERE num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
-	</select>
-
-	<!-- 일일보고서 장애이력 -->
-	<select id="DayReportHistoryErrorQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
-		SELECT /* history_stats.statsErrorHistoryRetrieveQry */ * FROM (
-    		SELECT
-    				ROW_NUMBER() OVER (ORDER BY D_UPDATE_TIME DESC) NUM,
-					COUNT(*) OVER () AS TOTAL_COUNT
-    				, S_ALM_KEY, D_UPDATE_TIME, N_ALM_STATUS, N_ALM_RATING, S_USER_ID, S_PROCESS, S_MSG
-					, N_ALM_STATUS_NAME, S_MON_NAME, S_USER_NAME, S_ALM_RATING_NAME, S_MON_IP
-    		FROM
-					(
-						SELECT
-								S_ALM_KEY, DATE_FORMAT(D_UPDATE_TIME, '%Y-%m-%d %H:%i-%s') D_UPDATE_TIME, N_ALM_STATUS, N_ALM_RATING, S_USER_ID, S_PROCESS
-								, (SELECT S_MON_NAME FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_NAME
-								, (SELECT S_MON_IP FROM TB_MON_INFO WHERE N_MON_ID = A.N_MON_ID) S_MON_IP
-								, (SELECT S_ALM_STATUS_NAME FROM TB_ALM_STATUS_CODE WHERE N_ALM_STATUS = A.N_ALM_STATUS) N_ALM_STATUS_NAME
-								, (SELECT S_USER_NAME FROM TB_USER_INFO WHERE S_USER_ID = A.S_USER_ID) S_USER_NAME
-								, (SELECT S_ALM_RATING_NAME FROM TB_ALM_RATING_CODE WHERE N_ALM_RATING = A.N_ALM_RATING) S_ALM_RATING_NAME
-								, CONCAT((SELECT S_ALM_MSG FROM TB_ALM_CODE WHERE N_ALM_TYPE = A.N_ALM_TYPE AND N_ALM_CODE = A.N_ALM_CODE) ,F_ALM_SUB_MSG(A.N_MON_ID, A.N_ALM_TYPE, A.N_ALM_CODE, A.N_ALM_STATUS, S_MSG)) AS S_MSG
-						FROM
-								(
-								SELECT AL.N_MON_ID, AL.S_ALM_KEY, HIS.N_ALM_STATUS, AL.N_ALM_TYPE, AL.N_ALM_CODE, HIS.S_USER_ID, HIS.N_ALM_RATING, HIS.D_UPDATE_TIME, HIS.S_PROCESS, HIS.S_MSG 
-								FROM TB_ALM AL, TB_ALM_HISTORY HIS 
-								WHERE AL.N_MON_ID = HIS.N_MON_ID
-								<if test="SESSION_USER_ID != null and SESSION_USER_ID != '' ">
-								AND AL.N_MON_ID IN (SELECT N_MON_ID 
-																FROM TB_USER_MON_LIST 
-																WHERE S_USER_ID = #{SESSION_USER_ID})
-								</if>
-								) A
-					<!--								
-						WHERE
-								D_UPDATE_TIME BETWEEN STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s') AND STR_TO_DATE(CONCAT(#{S_ST_DT}, ' 23:59:59'), '%Y-%m-%d %H:%i:%s')
-  					-->		
-					<where>
-						<choose>
-							<when test="R_TYPE == 1 ">
-							  date_format(D_UPDATE_TIME, '%Y%m%d') BETWEEN date_format(STR_TO_DATE(#{T_ST_DT}, '%Y-%m-%d'), '%Y%m%d') AND date_format(STR_TO_DATE(#{T_ED_DT}, '%Y-%m-%d'), '%Y%m%d')
-							</when>
-		<!-- 				<when test="R_TYPE == 2 ">
-							 AND date_format(D_INS_DATE, '%Y%m%d') = date_format(D_INS_DATE, '%Y%m%d')
-							</when> -->
-							<otherwise>
-							  date_format(D_UPDATE_TIME, '%Y%m%d') = date_format(STR_TO_DATE(#{S_ST_DT}, '%Y-%m-%d'), '%Y%m%d')
-							</otherwise>
-						</choose>
-					</where>
-					) A
-		) X
-	</select>
-	
-	<!-- 일일보고서 콜통계 -->
-	<select id="DayReportCallRetrieveListQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
-		SELECT * FROM (
-			SELECT
-				COUNT(*) OVER () AS TOTAL_COUNT
-				, ROW_NUMBER() OVER (ORDER BY ORG_NM ASC) NUM
-				, ORG_NM as BRANCH_NAME
-				, NVL(CALL_COUNT_OUTBOUND,0) as OUTBOUND
-				, NVL(CALL_COUNT_INBOUND,0) as INBOUND
-			FROM
-			(
-				SELECT  ORG_NM, CALL_COUNT_OUTBOUND, CALL_COUNT_INBOUND
-				FROM TB_ORG_INFO AA
-					LEFT OUTER JOIN (SELECT BRANCH_CODE, CALL_COUNT AS CALL_COUNT_OUTBOUND FROM TB_CDR_ACCRUE_DAILY A WHERE CDR_DATE=#{S_ST_DT} AND N_TYPE='2') OUTBOUND
-					ON AA.ORG_ID=OUTBOUND.BRANCH_CODE
-					LEFT OUTER JOIN (SELECT BRANCH_CODE, CALL_COUNT AS CALL_COUNT_INBOUND FROM TB_CDR_ACCRUE_DAILY A WHERE CDR_DATE=#{S_ST_DT} AND N_TYPE='3') INBOUND
-					ON AA.ORG_ID=INBOUND.BRANCH_CODE
-			) A
-			WHERE (CALL_COUNT_OUTBOUND != 0 OR CALL_COUNT_INBOUND != 0)
-		) X 
-		WHERE
-			num BETWEEN #{firstRecordIndex} + 1 AND #{lastRecordIndex}
-	</select>
-
-	<!-- 일일보고서 콜통계 -->
-	<select id="DayReportHistoryCallQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
-		SELECT * FROM (
-			SELECT
-				COUNT(*) OVER () AS TOTAL_COUNT
-				, ROW_NUMBER() OVER (ORDER BY ORG_NM ASC) NUM
-				, ORG_NM as BRANCH_NAME
-				, NVL(CALL_COUNT_OUTBOUND,0) as OUTBOUND
-				, NVL(CALL_COUNT_INBOUND,0) as INBOUND
-			FROM
-			(
-				SELECT  ORG_NM, CALL_COUNT_OUTBOUND, CALL_COUNT_INBOUND
-				FROM TB_ORG_INFO AA
-					LEFT OUTER JOIN (SELECT BRANCH_CODE, CALL_COUNT AS CALL_COUNT_OUTBOUND FROM TB_CDR_ACCRUE_DAILY A WHERE CDR_DATE=#{S_ST_DT} AND N_TYPE='2') OUTBOUND
-					ON AA.ORG_ID=OUTBOUND.BRANCH_CODE
-					LEFT OUTER JOIN (SELECT BRANCH_CODE, CALL_COUNT AS CALL_COUNT_INBOUND FROM TB_CDR_ACCRUE_DAILY A WHERE CDR_DATE=#{S_ST_DT} AND N_TYPE='3') INBOUND
-					ON AA.ORG_ID=INBOUND.BRANCH_CODE
-			) A
-		) X
-		WHERE (CALL_COUNT_OUTBOUND != 0 OR CALL_COUNT_INBOUND != 0)
-	</select>
-	
-	
-	   <select id="IpphoneStatusListQry" resultType="java.util.HashMap" parameterType="java.util.HashMap">
-		SELECT COUNT(*) OVER () AS TOTAL_COUNT
-			, MON_ID
-			, NAME
-			, MODEL
-			, STATUS
-			, STATUSREASON
-			, PROTOCOL
-			, DESCRIPTION
-			, IPADDRESS1
-			, DIRECTNUM1
-			, LINESTATUS1
-			, DIRECTNUM2
-			, LINESTATUS2
-			, IPADDTYPE1
-			, IPATTRIBUTE1
-			, IPADDRESS2
-			, IPADDTYPE2
-			, IPATTRIBUTE2
-			, COLLECT_DATE
-	    FROM tb_http_ipphone_info
-	   <where>
-	   		1 = 1
-	   <choose>
-		   	<when test="phone_state !='Registered' ">AND STATUS != 'Registered'</when>
-		   	<otherwise>AND STATUS = 'Registered'</otherwise>
-	   </choose>
-		<if test="ip_address != '' and ip_address != null"> AND IPADDRESS1 LIKE CONCAT('%', #{ip_address}, '%') </if>
-		<if test="search_phone != '' and search_phone != null"> AND DIRECTNUM1 LIKE CONCAT('%', #{search_phone}, '%') </if>
-	   </where>
-	   ORDER BY NAME, DIRECTNUM1
-	   <if test="excelYn != null and excelYn != '' and excelYn == 'no'">
-			LIMIT #{firstRecordIndex}, #{lastRecordIndex}
-		</if>
-	    
-    </select>
-    
 </mapper>
